@@ -2,11 +2,8 @@
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
-import React from "react";
-
-var Layout = ({children}) => (<div>
-  <h1>CQRS Hotel</h1>
-  {children}
-</div>);
-
-export default Layout;
+export const DUMMY_DATA_LOADED = 'DUMMY_DATA_LOADED';
+export const dummyDataLoaded = (data) => ({
+  type: DUMMY_DATA_LOADED,
+  data
+});

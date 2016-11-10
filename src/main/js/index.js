@@ -7,30 +7,20 @@ import "../css/style.css";
 import "whatwg-fetch";
 import React from "react";
 import ReactDOM from "react-dom";
-import Layout from "./Layout";
+import {Provider} from "react-redux";
+import {createStore, applyMiddleware} from "redux";
+import createLogger from "redux-logger";
+import App from "./App";
+import reducers from "./reducers";
 
 function init() {
-  loadDummyData();
-  renderUI();
-}
+  const logger = createLogger();
+  const store = createStore(reducers, applyMiddleware(logger));
 
-function loadDummyData() {
-  // TODO: show in the UI
-  fetch('/api/dummy', {
-    method: 'get',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    }
-  })
-    .then(response => response.json())
-    .then(json => console.log('parsed json', json))
-    .catch(ex => console.log('parsing failed', ex))
-}
-
-function renderUI() {
   ReactDOM.render(
-    <Layout/>,
+    <Provider store={store}>
+      <App />
+    </Provider>,
     document.getElementById('root')
   );
 }

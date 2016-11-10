@@ -2,11 +2,9 @@
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
-import React from "react";
+import {combineReducers} from "redux";
+import dummy from "./dummyReducer";
 
-var Layout = ({children}) => (<div>
-  <h1>CQRS Hotel</h1>
-  {children}
-</div>);
-
-export default Layout;
+export default combineReducers({
+  dummy,
+});
