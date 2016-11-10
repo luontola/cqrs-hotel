@@ -16,20 +16,20 @@ function getEntrySources() {
 }
 
 module.exports = {
-  devtool: 'source-map',
   entry: getEntrySources(
     './src/main/js/index.js'
   ),
   output: {
-    path: path.resolve(__dirname, 'target/web'),
-    filename: 'bundle.js'
+    path: path.resolve(__dirname, 'target/webpack'),
+    filename: 'bundle.js',
   },
   module: {
     loaders: [
       {test: /\.js$/, loaders: ['jsx', 'babel'], exclude: /node_modules/},
-      {test: /\.css$/, loader: 'style!css'}
+      {test: /\.css$/, loader: 'style!css'},
     ]
   },
+  devtool: 'source-map',
   devServer: {
     proxy: {
       '/api': {
