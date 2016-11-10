@@ -18,7 +18,7 @@ function getEntrySources() {
 module.exports = {
   devtool: 'source-map',
   entry: getEntrySources(
-    './src/main/web/index.js'
+    './src/main/js/index.js'
   ),
   output: {
     path: path.resolve(__dirname, 'target/web'),
