@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Application" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+    <extension name="coverage" enabled="false" merge="false" track_test_folders="true" runner="idea">
+      <pattern>
+        <option name="PATTERN" value="fi.luontola.cqrshotel.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <option name="SPRING_BOOT_MAIN_CLASS" value="fi.luontola.cqrshotel.Application" />
+    <option name="VM_PARAMETERS" value="-ea" />
+    <option name="ALTERNATIVE_JRE_PATH" />
+    <module name="cqrs-hotel" />
+    <envs />
+    <method />
+  </configuration>
+</component>
