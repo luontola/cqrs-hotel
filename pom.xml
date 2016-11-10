@@ -10,7 +10,7 @@
     </parent>
     <groupId>fi.luontola.cqrs-hotel</groupId>
     <artifactId>cqrs-hotel</artifactId>
-    <version>0-SNAPSHOT</version>
+    <version>1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>CQRS Hotel</name>

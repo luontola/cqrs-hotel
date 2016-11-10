@@ -1,0 +1,41 @@
+{
+  "name": "cqrs-hotel",
+  "version": "1.0.0",
+  "description": "Example application about CQRS and Event Sourcing",
+  "directories": {
+    "test": "src/test/js"
+  },
+  "dependencies": {
+    "purecss": "0.6.0",
+    "react": "15.3.1",
+    "react-dom": "15.3.1",
+    "whatwg-fetch": "1.0.0"
+  },
+  "devDependencies": {
+    "babel-core": "6.14.0",
+    "babel-loader": "6.2.5",
+    "babel-preset-es2015": "6.14.0",
+    "babel-preset-react": "6.11.1",
+    "css-loader": "0.23.1",
+    "jsx-loader": "0.13.2",
+    "style-loader": "0.13.1",
+    "webpack": "1.13.2",
+    "webpack-dev-server": "1.15.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --progress --colors",
+    "autobuild": "webpack --progress --colors --watch",
+    "start": "webpack-dev-server --content-base src/main/web --host 0.0.0.0 --progress --colors"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/orfjackal/cqrs-hotel.git"
+  },
+  "author": "Esko Luontola",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/orfjackal/cqrs-hotel/issues"
+  },
+  "homepage": "https://github.com/orfjackal/cqrs-hotel"
+}

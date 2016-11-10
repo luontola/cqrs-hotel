@@ -7,11 +7,19 @@ package fi.luontola.cqrshotel;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Arrays;
+import java.util.List;
+
 @RestController
 public class ApiController {
 
-    @RequestMapping("/")
+    @RequestMapping("/api")
     public String home() {
-        return "Hello world";
+        return "CQRS Hotel API";
+    }
+
+    @RequestMapping("/api/dummy")
+    public List<String> dummy() {
+        return Arrays.asList("foo", "bar", "gazonk");
     }
 }
