@@ -4,6 +4,7 @@
 
 package fi.luontola.cqrshotel.framework;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -29,6 +30,6 @@ public class FakeEventStore implements EventStore {
     @Override
     public void saveEvents(UUID streamId, List<Event> newEvents, int expectedVersion) {
         assertThat("streamId", streamId, is(expectedStreamId));
-        produced = newEvents;
+        produced = new ArrayList<>(newEvents);
     }
 }
