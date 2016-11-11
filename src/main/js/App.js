@@ -6,11 +6,14 @@ import React from "react";
 import {connect} from "react-redux";
 import Layout from "./Layout";
 import {dummyDataLoaded} from "./dummyActions";
-import {uuid} from "./util";
+import {uuid, apiFetch} from "./util";
 
-var App = ({dummyData, loadDummyData, makeReservation}) => {
+var App = ({dummyData, loadDummyData, findAvailableRoom, makeReservation}) => {
   return (
     <Layout>
+      <p>
+        <button type="button" onClick={findAvailableRoom}>Find Available Room</button>
+      </p>
       <p>
         <button type="button" onClick={makeReservation}>Make Reservation</button>
       </p>
@@ -47,13 +50,22 @@ function mapDispatchToProps(dispatch) {
         })
         .catch(ex => console.log("loadDummyData failed", ex))
     },
-    makeReservation: () => {
-      fetch('/api/make-reservation', {
-        method: 'post',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
+    findAvailableRoom: () => {
+      apiFetch('/api/find-available-room', {
+        method: 'get',
+        queryParams: {
+          startDate: '2016-11-15',
+          endDate: '2016-11-16',
         },
+      })
+        .then(json => {
+          console.log("findAvailableRoom", json);
+        })
+        .catch(ex => console.log("findAvailableRoom failed", ex));
+    },
+    makeReservation: () => {
+      apiFetch('/api/make-reservation', {
+        method: 'post',
         body: JSON.stringify({
           reservationId: uuid(),
           startDate: '2016-11-15',
@@ -62,13 +74,11 @@ function mapDispatchToProps(dispatch) {
           email: "john@example.com",
         }),
       })
-        .then(response => response.json())
         .then(json => {
           console.log("makeReservation", json);
         })
-        .catch(ex => console.log("makeReservation failed", ex))
-
-    }
+        .catch(ex => console.log("makeReservation failed", ex));
+    },
   }
 }
 

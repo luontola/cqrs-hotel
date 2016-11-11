@@ -8,3 +8,30 @@ export function uuid() {
     return v.toString(16);
   });
 }
+
+export function apiFetch(url, options = {}) {
+  options = {
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+    credentials: 'same-origin',
+    redirect: 'error',
+    ...options,
+  };
+  if (options.queryParams) {
+    url += (url.indexOf('?') === -1 ? '?' : '&') + queryParams(options.queryParams);
+    delete options.queryParams;
+  }
+  if (typeof options.body === 'object') {
+    options.body = JSON.stringify(options.body);
+  }
+  return fetch(url, options)
+    .then(response => response.json());
+}
+
+function queryParams(params) {
+  return Object.keys(params)
+    .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k]))
+    .join('&');
+}

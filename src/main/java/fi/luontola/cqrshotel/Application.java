@@ -21,7 +21,7 @@ public class Application {
     @Bean
     public ObjectMapper jacksonObjectMapper() {
         ObjectMapper om = new ObjectMapper();
-        om.registerModule(new JavaTimeModule());
+        om.registerModules(new JavaTimeModule(), new MoneyModule());
         om.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         return om;
     }
