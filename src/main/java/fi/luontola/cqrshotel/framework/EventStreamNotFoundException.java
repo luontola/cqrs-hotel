@@ -6,9 +6,9 @@ package fi.luontola.cqrshotel.framework;
 
 import java.util.UUID;
 
-public class AggregateNotFoundException extends RuntimeException {
+public class EventStreamNotFoundException extends RuntimeException {
 
-    public AggregateNotFoundException(UUID aggrigateId) {
-        super(String.valueOf(aggrigateId));
+    public EventStreamNotFoundException(UUID streamId) {
+        super(String.valueOf(streamId));
     }
 }

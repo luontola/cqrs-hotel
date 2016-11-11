@@ -28,9 +28,9 @@ public class EventStoreTest {
         UUID id = UUID.randomUUID();
         eventStore.saveEvents(id,
                 Arrays.asList(new DummyEvent("one"), new DummyEvent("two")),
-                EventStore.NO_EXISTING_VERSIONS);
+                EventStore.NEW_STREAM);
 
-        List<Event> events = eventStore.getEventsForAggregate(id);
+        List<Event> events = eventStore.getEventsForStream(id);
         assertThat(events, is(Arrays.asList(new DummyEvent("one"), new DummyEvent("two"))));
     }
 
@@ -39,13 +39,13 @@ public class EventStoreTest {
         UUID id = UUID.randomUUID();
         eventStore.saveEvents(id,
                 Arrays.asList(new DummyEvent("one"), new DummyEvent("two")),
-                EventStore.NO_EXISTING_VERSIONS);
+                EventStore.NEW_STREAM);
 
         eventStore.saveEvents(id,
                 Arrays.asList(new DummyEvent("three"), new DummyEvent("four")),
                 2);
 
-        List<Event> events = eventStore.getEventsForAggregate(id);
+        List<Event> events = eventStore.getEventsForStream(id);
         assertThat(events, is(Arrays.asList(
                 new DummyEvent("one"), new DummyEvent("two"), new DummyEvent("three"), new DummyEvent("four"))));
     }
@@ -55,10 +55,10 @@ public class EventStoreTest {
         UUID id = UUID.fromString("ad726cb5-2078-40cf-ae40-6c1429f9cbeb");
         eventStore.saveEvents(id,
                 Arrays.asList(new DummyEvent("one"), new DummyEvent("two")),
-                EventStore.NO_EXISTING_VERSIONS);
+                EventStore.NEW_STREAM);
 
         thrown.expect(OptimisticLockingException.class);
-        thrown.expectMessage("expected version 1 but was 2 for ad726cb5-2078-40cf-ae40-6c1429f9cbeb");
+        thrown.expectMessage("expected version 1 but was 2 for stream ad726cb5-2078-40cf-ae40-6c1429f9cbeb");
         eventStore.saveEvents(id,
                 Arrays.asList(new DummyEvent("three"), new DummyEvent("four")),
                 1);
@@ -67,9 +67,9 @@ public class EventStoreTest {
     @Test
     public void cannot_read_events_for_non_existing_aggregate() {
         UUID id = UUID.randomUUID();
-        thrown.expect(AggregateNotFoundException.class);
+        thrown.expect(EventStreamNotFoundException.class);
         thrown.expectMessage(id.toString());
-        eventStore.getEventsForAggregate(id);
+        eventStore.getEventsForStream(id);
     }
 
 

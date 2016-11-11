@@ -12,24 +12,24 @@ import java.util.concurrent.ConcurrentMap;
 
 public class EventStore {
 
-    public static final int NO_EXISTING_VERSIONS = 0;
+    public static final int NEW_STREAM = 0;
 
-    private final ConcurrentMap<UUID, List<Event>> aggregates = new ConcurrentHashMap<>();
+    private final ConcurrentMap<UUID, List<Event>> streamsById = new ConcurrentHashMap<>();
 
-    public List<Event> getEventsForAggregate(UUID id) {
-        List<Event> events = aggregates.get(id);
+    public List<Event> getEventsForStream(UUID streamId) {
+        List<Event> events = streamsById.get(streamId);
         if (events == null) {
-            throw new AggregateNotFoundException(id);
+            throw new EventStreamNotFoundException(streamId);
         }
         return new ArrayList<>(events);
     }
 
-    public void saveEvents(UUID id, List<Event> newEvents, int expectedVersion) {
-        List<Event> events = aggregates.computeIfAbsent(id, uuid -> new ArrayList<>());
+    public void saveEvents(UUID streamId, List<Event> newEvents, int expectedVersion) {
+        List<Event> events = streamsById.computeIfAbsent(streamId, uuid -> new ArrayList<>());
         synchronized (events) {
             int actualVersion = events.size();
             if (expectedVersion != actualVersion) {
-                throw new OptimisticLockingException("expected version " + expectedVersion + " but was " + actualVersion + " for " + id);
+                throw new OptimisticLockingException("expected version " + expectedVersion + " but was " + actualVersion + " for stream " + streamId);
             }
             events.addAll(newEvents);
         }
