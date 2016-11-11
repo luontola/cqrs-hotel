@@ -16,12 +16,12 @@ import java.util.UUID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-public class EventStoreTest {
+public class InMemoryEventStoreTest {
 
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
-    private final EventStore eventStore = new EventStore();
+    private final EventStore eventStore = new InMemoryEventStore();
 
     @Test
     public void saving_new_aggregate() {

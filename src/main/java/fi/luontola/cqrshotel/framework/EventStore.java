@@ -4,34 +4,14 @@
 
 package fi.luontola.cqrshotel.framework;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
-public class EventStore {
+public interface EventStore {
 
-    public static final int NEW_STREAM = 0;
+    int NEW_STREAM = 0;
 
-    private final ConcurrentMap<UUID, List<Event>> streamsById = new ConcurrentHashMap<>();
+    List<Event> getEventsForStream(UUID streamId);
 
-    public List<Event> getEventsForStream(UUID streamId) {
-        List<Event> events = streamsById.get(streamId);
-        if (events == null) {
-            throw new EventStreamNotFoundException(streamId);
-        }
-        return new ArrayList<>(events);
-    }
-
-    public void saveEvents(UUID streamId, List<Event> newEvents, int expectedVersion) {
-        List<Event> events = streamsById.computeIfAbsent(streamId, uuid -> new ArrayList<>());
-        synchronized (events) {
-            int actualVersion = events.size();
-            if (expectedVersion != actualVersion) {
-                throw new OptimisticLockingException("expected version " + expectedVersion + " but was " + actualVersion + " for stream " + streamId);
-            }
-            events.addAll(newEvents);
-        }
-    }
+    void saveEvents(UUID streamId, List<Event> newEvents, int expectedVersion);
 }
