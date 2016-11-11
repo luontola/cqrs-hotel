@@ -6,6 +6,7 @@ import React from "react";
 import {connect} from "react-redux";
 import Layout from "./Layout";
 import {dummyDataLoaded} from "./dummyActions";
+import {uuid} from "./util";
 
 var App = ({dummyData, loadDummyData, makeReservation}) => {
   return (
@@ -54,6 +55,7 @@ function mapDispatchToProps(dispatch) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          reservationId: uuid(),
           startDate: '2016-11-15',
           endDate: '2016-11-16',
           name: "John Doe",
