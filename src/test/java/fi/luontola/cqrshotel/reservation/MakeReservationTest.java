@@ -17,12 +17,15 @@ import java.time.ZonedDateTime;
 
 public class MakeReservationTest extends AggregateRootTester {
 
+    private static final LocalDate startDate = LocalDate.of(2000, 1, 2);
+    private static final LocalDate endDate = LocalDate.of(2001, 3, 4);
+
+    {
+        commandHandler = new MakeReservationHandler(new ReservationRepo(eventStore));
+    }
+
     @Test
     public void make_reservation() {
-        LocalDate startDate = LocalDate.of(2000, 1, 2);
-        LocalDate endDate = LocalDate.of(2001, 3, 4);
-        commandHandler = new MakeReservationHandler(new ReservationRepo(eventStore));
-
         given(new ReservationInitialized(id));
         when(new MakeReservation(id, startDate, endDate, "John Doe", "john@example.com"));
         then(new ContactInformationUpdated(id, "John Doe", "john@example.com"),
@@ -30,4 +33,8 @@ public class MakeReservationTest extends AggregateRootTester {
                         ZonedDateTime.of(startDate, Reservation.CHECK_IN_TIME, Reservation.TIMEZONE).toInstant(),
                         ZonedDateTime.of(endDate, Reservation.CHECK_OUT_TIME, Reservation.TIMEZONE).toInstant()));
     }
+
+    // TODO: create line items
+    // TODO: check price offer existence
+    // TODO: check price offer expiry
 }

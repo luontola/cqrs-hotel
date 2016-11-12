@@ -22,13 +22,13 @@ import java.time.ZoneId;
 
 public class SearchForAccommodationTest extends AggregateRootTester {
 
-    LocalDate date1 = LocalDate.of(2000, 1, 2);
-    LocalDate date2 = LocalDate.of(2000, 1, 3);
-    LocalDate date3 = LocalDate.of(2000, 1, 4);
-    Money price1 = Money.of(11, "EUR");
-    Money price2 = Money.of(12, "EUR");
-    Instant now = Instant.now();
-    Instant expires = now.plus(Reservation.PRICE_VALIDITY_DURATION);
+    private static final LocalDate date1 = LocalDate.of(2000, 1, 2);
+    private static final LocalDate date2 = LocalDate.of(2000, 1, 3);
+    private static final LocalDate date3 = LocalDate.of(2000, 1, 4);
+    private static final Money price1 = Money.of(11, "EUR");
+    private static final Money price2 = Money.of(12, "EUR");
+    private static final Instant now = Instant.now();
+    private static final Instant expires = now.plus(Reservation.PRICE_VALIDITY_DURATION);
 
     {
         PricingEngine pricing = new InMemoryPricingEngine()
