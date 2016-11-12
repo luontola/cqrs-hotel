@@ -8,11 +8,13 @@ import Layout from "./Layout";
 import {dummyDataLoaded} from "./dummyActions";
 import {uuid, apiFetch} from "./util";
 
-var App = ({dummyData, loadDummyData, findAvailableRoom, makeReservation}) => {
+const reservationId = uuid();
+
+const App = ({dummyData, loadDummyData, searchForAccommodation, makeReservation}) => {
   return (
     <Layout>
       <p>
-        <button type="button" onClick={findAvailableRoom}>Find Available Room</button>
+        <button type="button" onClick={searchForAccommodation}>Find A Room</button>
       </p>
       <p>
         <button type="button" onClick={makeReservation}>Make Reservation</button>
@@ -50,29 +52,30 @@ function mapDispatchToProps(dispatch) {
         })
         .catch(ex => console.log("loadDummyData failed", ex))
     },
-    findAvailableRoom: () => {
-      apiFetch('/api/find-available-room', {
-        method: 'get',
-        queryParams: {
+    searchForAccommodation: () => {
+      apiFetch('/api/search-for-accommodation', {
+        method: 'post',
+        body: {
+          reservationId: reservationId,
           startDate: '2016-11-15',
           endDate: '2016-11-16',
         },
       })
         .then(json => {
-          console.log("findAvailableRoom", json);
+          console.log("searchForAccommodation", json);
         })
-        .catch(ex => console.log("findAvailableRoom failed", ex));
+        .catch(ex => console.log("searchForAccommodation failed", ex));
     },
     makeReservation: () => {
       apiFetch('/api/make-reservation', {
         method: 'post',
-        body: JSON.stringify({
-          reservationId: uuid(),
+        body: {
+          reservationId: reservationId,
           startDate: '2016-11-15',
           endDate: '2016-11-16',
           name: "John Doe",
           email: "john@example.com",
-        }),
+        },
       })
         .then(json => {
           console.log("makeReservation", json);

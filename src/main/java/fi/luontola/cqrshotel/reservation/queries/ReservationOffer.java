@@ -15,5 +15,5 @@ public class ReservationOffer extends Struct {
     public UUID reservationId;
     public LocalDate startDate;
     public LocalDate endDate;
-    public Money price;
+    public Money totalPrice;
 }

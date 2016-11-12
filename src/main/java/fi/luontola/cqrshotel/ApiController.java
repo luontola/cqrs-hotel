@@ -4,29 +4,26 @@
 
 package fi.luontola.cqrshotel;
 
-import fi.luontola.cqrshotel.framework.Command;
 import fi.luontola.cqrshotel.framework.EventStore;
-import fi.luontola.cqrshotel.framework.Handles;
 import fi.luontola.cqrshotel.framework.InMemoryEventStore;
+import fi.luontola.cqrshotel.pricing.PricingEngine;
+import fi.luontola.cqrshotel.pricing.RandomPricingEngine;
 import fi.luontola.cqrshotel.reservation.ReservationRepo;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservationHandler;
-import fi.luontola.cqrshotel.reservation.events.ReservationInitialized;
+import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
+import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodationHandler;
 import fi.luontola.cqrshotel.reservation.queries.ReservationOffer;
 import org.javamoney.moneta.Money;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDate;
+import java.time.Clock;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static org.springframework.format.annotation.DateTimeFormat.ISO.DATE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
@@ -35,7 +32,8 @@ public class ApiController {
 
     private final EventStore eventStore = new InMemoryEventStore();
     private final ReservationRepo reservationRepo = new ReservationRepo(eventStore);
-    private final Handles<Command> commandHandler = (Handles) new MakeReservationHandler(reservationRepo);
+    private final Clock clock = Clock.systemDefaultZone();
+    private final PricingEngine pricing = new RandomPricingEngine(clock);
 
     @RequestMapping(path = "/api", method = GET)
     public String home() {
@@ -47,24 +45,24 @@ public class ApiController {
         return Arrays.asList("foo", "bar", "gazonk");
     }
 
-    @RequestMapping(path = "/api/find-available-room", method = GET)
-    public ReservationOffer findAvailableRoom(@RequestParam @DateTimeFormat(iso = DATE) LocalDate startDate,
-                                              @RequestParam @DateTimeFormat(iso = DATE) LocalDate endDate) {
-        // TODO
+    @RequestMapping(path = "/api/search-for-accommodation", method = POST)
+    public ReservationOffer findAvailableRoom(@RequestBody SearchForAccommodation command) {
+
+        // TODO: composite handler
+        new SearchForAccommodationHandler(reservationRepo, pricing, clock).handle(command);
+
+        // TODO: read model
         ReservationOffer result = new ReservationOffer();
-        result.reservationId = UUID.randomUUID();
-        result.startDate = startDate;
-        result.endDate = endDate;
-        result.price = Money.of(ThreadLocalRandom.current().nextInt(50, 150), "EUR");
+        result.reservationId = command.reservationId;
+        result.startDate = command.startDate;
+        result.endDate = command.endDate;
+        result.totalPrice = Money.of(ThreadLocalRandom.current().nextInt(250, 500), "EUR");
         return result;
     }
 
     @RequestMapping(path = "/api/make-reservation", method = POST)
     public void makeReservation(@RequestBody MakeReservation command) {
-        // TODO
-        eventStore.saveEvents(command.reservationId,
-                Arrays.asList(new ReservationInitialized(command.reservationId)),
-                EventStore.NEW_STREAM);
-        commandHandler.handle(command);
+        // TODO: composite handler
+        new MakeReservationHandler(reservationRepo).handle(command);
     }
 }

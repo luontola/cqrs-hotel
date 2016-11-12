@@ -26,6 +26,9 @@ public class FakeEventStore implements EventStore {
             expectedStreamId = streamId;
         }
         assertThat("streamId", streamId, is(expectedStreamId));
+        if (existing.isEmpty()) {
+            throw new EventStreamNotFoundException(streamId);
+        }
         return existing;
     }
 
