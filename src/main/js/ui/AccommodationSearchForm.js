@@ -11,12 +11,12 @@ import moment from "moment";
 
 let AccommodationSearchForm = ({handleSubmit, submitting, error}) => (
   <form onSubmit={handleSubmit(searchForAccommodation)}>
-    <p>
+    <div>
       <Field name="startDate" component="input" type="text"/>
       <Field name="endDate" component="input" type="text"/>
       <button type="submit" disabled={submitting}>Find A Room</button>
       {error && <div style={{color: 'red'}}>{error}</div>}
-    </p>
+    </div>
   </form>
 );
 

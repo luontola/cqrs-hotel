@@ -13,7 +13,7 @@ let BookingPage = ({reservation, reservationOffer, makeReservation}) => (
   <Layout>
     <h2 className="content-subhead">Booking a Room</h2>
     <AccommodationSearchForm/>
-    {reservationOffer && <p>
+    {reservationOffer && <div>
       <b>Check in:</b> {reservationOffer.startDate}<br/>
       <b>Check out:</b> {reservationOffer.endDate}<br/>
       {reservationOffer.totalPrice ? <div>
@@ -22,11 +22,11 @@ let BookingPage = ({reservation, reservationOffer, makeReservation}) => (
       </div> : <div style={{color: 'red'}}>
         Sold out!
       </div>}
-    </p>
+    </div>
     }
-    {reservation && <p>
+    {reservation && <div>
       Reservation: {JSON.stringify(reservation)}
-    </p>
+    </div>
     }
   </Layout>
 );
