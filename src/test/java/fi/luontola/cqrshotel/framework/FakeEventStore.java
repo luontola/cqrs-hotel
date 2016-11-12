@@ -11,15 +11,17 @@ import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 public class FakeEventStore implements EventStore {
 
     public List<Event> existing = Collections.emptyList();
-    public List<Event> produced;
+    public final List<Event> produced = new ArrayList<>();
     private UUID expectedStreamId;
 
     @Override
     public List<Event> getEventsForStream(UUID streamId) {
+        assertThat("streamId", streamId, is(notNullValue()));
         if (expectedStreamId == null) {
             expectedStreamId = streamId;
         }
@@ -30,6 +32,6 @@ public class FakeEventStore implements EventStore {
     @Override
     public void saveEvents(UUID streamId, List<Event> newEvents, int expectedVersion) {
         assertThat("streamId", streamId, is(expectedStreamId));
-        produced = new ArrayList<>(newEvents);
+        produced.addAll(newEvents);
     }
 }
