@@ -27,7 +27,13 @@ export function apiFetch(url, options = {}) {
     options.body = JSON.stringify(options.body);
   }
   return fetch(url, options)
-    .then(response => response.json());
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        return response.json().then(error => Promise.reject(error));
+      }
+    });
 }
 
 function queryParams(params) {

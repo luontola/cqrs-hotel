@@ -3,8 +3,8 @@
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
 import {combineReducers} from "redux";
-import dummy from "./dummyReducer";
+import reservation from "./reservationReducer";
 
 export default combineReducers({
-  dummy,
+  reservation,
 });

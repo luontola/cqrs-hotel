@@ -4,6 +4,7 @@
 
 package fi.luontola.cqrshotel;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -23,6 +24,9 @@ public class Application {
         ObjectMapper om = new ObjectMapper();
         om.registerModules(new JavaTimeModule(), new MoneyModule());
         om.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        om.configure(SerializationFeature.INDENT_OUTPUT, true);
+        om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        om.configure(DeserializationFeature.FAIL_ON_NUMBERS_FOR_ENUMS, true);
         return om;
     }
 }
