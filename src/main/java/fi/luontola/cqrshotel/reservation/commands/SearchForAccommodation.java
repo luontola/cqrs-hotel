@@ -7,12 +7,13 @@ package fi.luontola.cqrshotel.reservation.commands;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import fi.luontola.cqrshotel.framework.Command;
+import fi.luontola.cqrshotel.framework.Query;
 import fi.luontola.cqrshotel.util.Struct;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
-public class SearchForAccommodation extends Struct implements Command {
+public class SearchForAccommodation extends Struct implements Command, Query {
 
     public final UUID reservationId;
     public final LocalDate startDate;

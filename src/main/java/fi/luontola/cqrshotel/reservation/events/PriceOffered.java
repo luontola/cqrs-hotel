@@ -8,6 +8,7 @@ import fi.luontola.cqrshotel.framework.Event;
 import fi.luontola.cqrshotel.util.Struct;
 import org.javamoney.moneta.Money;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -24,5 +25,14 @@ public class PriceOffered extends Struct implements Event {
         this.date = date;
         this.price = price;
         this.expires = expires;
+    }
+
+    public boolean isInRange(LocalDate startDate, LocalDate endDate) {
+        return (date.equals(startDate) || date.isAfter(startDate))
+                && date.isBefore(endDate);
+    }
+
+    public boolean isStillValid(Clock clock) {
+        return expires.isAfter(clock.instant());
     }
 }

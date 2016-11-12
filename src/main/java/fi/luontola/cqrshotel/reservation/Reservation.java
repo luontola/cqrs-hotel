@@ -58,9 +58,8 @@ public class Reservation extends AggregateRoot {
     }
 
     private boolean hasValidPriceOffer(LocalDate date, Clock clock) {
-        Instant now = clock.instant();
         return priceOffers.stream()
-                .anyMatch(offer -> offer.date.equals(date) && offer.expires.isAfter(now));
+                .anyMatch(offer -> offer.date.equals(date) && offer.isStillValid(clock));
     }
 
     public void updateContactInformation(String name, String email) {

@@ -14,7 +14,7 @@ import fi.luontola.cqrshotel.reservation.commands.MakeReservationHandler;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodationHandler;
 import fi.luontola.cqrshotel.reservation.queries.ReservationOffer;
-import org.javamoney.moneta.Money;
+import fi.luontola.cqrshotel.reservation.queries.SearchForAccommodationQuery;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.Clock;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
@@ -47,17 +46,9 @@ public class ApiController {
 
     @RequestMapping(path = "/api/search-for-accommodation", method = POST)
     public ReservationOffer findAvailableRoom(@RequestBody SearchForAccommodation command) {
-
         // TODO: composite handler
         new SearchForAccommodationHandler(reservationRepo, pricing, clock).handle(command);
-
-        // TODO: read model
-        ReservationOffer result = new ReservationOffer();
-        result.reservationId = command.reservationId;
-        result.startDate = command.startDate;
-        result.endDate = command.endDate;
-        result.totalPrice = Money.of(ThreadLocalRandom.current().nextInt(250, 500), "EUR");
-        return result;
+        return new SearchForAccommodationQuery(eventStore, clock).query(command);
     }
 
     @RequestMapping(path = "/api/make-reservation", method = POST)
