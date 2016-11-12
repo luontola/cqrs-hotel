@@ -9,4 +9,4 @@ var Layout = ({children}) => (<div>
   {children}
 </div>);
 
-export default Layout;
+export {Layout};

@@ -10,7 +10,7 @@ import ReactDOM from "react-dom";
 import {Provider} from "react-redux";
 import {createStore, applyMiddleware} from "redux";
 import createLogger from "redux-logger";
-import App from "./App";
+import {BookingPage} from "./ui/BookingPage";
 import reducers from "./reducers";
 
 function init() {
@@ -19,7 +19,7 @@ function init() {
 
   ReactDOM.render(
     <Provider store={store}>
-      <App />
+      <BookingPage/>
     </Provider>,
     document.getElementById('root')
   );

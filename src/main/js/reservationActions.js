@@ -7,3 +7,9 @@ export const reservationOfferReceived = (offer) => ({
   type: RESERVATION_OFFER_RECEIVED,
   offer
 });
+
+export const RESERVATION_MADE = 'RESERVATION_MADE';
+export const reservationMade = (reservation) => ({
+  type: RESERVATION_MADE,
+  reservation
+});

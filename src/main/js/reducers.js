@@ -4,7 +4,9 @@
 
 import {combineReducers} from "redux";
 import reservation from "./reservationReducer";
+import {reducer as form} from "redux-form";
 
 export default combineReducers({
   reservation,
+  form,
 });
