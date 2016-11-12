@@ -7,78 +7,65 @@ import React from "react";
 /*
  Based on http://purecss.io/layouts/side-menu/
  */
-var Layout = ({children}) => (<div id="layout">
+class Layout extends React.Component {
 
-    {/* Menu toggle */}
-    <a href="#menu" id="menuLink" className="menu-link">
-      {/* Hamburger icon */}
-      <span/>
-    </a>
-
-    <div id="menu">
-      <div className="pure-menu">
-        <a className="pure-menu-heading" href="#">CQRS Hotel</a>
-
-        <ul className="pure-menu-list">
-          <li className="pure-menu-item"><a href="#" className="pure-menu-link">Home</a></li>
-          <li className="pure-menu-item"><a href="#" className="pure-menu-link">About</a></li>
-
-          <li className="pure-menu-item menu-item-divided pure-menu-selected">
-            <a href="#" className="pure-menu-link">Services</a>
-          </li>
-
-          <li className="pure-menu-item"><a href="#" className="pure-menu-link">Contact</a></li>
-        </ul>
-      </div>
-    </div>
-
-    <div id="main">
-      <div className="header">
-        <h1>CQRS Hotel</h1>
-        <h2>Example application about CQRS and Event Sourcing</h2>
-      </div>
-
-      <div className="content">
-        {children}
-      </div>
-    </div>
-  </div>
-);
-
-// TODO: adapt this code to make the layout work with React
-function init(window, document) {
-
-  var layout = document.getElementById('layout'),
-    menu = document.getElementById('menu'),
-    menuLink = document.getElementById('menuLink');
-
-  function toggleClass(element, className) {
-    var classes = element.className.split(/\s+/),
-      length = classes.length,
-      i = 0;
-
-    for (; i < length; i++) {
-      if (classes[i] === className) {
-        classes.splice(i, 1);
-        break;
+  constructor(props) {
+    super(props);
+    this.state = {active: false};
+    this.toggleMenu = () => {
+      this.setState({active: !this.state.active});
+    };
+    this.maybeActive = (className) => {
+      if (this.state.active) {
+        if (className) {
+          return className + ' active';
+        } else {
+          return 'active';
+        }
+      } else {
+        return className;
       }
-    }
-    // The className is not found
-    if (length === classes.length) {
-      classes.push(className);
-    }
-
-    element.className = classes.join(' ');
+    };
   }
 
-  menuLink.onclick = function (e) {
-    var active = 'active';
+  render() {
+    return (<div id="layout" className={this.maybeActive()}>
 
-    e.preventDefault();
-    toggleClass(layout, active);
-    toggleClass(menu, active);
-    toggleClass(menuLink, active);
-  };
+      {/* Menu toggle */}
+      <a href="#menu" id="menuLink" className={this.maybeActive("menu-link")} onClick={this.toggleMenu}>
+        {/* Hamburger icon */}
+        <span/>
+      </a>
+
+      <div id="menu" className={this.maybeActive()}>
+        <div className="pure-menu">
+          <a className="pure-menu-heading" href="#">CQRS Hotel</a>
+
+          <ul className="pure-menu-list">
+            <li className="pure-menu-item"><a href="#" className="pure-menu-link">Home</a></li>
+            <li className="pure-menu-item"><a href="#" className="pure-menu-link">About</a></li>
+
+            <li className="pure-menu-item menu-item-divided pure-menu-selected">
+              <a href="#" className="pure-menu-link">Services</a>
+            </li>
+
+            <li className="pure-menu-item"><a href="#" className="pure-menu-link">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div id="main">
+        <div className="header">
+          <h1>CQRS Hotel</h1>
+          <h2>Example application about CQRS and Event Sourcing</h2>
+        </div>
+
+        <div className="content">
+          {this.props.children}
+        </div>
+      </div>
+    </div>);
+  }
 }
 
 export {Layout};
