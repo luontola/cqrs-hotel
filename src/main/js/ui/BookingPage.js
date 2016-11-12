@@ -11,6 +11,7 @@ import {reservationMade} from "../reservationActions";
 
 let BookingPage = ({reservation, reservationOffer, makeReservation}) => (
   <Layout>
+    <h2 className="content-subhead">Booking a Room</h2>
     <AccommodationSearchForm/>
     {reservationOffer && <p>
       <b>Check in:</b> {reservationOffer.startDate}<br/>

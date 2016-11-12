@@ -3,7 +3,7 @@
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
 import "purecss/build/pure-min.css";
-import "../css/style.css";
+import "../css/layout.css";
 import "whatwg-fetch";
 import React from "react";
 import ReactDOM from "react-dom";
