@@ -16,8 +16,12 @@ let BookingPage = ({reservation, reservationOffer, makeReservation}) => (
     {reservationOffer && <p>
       <b>Check in:</b> {reservationOffer.startDate}<br/>
       <b>Check out:</b> {reservationOffer.endDate}<br/>
-      <b>Cost:</b> {reservationOffer.totalPrice}<br/>
-      <button type="button" onClick={() => makeReservation(reservationOffer)}>Make Reservation</button>
+      {reservationOffer.totalPrice ? <div>
+        <b>Cost:</b> {reservationOffer.totalPrice}<br/>
+        <button type="button" onClick={() => makeReservation(reservationOffer)}>Make Reservation</button>
+      </div> : <div style={{color: 'red'}}>
+        Sold out!
+      </div>}
     </p>
     }
     {reservation && <p>
