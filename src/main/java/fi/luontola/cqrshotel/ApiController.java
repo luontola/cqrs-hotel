@@ -4,8 +4,7 @@
 
 package fi.luontola.cqrshotel;
 
-import fi.luontola.cqrshotel.framework.EventStore;
-import fi.luontola.cqrshotel.framework.InMemoryEventStore;
+import fi.luontola.cqrshotel.framework.*;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.pricing.RandomPricingEngine;
 import fi.luontola.cqrshotel.reservation.ReservationRepo;
@@ -27,10 +26,24 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 @RestController
 public class ApiController {
 
-    private final EventStore eventStore = new InMemoryEventStore();
-    private final ReservationRepo reservationRepo = new ReservationRepo(eventStore);
-    private final Clock clock = Clock.systemDefaultZone();
-    private final PricingEngine pricing = new RandomPricingEngine(clock);
+    private final MessageRouter<Command> commandHandler;
+    private final QueryRouter<Query> queryHandler;
+
+    public ApiController() {
+        EventStore eventStore = new InMemoryEventStore();
+        ReservationRepo reservationRepo = new ReservationRepo(eventStore);
+        Clock clock = Clock.systemDefaultZone();
+        PricingEngine pricing = new RandomPricingEngine(clock);
+
+        MessageRouter<Command> commandHandler = new MessageRouter<>();
+        commandHandler.register(SearchForAccommodation.class, new SearchForAccommodationHandler(reservationRepo, pricing, clock));
+        commandHandler.register(MakeReservation.class, new MakeReservationHandler(reservationRepo));
+        this.commandHandler = commandHandler;
+
+        QueryRouter<Query> queryHandler = new QueryRouter<>();
+        queryHandler.register(SearchForAccommodation.class, new SearchForAccommodationQuery(eventStore, clock));
+        this.queryHandler = queryHandler;
+    }
 
     @RequestMapping(path = "/api", method = GET)
     public String home() {
@@ -39,15 +52,13 @@ public class ApiController {
 
     @RequestMapping(path = "/api/search-for-accommodation", method = POST)
     public ReservationOffer findAvailableRoom(@RequestBody SearchForAccommodation command) {
-        // TODO: composite handler
-        new SearchForAccommodationHandler(reservationRepo, pricing, clock).handle(command);
-        return new SearchForAccommodationQuery(eventStore, clock).query(command);
+        commandHandler.handle(command);
+        return (ReservationOffer) queryHandler.query(command);
     }
 
     @RequestMapping(path = "/api/make-reservation", method = POST)
     public Boolean makeReservation(@RequestBody MakeReservation command) {
-        // TODO: composite handler
-        new MakeReservationHandler(reservationRepo).handle(command);
+        commandHandler.handle(command);
         return true;
     }
 }

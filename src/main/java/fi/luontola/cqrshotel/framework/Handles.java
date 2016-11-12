@@ -6,5 +6,5 @@ package fi.luontola.cqrshotel.framework;
 
 public interface Handles<T extends Message> {
 
-    void handle(T command);
+    void handle(T message);
 }
