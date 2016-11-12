@@ -9,7 +9,7 @@ import {apiFetch} from "../util";
 import {AccommodationSearchForm} from "./AccommodationSearchForm";
 import {reservationMade} from "../reservationActions";
 
-let BookingPage = ({reservationOffer, makeReservation}) => (
+let BookingPage = ({reservation, reservationOffer, makeReservation}) => (
   <Layout>
     <AccommodationSearchForm/>
     {reservationOffer && <p>
@@ -19,11 +19,16 @@ let BookingPage = ({reservationOffer, makeReservation}) => (
       <button type="button" onClick={() => makeReservation(reservationOffer)}>Make Reservation</button>
     </p>
     }
+    {reservation && <p>
+      Reservation: {JSON.stringify(reservation)}
+    </p>
+    }
   </Layout>
 );
 
 function mapStateToProps(state) {
   return {
+    reservation: state.reservation.current,
     reservationOffer: state.reservation.offer,
   }
 }
