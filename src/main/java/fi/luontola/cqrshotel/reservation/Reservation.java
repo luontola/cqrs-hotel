@@ -5,6 +5,7 @@
 package fi.luontola.cqrshotel.reservation;
 
 import fi.luontola.cqrshotel.framework.AggregateRoot;
+import fi.luontola.cqrshotel.framework.EventListener;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.reservation.events.*;
 
@@ -28,10 +29,12 @@ public class Reservation extends AggregateRoot {
         return id;
     }
 
+    @EventListener
     private void apply(ReservationInitialized event) {
         id = event.reservationId;
     }
 
+    @EventListener
     private void apply(PriceOffered event) {
         priceOffers.add(event);
     }
