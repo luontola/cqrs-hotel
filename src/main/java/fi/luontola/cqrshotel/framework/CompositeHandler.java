@@ -7,24 +7,24 @@ package fi.luontola.cqrshotel.framework;
 import java.util.HashMap;
 import java.util.Map;
 
-public class QueryRouter<T extends Query> implements Queries<T, Object> {
+public class CompositeHandler<M extends Message, R> implements Handler<M, R> {
 
-    private final Map<Class<?>, Queries<T, Object>> handlers = new HashMap<>();
+    private final Map<Class<?>, Handler<M, R>> handlers = new HashMap<>();
 
-    public <U extends T> void register(Class<U> type, Queries<U, ?> handler) {
+    public <U extends M> void register(Class<U> type, Handler<U, ?> handler) {
         if (handlers.containsKey(type)) {
             throw new IllegalStateException("handler for " + type + " already registered");
         }
-        handlers.put(type, (Queries<T, Object>) handler);
+        handlers.put(type, (Handler<M, R>) handler);
     }
 
     @Override
-    public Object query(T query) {
+    public R handle(M query) {
         Class<?> type = query.getClass();
-        Queries<T, Object> handler = handlers.get(type);
+        Handler<M, R> handler = handlers.get(type);
         if (handler == null) {
             throw new IllegalArgumentException("no handler for " + type);
         }
-        return handler.query(query);
+        return handler.handle(query);
     }
 }

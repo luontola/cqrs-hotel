@@ -14,14 +14,15 @@ public abstract class AggregateRootTester {
 
     protected final UUID id = UUID.randomUUID();
     protected final FakeEventStore eventStore = new FakeEventStore();
-    protected Handles commandHandler;
+    protected Handler<? extends Command, Void> commandHandler;
 
     public void given(Event... events) {
         eventStore.existing = Arrays.asList(events);
     }
 
     public void when(Command command) {
-        commandHandler.handle(command);
+        Handler unchecked = commandHandler;
+        unchecked.handle(command);
     }
 
     public void then(Event... expectedEvents) {

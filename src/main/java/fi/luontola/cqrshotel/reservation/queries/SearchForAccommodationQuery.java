@@ -6,7 +6,7 @@ package fi.luontola.cqrshotel.reservation.queries;
 
 import fi.luontola.cqrshotel.framework.Event;
 import fi.luontola.cqrshotel.framework.EventStore;
-import fi.luontola.cqrshotel.framework.Queries;
+import fi.luontola.cqrshotel.framework.Handler;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
 import fi.luontola.cqrshotel.reservation.events.PriceOffered;
 import org.javamoney.moneta.Money;
@@ -20,7 +20,7 @@ import java.util.Set;
 
 import static java.util.stream.Collectors.toMap;
 
-public class SearchForAccommodationQuery implements Queries<SearchForAccommodation, ReservationOffer> {
+public class SearchForAccommodationQuery implements Handler<SearchForAccommodation, ReservationOffer> {
 
     private final EventStore eventStore;
     private final Clock clock;
@@ -31,7 +31,7 @@ public class SearchForAccommodationQuery implements Queries<SearchForAccommodati
     }
 
     @Override
-    public ReservationOffer query(SearchForAccommodation command) {
+    public ReservationOffer handle(SearchForAccommodation command) {
         List<Event> events = eventStore.getEventsForStream(command.reservationId);
         Map<LocalDate, PriceOffered> offersByDate = events.stream()
                 .filter(e -> e instanceof PriceOffered)

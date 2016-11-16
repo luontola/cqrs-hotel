@@ -26,8 +26,8 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 @RestController
 public class ApiController {
 
-    private final MessageRouter<Command> commandHandler;
-    private final QueryRouter<Query> queryHandler;
+    private final CompositeHandler<Command, Void> commandHandler;
+    private final CompositeHandler<Query, Object> queryHandler;
 
     public ApiController() {
         EventStore eventStore = new InMemoryEventStore();
@@ -35,12 +35,12 @@ public class ApiController {
         Clock clock = Clock.systemDefaultZone();
         PricingEngine pricing = new RandomPricingEngine(clock);
 
-        MessageRouter<Command> commandHandler = new MessageRouter<>();
+        CompositeHandler<Command, Void> commandHandler = new CompositeHandler<>();
         commandHandler.register(SearchForAccommodation.class, new SearchForAccommodationHandler(reservationRepo, pricing, clock));
         commandHandler.register(MakeReservation.class, new MakeReservationHandler(reservationRepo));
         this.commandHandler = commandHandler;
 
-        QueryRouter<Query> queryHandler = new QueryRouter<>();
+        CompositeHandler<Query, Object> queryHandler = new CompositeHandler<>();
         queryHandler.register(SearchForAccommodation.class, new SearchForAccommodationQuery(eventStore, clock));
         this.queryHandler = queryHandler;
     }
@@ -53,7 +53,7 @@ public class ApiController {
     @RequestMapping(path = "/api/search-for-accommodation", method = POST)
     public ReservationOffer findAvailableRoom(@RequestBody SearchForAccommodation command) {
         commandHandler.handle(command);
-        return (ReservationOffer) queryHandler.query(command);
+        return (ReservationOffer) queryHandler.handle(command);
     }
 
     @RequestMapping(path = "/api/make-reservation", method = POST)

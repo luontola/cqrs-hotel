@@ -6,14 +6,14 @@ package fi.luontola.cqrshotel.reservation.commands;
 
 import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.EventStreamNotFoundException;
-import fi.luontola.cqrshotel.framework.Handles;
+import fi.luontola.cqrshotel.framework.Handler;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.reservation.Reservation;
 import fi.luontola.cqrshotel.reservation.ReservationRepo;
 
 import java.time.Clock;
 
-public class SearchForAccommodationHandler implements Handles<SearchForAccommodation> {
+public class SearchForAccommodationHandler implements Handler<SearchForAccommodation, Void> {
 
     private final ReservationRepo repo;
     private final PricingEngine pricing;
@@ -26,7 +26,7 @@ public class SearchForAccommodationHandler implements Handles<SearchForAccommoda
     }
 
     @Override
-    public void handle(SearchForAccommodation command) {
+    public Void handle(SearchForAccommodation command) {
         Reservation reservation;
         int originalVersion;
         try {
@@ -39,5 +39,6 @@ public class SearchForAccommodationHandler implements Handles<SearchForAccommoda
         }
         reservation.searchForAccommodation(command.startDate, command.endDate, pricing, clock);
         repo.save(reservation, originalVersion);
+        return null;
     }
 }

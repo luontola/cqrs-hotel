@@ -46,7 +46,7 @@ public class SearchForAccommodationQueryTest {
                 new PriceOffered(id, date2, price2, expires)
         ), EventStore.NEW_STREAM);
 
-        ReservationOffer result = queryHandler.query(new SearchForAccommodation(id, date1, date3));
+        ReservationOffer result = queryHandler.handle(new SearchForAccommodation(id, date1, date3));
 
         ReservationOffer expected = new ReservationOffer();
         expected.reservationId = id;
@@ -64,7 +64,7 @@ public class SearchForAccommodationQueryTest {
                 new PriceOffered(id, date3, price3, expires)
         ), EventStore.NEW_STREAM);
 
-        ReservationOffer result = queryHandler.query(new SearchForAccommodation(id, date2, date3));
+        ReservationOffer result = queryHandler.handle(new SearchForAccommodation(id, date2, date3));
 
         assertThat("totalPrice", result.totalPrice, is(price2));
     }
@@ -75,7 +75,7 @@ public class SearchForAccommodationQueryTest {
                 new PriceOffered(id, date2, price2, expires)
         ), EventStore.NEW_STREAM);
 
-        ReservationOffer result = queryHandler.query(new SearchForAccommodation(id, date1, date3));
+        ReservationOffer result = queryHandler.handle(new SearchForAccommodation(id, date1, date3));
 
         assertThat("totalPrice", result.totalPrice, is(nullValue()));
     }
@@ -87,7 +87,7 @@ public class SearchForAccommodationQueryTest {
                 new PriceOffered(id, date2, price2, now.minusSeconds(1))
         ), EventStore.NEW_STREAM);
 
-        ReservationOffer result = queryHandler.query(new SearchForAccommodation(id, date1, date3));
+        ReservationOffer result = queryHandler.handle(new SearchForAccommodation(id, date1, date3));
 
         assertThat("totalPrice", result.totalPrice, is(nullValue()));
     }

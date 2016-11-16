@@ -4,7 +4,7 @@
 
 package fi.luontola.cqrshotel.framework;
 
-public interface Handles<T extends Message> {
+public interface Handler<M extends Message, R> {
 
-    void handle(T message);
+    R handle(M message);
 }

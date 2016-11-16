@@ -4,11 +4,11 @@
 
 package fi.luontola.cqrshotel.reservation.commands;
 
-import fi.luontola.cqrshotel.framework.Handles;
+import fi.luontola.cqrshotel.framework.Handler;
 import fi.luontola.cqrshotel.reservation.Reservation;
 import fi.luontola.cqrshotel.reservation.ReservationRepo;
 
-public class MakeReservationHandler implements Handles<MakeReservation> {
+public class MakeReservationHandler implements Handler<MakeReservation, Void> {
 
     private final ReservationRepo repo;
 
@@ -17,11 +17,12 @@ public class MakeReservationHandler implements Handles<MakeReservation> {
     }
 
     @Override
-    public void handle(MakeReservation command) {
+    public Void handle(MakeReservation command) {
         Reservation reservation = repo.getById(command.reservationId);
         int originalVersion = reservation.getVersion();
         reservation.updateContactInformation(command.name, command.email);
         reservation.makeReservation(command.startDate, command.endDate);
         repo.save(reservation, originalVersion);
+        return null;
     }
 }
