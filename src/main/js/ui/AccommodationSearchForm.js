@@ -5,7 +5,8 @@
 import React from "react";
 import {connect} from "react-redux";
 import {reduxForm, Field, SubmissionError} from "redux-form";
-import {uuid, apiFetch} from "../util";
+import uuid from "node-uuid";
+import {apiFetch} from "../util";
 import {reservationOfferReceived} from "../reservationActions";
 import moment from "moment";
 
