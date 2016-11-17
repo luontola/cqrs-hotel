@@ -1,0 +1,9 @@
+version: '2'
+services:
+  db:
+    image: postgres:9.6.1
+    environment:
+      POSTGRES_USER: cqrshotel
+      POSTGRES_PASSWORD: cqrshotel
+    ports:
+    - "5432:5432"
