@@ -6,7 +6,7 @@ import React from "react";
 import {connect} from "react-redux";
 import {reduxForm, Field, SubmissionError} from "redux-form";
 import uuid from "node-uuid";
-import {apiFetch} from "../util";
+import {api} from "../util";
 import {reservationOfferReceived} from "../reservationActions";
 import moment from "moment";
 
@@ -28,21 +28,16 @@ AccommodationSearchForm = reduxForm({
 function searchForAccommodation(form, dispatch, props) {
   const {startDate, endDate} = form;
   const {reservationId} = props;
-
-  return apiFetch(
-    '/api/search-for-accommodation', {
-      method: 'post',
-      body: {
-        reservationId: reservationId,
-        startDate: startDate,
-        endDate: endDate,
-      },
+  return api.post('/api/search-for-accommodation', {
+    reservationId: reservationId,
+    startDate: startDate,
+    endDate: endDate,
+  })
+    .then(response => {
+      dispatch(reservationOfferReceived(response.data))
     })
-    .then(result => {
-      dispatch(reservationOfferReceived(result))
-    })
-    .catch(ex => {
-      console.log("searchForAccommodation failed", ex);
+    .catch(error => {
+      console.log("searchForAccommodation failed", error);
       throw new SubmissionError({_error: "Search failed"})
     });
 }

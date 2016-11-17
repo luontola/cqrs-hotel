@@ -5,7 +5,7 @@
 import React from "react";
 import {connect} from "react-redux";
 import {Layout} from "./Layout";
-import {apiFetch} from "../util";
+import {api} from "../util";
 import {AccommodationSearchForm} from "./AccommodationSearchForm";
 import {reservationMade} from "../reservationActions";
 
@@ -41,19 +41,17 @@ function mapStateToProps(state) {
 function mapDispatchToProps(dispatch) {
   return {
     makeReservation: (reservationOffer) => {
-      apiFetch(
-        '/api/make-reservation', {
-          method: 'post',
-          body: {
-            ...reservationOffer,
-            name: "John Doe",
-            email: "john@example.com",
-          },
+      api.post('/api/make-reservation', {
+        ...reservationOffer,
+        name: "John Doe",
+        email: "john@example.com",
+      })
+        .then(response => {
+          dispatch(reservationMade(response.data));
         })
-        .then(result => {
-          dispatch(reservationMade(result));
-        })
-        .catch(ex => console.log("makeReservation failed", ex));
+        .catch(error => {
+          console.log("makeReservation failed", error);
+        });
     },
   }
 }
