@@ -111,21 +111,21 @@ public class PostgresFunctionSpikeTest {
         try (Connection connection = DataSourceUtils.getConnection(dataSource)) {
 
             UUID streamId = UUID.randomUUID();
-            Array data = connection.createArrayOf("text", new String[]{
+            Array data = connection.createArrayOf("jsonb", new String[]{
                     json.writeValueAsString(singletonMap("foo", "one")),
                     json.writeValueAsString(singletonMap("foo", "two")),
                     json.writeValueAsString(singletonMap("foo", "three"))
             });
-            Array metadata = connection.createArrayOf("text", new String[]{
+            Array metadata = connection.createArrayOf("jsonb", new String[]{
                     json.writeValueAsString(singletonMap("bar", "one")),
                     json.writeValueAsString(singletonMap("bar", "two")),
                     json.writeValueAsString(singletonMap("bar", "three"))
             });
 
             int result = jdbcTemplate.queryForObject(
-                    "SELECT save_events(:stream_id::UUID, :expected_version, :data::JSONB[], :metadata::JSONB[])",
+                    "SELECT save_events(:stream_id, :expected_version, :data, :metadata)",
                     new MapSqlParameterSource()
-                            .addValue("stream_id", streamId.toString())
+                            .addValue("stream_id", streamId)
                             .addValue("expected_version", 0)
                             .addValue("data", data)
                             .addValue("metadata", metadata),
