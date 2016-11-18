@@ -77,4 +77,23 @@ public class PostgresFunctionSpikeTest {
             assertThat(result.toString(), is("{#result-set-1=[{result=10}]}"));
         }
     }
+
+    @Test
+    public void multiple_parameters() throws SQLException {
+        NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
+
+        try (Connection connection = DataSourceUtils.getConnection(dataSource)) {
+            Array numbers = connection.createArrayOf("int", new Integer[]{1, 2, 3, 4});
+            Array strings = connection.createArrayOf("text", new String[]{"alpha", "bravo", "charlie", "delta"});
+
+            int result = jdbcTemplate.queryForObject(
+                    "SELECT spike2(:numbers, :strings)",
+                    new MapSqlParameterSource()
+                            .addValue("numbers", numbers)
+                            .addValue("strings", strings),
+                    Integer.class);
+
+            assertThat(result, is(10));
+        }
+    }
 }
