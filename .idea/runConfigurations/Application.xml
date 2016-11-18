@@ -7,7 +7,7 @@
       </pattern>
     </extension>
     <option name="SPRING_BOOT_MAIN_CLASS" value="fi.luontola.cqrshotel.Application" />
-    <option name="VM_PARAMETERS" value="-ea" />
+    <option name="VM_PARAMETERS" value="-ea -Dspring.profiles.active=dev" />
     <option name="ALTERNATIVE_JRE_PATH" />
     <module name="cqrs-hotel" />
     <envs />
