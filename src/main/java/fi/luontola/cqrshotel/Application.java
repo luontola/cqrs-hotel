@@ -8,15 +8,36 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import fi.luontola.cqrshotel.framework.EventStore;
+import fi.luontola.cqrshotel.framework.InMemoryEventStore;
+import fi.luontola.cqrshotel.pricing.PricingEngine;
+import fi.luontola.cqrshotel.pricing.RandomPricingEngine;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+
+import java.time.Clock;
 
 @SpringBootApplication
 public class Application {
 
     public static void main(String[] args) throws Exception {
         SpringApplication.run(Application.class, args);
+    }
+
+    @Bean
+    public EventStore eventStore() {
+        return new InMemoryEventStore();
+    }
+
+    @Bean
+    public PricingEngine pricingEngine(Clock clock) {
+        return new RandomPricingEngine(clock);
+    }
+
+    @Bean
+    public Clock clock() {
+        return Clock.systemDefaultZone();
     }
 
     @Bean

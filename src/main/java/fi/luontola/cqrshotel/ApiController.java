@@ -4,9 +4,11 @@
 
 package fi.luontola.cqrshotel;
 
-import fi.luontola.cqrshotel.framework.*;
+import fi.luontola.cqrshotel.framework.Command;
+import fi.luontola.cqrshotel.framework.CompositeHandler;
+import fi.luontola.cqrshotel.framework.EventStore;
+import fi.luontola.cqrshotel.framework.Query;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
-import fi.luontola.cqrshotel.pricing.RandomPricingEngine;
 import fi.luontola.cqrshotel.reservation.ReservationRepo;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservationHandler;
@@ -29,11 +31,8 @@ public class ApiController {
     private final CompositeHandler<Command, Void> commandHandler;
     private final CompositeHandler<Query, Object> queryHandler;
 
-    public ApiController() {
-        EventStore eventStore = new InMemoryEventStore();
+    public ApiController(EventStore eventStore, PricingEngine pricing, Clock clock) {
         ReservationRepo reservationRepo = new ReservationRepo(eventStore);
-        Clock clock = Clock.systemDefaultZone();
-        PricingEngine pricing = new RandomPricingEngine(clock);
 
         CompositeHandler<Command, Void> commandHandler = new CompositeHandler<>();
         commandHandler.register(SearchForAccommodation.class, new SearchForAccommodationHandler(reservationRepo, pricing, clock));
