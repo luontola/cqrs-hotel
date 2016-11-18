@@ -4,6 +4,7 @@
 
 package fi.luontola.cqrshotel.framework;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import fi.luontola.cqrshotel.Application;
 import fi.luontola.cqrshotel.SlowTests;
 import org.junit.Test;
@@ -24,7 +25,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
+import java.util.UUID;
 
+import static java.util.Collections.singletonMap;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.NONE;
@@ -42,7 +45,7 @@ public class PostgresFunctionSpikeTest {
         NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
 
         int result = jdbcTemplate.queryForObject(
-                "SELECT spike(array[1, 2, 3, 4])",
+                "SELECT spike(ARRAY[1, 2, 3, 4])",
                 new MapSqlParameterSource(),
                 Integer.class);
 
@@ -97,6 +100,38 @@ public class PostgresFunctionSpikeTest {
                     Integer.class);
 
             assertThat(result, is(10));
+        }
+    }
+
+    @Test
+    public void jsonb_parameters() throws Exception {
+        NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
+        ObjectMapper json = new ObjectMapper();
+
+        try (Connection connection = DataSourceUtils.getConnection(dataSource)) {
+
+            UUID streamId = UUID.randomUUID();
+            Array data = connection.createArrayOf("text", new String[]{
+                    json.writeValueAsString(singletonMap("foo", "one")),
+                    json.writeValueAsString(singletonMap("foo", "two")),
+                    json.writeValueAsString(singletonMap("foo", "three"))
+            });
+            Array metadata = connection.createArrayOf("text", new String[]{
+                    json.writeValueAsString(singletonMap("bar", "one")),
+                    json.writeValueAsString(singletonMap("bar", "two")),
+                    json.writeValueAsString(singletonMap("bar", "three"))
+            });
+
+            int result = jdbcTemplate.queryForObject(
+                    "SELECT save_events(:stream_id::UUID, :expected_version, :data::JSONB[], :metadata::JSONB[])",
+                    new MapSqlParameterSource()
+                            .addValue("stream_id", streamId.toString())
+                            .addValue("expected_version", 0)
+                            .addValue("data", data)
+                            .addValue("metadata", metadata),
+                    Integer.class);
+
+            assertThat(result, is(3));
         }
     }
 }
