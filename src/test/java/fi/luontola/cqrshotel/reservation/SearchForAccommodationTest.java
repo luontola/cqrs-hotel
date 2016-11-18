@@ -4,6 +4,7 @@
 
 package fi.luontola.cqrshotel.reservation;
 
+import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.framework.AggregateRootTester;
 import fi.luontola.cqrshotel.pricing.InMemoryPricingEngine;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
@@ -14,12 +15,14 @@ import fi.luontola.cqrshotel.reservation.events.ReservationInitialized;
 import fi.luontola.cqrshotel.reservation.events.SearchedForAccommodation;
 import org.javamoney.moneta.Money;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 
+@Category(FastTests.class)
 public class SearchForAccommodationTest extends AggregateRootTester {
 
     private static final LocalDate date1 = LocalDate.of(2000, 1, 2);

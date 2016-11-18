@@ -4,6 +4,7 @@
 
 package fi.luontola.cqrshotel.reservation;
 
+import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.InMemoryEventStore;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
@@ -12,6 +13,7 @@ import fi.luontola.cqrshotel.reservation.queries.ReservationOffer;
 import fi.luontola.cqrshotel.reservation.queries.SearchForAccommodationQuery;
 import org.javamoney.moneta.Money;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -24,6 +26,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 
+@Category(FastTests.class)
 public class SearchForAccommodationQueryTest {
 
     private final UUID id = UUID.randomUUID();

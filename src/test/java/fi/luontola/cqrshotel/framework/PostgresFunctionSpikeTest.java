@@ -5,7 +5,9 @@
 package fi.luontola.cqrshotel.framework;
 
 import fi.luontola.cqrshotel.Application;
+import fi.luontola.cqrshotel.SlowTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,6 +31,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class, webEnvironment = NONE)
+@Category(SlowTests.class)
 public class PostgresFunctionSpikeTest {
 
     @Autowired

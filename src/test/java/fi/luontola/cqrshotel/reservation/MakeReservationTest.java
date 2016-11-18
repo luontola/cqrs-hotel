@@ -4,6 +4,7 @@
 
 package fi.luontola.cqrshotel.reservation;
 
+import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.framework.AggregateRootTester;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservationHandler;
@@ -11,10 +12,12 @@ import fi.luontola.cqrshotel.reservation.events.ContactInformationUpdated;
 import fi.luontola.cqrshotel.reservation.events.ReservationInitialized;
 import fi.luontola.cqrshotel.reservation.events.ReservationMade;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 
+@Category(FastTests.class)
 public class MakeReservationTest extends AggregateRootTester {
 
     private static final LocalDate startDate = LocalDate.of(2000, 1, 2);

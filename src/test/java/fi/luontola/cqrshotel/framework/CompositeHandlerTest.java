@@ -4,13 +4,16 @@
 
 package fi.luontola.cqrshotel.framework;
 
+import fi.luontola.cqrshotel.FastTests;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
+@Category(FastTests.class)
 public class CompositeHandlerTest {
 
     @Rule

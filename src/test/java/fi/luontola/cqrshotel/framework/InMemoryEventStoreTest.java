@@ -4,9 +4,11 @@
 
 package fi.luontola.cqrshotel.framework;
 
+import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.util.Struct;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 
 import java.util.Arrays;
@@ -16,6 +18,7 @@ import java.util.UUID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
+@Category(FastTests.class)
 public class InMemoryEventStoreTest {
 
     @Rule
