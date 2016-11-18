@@ -6,6 +6,7 @@ DECLARE
 BEGIN
   FOREACH x IN ARRAY $1
   LOOP
+    RAISE NOTICE 'number = %', x;
     s := s + x;
   END LOOP;
   RETURN s;
