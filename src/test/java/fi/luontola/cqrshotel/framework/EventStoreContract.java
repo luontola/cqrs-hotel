@@ -4,6 +4,8 @@
 
 package fi.luontola.cqrshotel.framework;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import fi.luontola.cqrshotel.util.Struct;
 import org.junit.Assert;
 import org.junit.Before;
@@ -62,13 +64,13 @@ public abstract class EventStoreContract {
 
     @Test
     public void cannot_save_events_if_expecting_wrong_version() {
-        UUID id = UUID.fromString("ad726cb5-2078-40cf-ae40-6c1429f9cbeb");
+        UUID id = UUID.randomUUID();
         eventStore.saveEvents(id,
                 Arrays.asList(new DummyEvent("one"), new DummyEvent("two")),
                 EventStore.NEW_STREAM);
 
         thrown.expect(OptimisticLockingException.class);
-        thrown.expectMessage("expected version 1 but was 2 for stream ad726cb5-2078-40cf-ae40-6c1429f9cbeb");
+        thrown.expectMessage("expected version 1 but was 2 for stream " + id);
         eventStore.saveEvents(id,
                 Arrays.asList(new DummyEvent("three"), new DummyEvent("four")),
                 1);
@@ -86,7 +88,8 @@ public abstract class EventStoreContract {
     public static class DummyEvent extends Struct implements Event {
         public final String message;
 
-        private DummyEvent(String message) {
+        @JsonCreator
+        public DummyEvent(@JsonProperty("message") String message) {
             this.message = message;
         }
     }
