@@ -38,24 +38,6 @@ public class PsqlEventStore implements EventStore {
     }
 
     @Override
-    public List<Event> getEventsForStream(UUID streamId) {
-        List<Event> events = jdbcTemplate.query("SELECT data, metadata " +
-                        "FROM event " +
-                        "WHERE stream_id = :stream_id " +
-                        "ORDER BY version",
-                new MapSqlParameterSource("stream_id", streamId),
-                (rs, rowNum) -> {
-                    String data = rs.getString("data");
-                    String metadata = rs.getString("metadata");
-                    return deserialize(data, metadata);
-                });
-        if (events.isEmpty()) {
-            throw new EventStreamNotFoundException(streamId);
-        }
-        return events;
-    }
-
-    @Override
     public void saveEvents(UUID streamId, List<Event> newEvents, int expectedVersion) {
         try (Connection connection = DataSourceUtils.getConnection(dataSource)) {
             Array data = connection.createArrayOf("jsonb", serializeData(newEvents));
@@ -84,6 +66,24 @@ public class PsqlEventStore implements EventStore {
         } catch (SQLException | JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public List<Event> getEventsForStream(UUID streamId) {
+        List<Event> events = jdbcTemplate.query("SELECT data, metadata " +
+                        "FROM event " +
+                        "WHERE stream_id = :stream_id " +
+                        "ORDER BY version",
+                new MapSqlParameterSource("stream_id", streamId),
+                (rs, rowNum) -> {
+                    String data = rs.getString("data");
+                    String metadata = rs.getString("metadata");
+                    return deserialize(data, metadata);
+                });
+        if (events.isEmpty()) {
+            throw new EventStreamNotFoundException(streamId);
+        }
+        return events;
     }
 
     private String[] serializeData(List<Event> events) throws JsonProcessingException {

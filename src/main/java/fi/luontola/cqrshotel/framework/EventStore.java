@@ -11,7 +11,7 @@ public interface EventStore {
 
     int NEW_STREAM = 0;
 
-    List<Event> getEventsForStream(UUID streamId);
-
     void saveEvents(UUID streamId, List<Event> newEvents, int expectedVersion);
+
+    List<Event> getEventsForStream(UUID streamId);
 }

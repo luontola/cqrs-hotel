@@ -20,6 +20,12 @@ public class FakeEventStore implements EventStore {
     private UUID expectedStreamId;
 
     @Override
+    public void saveEvents(UUID streamId, List<Event> newEvents, int expectedVersion) {
+        assertThat("streamId", streamId, is(expectedStreamId));
+        produced.addAll(newEvents);
+    }
+
+    @Override
     public List<Event> getEventsForStream(UUID streamId) {
         assertThat("streamId", streamId, is(notNullValue()));
         if (expectedStreamId == null) {
@@ -30,11 +36,5 @@ public class FakeEventStore implements EventStore {
             throw new EventStreamNotFoundException(streamId);
         }
         return existing;
-    }
-
-    @Override
-    public void saveEvents(UUID streamId, List<Event> newEvents, int expectedVersion) {
-        assertThat("streamId", streamId, is(expectedStreamId));
-        produced.addAll(newEvents);
     }
 }

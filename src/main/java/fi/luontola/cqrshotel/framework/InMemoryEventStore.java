@@ -20,15 +20,6 @@ public class InMemoryEventStore implements EventStore {
     private final ConcurrentMap<UUID, List<Event>> streamsById = new ConcurrentHashMap<>();
 
     @Override
-    public List<Event> getEventsForStream(UUID streamId) {
-        List<Event> events = streamsById.get(streamId);
-        if (events == null) {
-            throw new EventStreamNotFoundException(streamId);
-        }
-        return new ArrayList<>(events);
-    }
-
-    @Override
     public void saveEvents(UUID streamId, List<Event> newEvents, int expectedVersion) {
         List<Event> events = streamsById.computeIfAbsent(streamId, uuid -> new ArrayList<>());
         synchronized (events) {
@@ -42,5 +33,14 @@ public class InMemoryEventStore implements EventStore {
                 log.info("Saved stream {} version {}: {}", streamId, newVersion, newEvent);
             }
         }
+    }
+
+    @Override
+    public List<Event> getEventsForStream(UUID streamId) {
+        List<Event> events = streamsById.get(streamId);
+        if (events == null) {
+            throw new EventStreamNotFoundException(streamId);
+        }
+        return new ArrayList<>(events);
     }
 }
