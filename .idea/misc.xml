@@ -39,7 +39,6 @@
     </properties>
   </component>
   <component name="EntryPointsManager">
-    <entry_points version="2.0" />
     <list size="2">
       <item index="0" class="java.lang.String" itemvalue="fi.luontola.cqrshotel.framework.EventListener" />
       <item index="1" class="java.lang.String" itemvalue="org.springframework.web.bind.annotation.RestController" />
@@ -55,17 +54,7 @@
       </list>
     </option>
   </component>
-  <component name="ProjectLevelVcsManager" settingsEditedManually="false">
-    <OptionsSetting value="true" id="Add" />
-    <OptionsSetting value="true" id="Remove" />
-    <OptionsSetting value="true" id="Checkout" />
-    <OptionsSetting value="true" id="Update" />
-    <OptionsSetting value="true" id="Status" />
-    <OptionsSetting value="true" id="Edit" />
-    <ConfirmationsSetting value="2" id="Add" />
-    <ConfirmationsSetting value="2" id="Remove" />
-  </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="false" assert-keyword="true" jdk-15="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="false" project-jdk-name="1.8" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/classes" />
   </component>
 </project>
