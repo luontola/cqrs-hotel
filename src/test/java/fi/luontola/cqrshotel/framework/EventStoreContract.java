@@ -77,11 +77,26 @@ public abstract class EventStoreContract {
     }
 
     @Test
-    public void cannot_read_events_for_non_existing_aggregate() {
+    public void cannot_read_events_from_non_existing_streams() {
         UUID id = UUID.randomUUID();
         thrown.expect(EventStreamNotFoundException.class);
         thrown.expectMessage(id.toString());
         eventStore.getEventsForStream(id);
+    }
+
+    @Test
+    public void reading_events_since_a_particular_version() {
+        UUID id = UUID.randomUUID();
+        eventStore.saveEvents(id,
+                Arrays.asList(new DummyEvent("one"), new DummyEvent("two")),
+                EventStore.NEW_STREAM);
+
+        assertThat("since beginning", eventStore.getEventsForStream(id, EventStore.NEW_STREAM),
+                is(Arrays.asList(new DummyEvent("one"), new DummyEvent("two"))));
+        assertThat("since middle", eventStore.getEventsForStream(id, 1),
+                is(Arrays.asList(new DummyEvent("two"))));
+        assertThat("since end", eventStore.getEventsForStream(id, 2),
+                is(Arrays.asList()));
     }
 
 

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -26,7 +27,7 @@ public class FakeEventStore implements EventStore {
     }
 
     @Override
-    public List<Event> getEventsForStream(UUID streamId) {
+    public List<Event> getEventsForStream(UUID streamId, int sinceVersion) {
         assertThat("streamId", streamId, is(notNullValue()));
         if (expectedStreamId == null) {
             expectedStreamId = streamId;
@@ -35,6 +36,8 @@ public class FakeEventStore implements EventStore {
         if (existing.isEmpty()) {
             throw new EventStreamNotFoundException(streamId);
         }
-        return existing;
+        return existing.stream()
+                .skip(sinceVersion)
+                .collect(Collectors.toList());
     }
 }

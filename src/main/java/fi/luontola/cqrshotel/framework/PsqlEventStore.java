@@ -17,6 +17,7 @@ import javax.sql.DataSource;
 import java.io.IOException;
 import java.sql.Array;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
@@ -69,21 +70,31 @@ public class PsqlEventStore implements EventStore {
     }
 
     @Override
-    public List<Event> getEventsForStream(UUID streamId) {
-        List<Event> events = jdbcTemplate.query("SELECT data, metadata " +
+    public List<Event> getEventsForStream(UUID streamId, int sinceVersion) {
+        Integer found = jdbcTemplate.queryForObject("SELECT count(*) " +
                         "FROM event " +
                         "WHERE stream_id = :stream_id " +
-                        "ORDER BY version",
+                        "LIMIT 1",
                 new MapSqlParameterSource("stream_id", streamId),
-                (rs, rowNum) -> {
-                    String data = rs.getString("data");
-                    String metadata = rs.getString("metadata");
-                    return deserialize(data, metadata);
-                });
-        if (events.isEmpty()) {
+                Integer.class);
+        if (found == 0) {
             throw new EventStreamNotFoundException(streamId);
         }
-        return events;
+        return jdbcTemplate.query("SELECT data, metadata " +
+                        "FROM event " +
+                        "WHERE stream_id = :stream_id " +
+                        "  AND version > :since_version " +
+                        "ORDER BY version",
+                new MapSqlParameterSource()
+                        .addValue("stream_id", streamId)
+                        .addValue("since_version", sinceVersion),
+                this::eventMapping);
+    }
+
+    private Event eventMapping(ResultSet rs, int rowNum) throws SQLException {
+        String data = rs.getString("data");
+        String metadata = rs.getString("metadata");
+        return deserialize(data, metadata);
     }
 
     private String[] serializeData(List<Event> events) throws JsonProcessingException {

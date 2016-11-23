@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 public class InMemoryEventStore implements EventStore {
 
@@ -36,11 +37,15 @@ public class InMemoryEventStore implements EventStore {
     }
 
     @Override
-    public List<Event> getEventsForStream(UUID streamId) {
+    public List<Event> getEventsForStream(UUID streamId, int sinceVersion) {
         List<Event> events = streamsById.get(streamId);
         if (events == null) {
             throw new EventStreamNotFoundException(streamId);
         }
-        return new ArrayList<>(events);
+        synchronized (events) {
+            return events.stream()
+                    .skip(sinceVersion)
+                    .collect(Collectors.toList());
+        }
     }
 }
