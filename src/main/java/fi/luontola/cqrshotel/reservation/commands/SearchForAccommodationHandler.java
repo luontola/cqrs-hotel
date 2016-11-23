@@ -35,7 +35,7 @@ public class SearchForAccommodationHandler implements Handler<SearchForAccommoda
         } catch (EventStreamNotFoundException e) {
             reservation = new Reservation();
             reservation.initialize(command.reservationId);
-            originalVersion = EventStore.NEW_STREAM;
+            originalVersion = EventStore.BEGINNING;
         }
         reservation.searchForAccommodation(command.startDate, command.endDate, pricing, clock);
         repo.save(reservation, originalVersion);

@@ -21,9 +21,10 @@ public class FakeEventStore implements EventStore {
     private UUID expectedStreamId;
 
     @Override
-    public void saveEvents(UUID streamId, List<Event> newEvents, int expectedVersion) {
+    public long saveEvents(UUID streamId, List<Event> newEvents, int expectedVersion) {
         assertThat("streamId", streamId, is(expectedStreamId));
         produced.addAll(newEvents);
+        return 0;
     }
 
     @Override
@@ -39,5 +40,15 @@ public class FakeEventStore implements EventStore {
         return existing.stream()
                 .skip(sinceVersion)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Event> getAllEvents(long sincePosition) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public long getCurrentPosition() {
+        throw new UnsupportedOperationException();
     }
 }

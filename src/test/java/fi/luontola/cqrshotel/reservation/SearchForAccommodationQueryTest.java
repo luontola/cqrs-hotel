@@ -47,7 +47,7 @@ public class SearchForAccommodationQueryTest {
         eventStore.saveEvents(id, Arrays.asList(
                 new PriceOffered(id, date1, price1, expires),
                 new PriceOffered(id, date2, price2, expires)
-        ), EventStore.NEW_STREAM);
+        ), EventStore.BEGINNING);
 
         ReservationOffer result = queryHandler.handle(new SearchForAccommodation(id, date1, date3));
 
@@ -65,7 +65,7 @@ public class SearchForAccommodationQueryTest {
                 new PriceOffered(id, date1, price1, expires),
                 new PriceOffered(id, date2, price2, expires),
                 new PriceOffered(id, date3, price3, expires)
-        ), EventStore.NEW_STREAM);
+        ), EventStore.BEGINNING);
 
         ReservationOffer result = queryHandler.handle(new SearchForAccommodation(id, date2, date3));
 
@@ -76,7 +76,7 @@ public class SearchForAccommodationQueryTest {
     public void is_unavailable_if_a_price_offer_is_missing() {
         eventStore.saveEvents(id, Arrays.asList(
                 new PriceOffered(id, date2, price2, expires)
-        ), EventStore.NEW_STREAM);
+        ), EventStore.BEGINNING);
 
         ReservationOffer result = queryHandler.handle(new SearchForAccommodation(id, date1, date3));
 
@@ -88,7 +88,7 @@ public class SearchForAccommodationQueryTest {
         eventStore.saveEvents(id, Arrays.asList(
                 new PriceOffered(id, date1, price1, expires),
                 new PriceOffered(id, date2, price2, now.minusSeconds(1))
-        ), EventStore.NEW_STREAM);
+        ), EventStore.BEGINNING);
 
         ReservationOffer result = queryHandler.handle(new SearchForAccommodation(id, date1, date3));
 

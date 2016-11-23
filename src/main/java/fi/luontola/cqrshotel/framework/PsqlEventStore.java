@@ -39,19 +39,19 @@ public class PsqlEventStore implements EventStore {
     }
 
     @Override
-    public void saveEvents(UUID streamId, List<Event> newEvents, int expectedVersion) {
+    public long saveEvents(UUID streamId, List<Event> newEvents, int expectedVersion) {
         try (Connection connection = DataSourceUtils.getConnection(dataSource)) {
             Array data = connection.createArrayOf("jsonb", serializeData(newEvents));
             Array metadata = connection.createArrayOf("jsonb", serializeMetadata(newEvents));
 
-            int latestVersion = jdbcTemplate.queryForObject(
+            return jdbcTemplate.queryForObject(
                     "SELECT save_events(:stream_id, :expected_version, :data, :metadata)",
                     new MapSqlParameterSource()
                             .addValue("stream_id", streamId)
                             .addValue("expected_version", expectedVersion)
                             .addValue("data", data)
                             .addValue("metadata", metadata),
-                    Integer.class);
+                    Long.class);
 
         } catch (UncategorizedSQLException e) {
             if (e.getCause() instanceof PSQLException) {
@@ -89,6 +89,26 @@ public class PsqlEventStore implements EventStore {
                         .addValue("stream_id", streamId)
                         .addValue("since_version", sinceVersion),
                 this::eventMapping);
+    }
+
+    @Override
+    public List<Event> getAllEvents(long sincePosition) {
+        return jdbcTemplate.query("SELECT e.data, e.metadata " +
+                        "FROM event e " +
+                        "JOIN event_sequence s USING (stream_id, version) " +
+                        "WHERE s.position > :position " +
+                        "ORDER BY s.position",
+                new MapSqlParameterSource("position", sincePosition),
+                this::eventMapping);
+    }
+
+    @Override
+    public long getCurrentPosition() {
+        List<Long> position = jdbcTemplate.queryForList(
+                "SELECT position FROM event_sequence ORDER BY position DESC  LIMIT 1",
+                new MapSqlParameterSource(),
+                Long.class);
+        return position.isEmpty() ? BEGINNING : position.get(0);
     }
 
     private Event eventMapping(ResultSet rs, int rowNum) throws SQLException {

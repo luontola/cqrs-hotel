@@ -40,7 +40,7 @@ public abstract class EventStoreContract {
         UUID id = UUID.randomUUID();
         eventStore.saveEvents(id,
                 Arrays.asList(new DummyEvent("one"), new DummyEvent("two")),
-                EventStore.NEW_STREAM);
+                EventStore.BEGINNING);
 
         List<Event> events = eventStore.getEventsForStream(id);
         assertThat(events, is(Arrays.asList(new DummyEvent("one"), new DummyEvent("two"))));
@@ -51,7 +51,7 @@ public abstract class EventStoreContract {
         UUID id = UUID.randomUUID();
         eventStore.saveEvents(id,
                 Arrays.asList(new DummyEvent("one"), new DummyEvent("two")),
-                EventStore.NEW_STREAM);
+                EventStore.BEGINNING);
 
         eventStore.saveEvents(id,
                 Arrays.asList(new DummyEvent("three"), new DummyEvent("four")),
@@ -67,7 +67,7 @@ public abstract class EventStoreContract {
         UUID id = UUID.randomUUID();
         eventStore.saveEvents(id,
                 Arrays.asList(new DummyEvent("one"), new DummyEvent("two")),
-                EventStore.NEW_STREAM);
+                EventStore.BEGINNING);
 
         thrown.expect(OptimisticLockingException.class);
         thrown.expectMessage("expected version 1 but was 2 for stream " + id);
@@ -89,15 +89,46 @@ public abstract class EventStoreContract {
         UUID id = UUID.randomUUID();
         eventStore.saveEvents(id,
                 Arrays.asList(new DummyEvent("one"), new DummyEvent("two")),
-                EventStore.NEW_STREAM);
+                EventStore.BEGINNING);
 
-        assertThat("since beginning", eventStore.getEventsForStream(id, EventStore.NEW_STREAM),
+        assertThat("since beginning", eventStore.getEventsForStream(id, EventStore.BEGINNING),
                 is(Arrays.asList(new DummyEvent("one"), new DummyEvent("two"))));
         assertThat("since middle", eventStore.getEventsForStream(id, 1),
                 is(Arrays.asList(new DummyEvent("two"))));
         assertThat("since end", eventStore.getEventsForStream(id, 2),
                 is(Arrays.asList()));
     }
+
+    @Test
+    public void reading_events_from_all_streams() {
+        long position = eventStore.getCurrentPosition();
+        UUID id1 = UUID.randomUUID();
+        eventStore.saveEvents(id1, Arrays.asList(new DummyEvent("one")), EventStore.BEGINNING);
+        UUID id2 = UUID.randomUUID();
+        eventStore.saveEvents(id2, Arrays.asList(new DummyEvent("two")), EventStore.BEGINNING);
+
+        List<Event> events = eventStore.getAllEvents(position);
+
+        assertThat(events, is(Arrays.asList(new DummyEvent("one"), new DummyEvent("two"))));
+    }
+
+    @Test
+    public void reports_the_global_position_of_the_last_saved_event() {
+        long posA = eventStore.saveEvents(UUID.randomUUID(), Arrays.asList(new DummyEvent("a1"), new DummyEvent("a2")), EventStore.BEGINNING);
+        long posB = eventStore.saveEvents(UUID.randomUUID(), Arrays.asList(new DummyEvent("b")), EventStore.BEGINNING);
+        long posC = eventStore.saveEvents(UUID.randomUUID(), Arrays.asList(new DummyEvent("c")), EventStore.BEGINNING);
+
+        assertThat("since a", eventStore.getAllEvents(posA),
+                is(Arrays.asList(new DummyEvent("b"), new DummyEvent("c"))));
+        assertThat("since b", eventStore.getAllEvents(posB),
+                is(Arrays.asList(new DummyEvent("c"))));
+        assertThat("since c", eventStore.getAllEvents(posC),
+                is(Arrays.asList()));
+    }
+
+    // TODO: use a cursor to search results
+    // TODO: concurrency test: multiple writers to same stream, each commit is atomic
+    // TODO: concurrency test: multiple writers to different streams, each commit is atomic
 
 
     public static class DummyEvent extends Struct implements Event {
