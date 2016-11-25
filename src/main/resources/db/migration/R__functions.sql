@@ -15,24 +15,22 @@ BEGIN
 
   -- initialize stream
 
-  SELECT version
-  INTO _base_version
-  FROM stream
-  WHERE stream_id = _stream_id
-  FOR UPDATE;
-
-  IF _base_version IS NULL
-  THEN
-    INSERT INTO stream (stream_id, version)
-    VALUES (_stream_id, 0)
-    ON CONFLICT DO NOTHING;
-
+  LOOP
     SELECT version
     INTO _base_version
     FROM stream
     WHERE stream_id = _stream_id
     FOR UPDATE;
-  END IF;
+
+    IF _base_version IS NULL
+    THEN
+      INSERT INTO stream (stream_id, version)
+      VALUES (_stream_id, 0)
+      ON CONFLICT DO NOTHING;
+    ELSE
+      EXIT;
+    END IF;
+  END LOOP;
 
   IF _base_version != _expected_version
   THEN
@@ -54,7 +52,7 @@ BEGIN
   SET version = _version
   WHERE stream_id = _stream_id;
 
-  -- set the global order of the events
+  -- set the global order of events
 
   LOCK TABLE event_sequence IN EXCLUSIVE MODE;
 
