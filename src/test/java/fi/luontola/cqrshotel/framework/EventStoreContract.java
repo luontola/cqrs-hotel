@@ -153,8 +153,8 @@ public abstract class EventStoreContract {
 
     @Test
     public void concurrent_writers_to_same_stream() throws ExecutionException, InterruptedException {
-        final int BATCH_SIZE = 100;
-        final int ITERATIONS = 1000;
+        final int BATCH_SIZE = 10;
+        final int ITERATIONS = 100;
 
         UUID id = UUID.randomUUID();
         long initialPosition = eventStore.getCurrentPosition();

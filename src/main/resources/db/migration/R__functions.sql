@@ -18,12 +18,20 @@ BEGIN
   SELECT version
   INTO _base_version
   FROM stream
-  WHERE stream_id = _stream_id;
+  WHERE stream_id = _stream_id
+  FOR UPDATE;
 
   IF _base_version IS NULL
   THEN
-    _base_version := 0;
-    INSERT INTO stream (stream_id, version) VALUES (_stream_id, _base_version);
+    INSERT INTO stream (stream_id, version)
+    VALUES (_stream_id, 0)
+    ON CONFLICT DO NOTHING;
+
+    SELECT version
+    INTO _base_version
+    FROM stream
+    WHERE stream_id = _stream_id
+    FOR UPDATE;
   END IF;
 
   IF _base_version != _expected_version
