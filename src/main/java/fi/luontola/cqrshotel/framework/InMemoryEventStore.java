@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
 
 public class InMemoryEventStore implements EventStore {
 
@@ -48,19 +47,19 @@ public class InMemoryEventStore implements EventStore {
             throw new EventStreamNotFoundException(streamId);
         }
         synchronized (events) {
-            return events.stream()
-                    .skip(sinceVersion)
-                    .collect(Collectors.toList());
+            return readSince(sinceVersion, events);
         }
     }
 
     @Override
     public List<Event> getAllEvents(long sincePosition) {
         synchronized (allEvents) {
-            return allEvents.stream()
-                    .skip(sincePosition)
-                    .collect(Collectors.toList());
+            return readSince(sincePosition, allEvents);
         }
+    }
+
+    private static ArrayList<Event> readSince(long sincePosition, List<Event> events) {
+        return new ArrayList<>(events.subList((int) sincePosition, events.size()));
     }
 
     @Override

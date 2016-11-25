@@ -39,9 +39,11 @@
     </properties>
   </component>
   <component name="EntryPointsManager">
-    <list size="2">
+    <list size="4">
       <item index="0" class="java.lang.String" itemvalue="fi.luontola.cqrshotel.framework.EventListener" />
-      <item index="1" class="java.lang.String" itemvalue="org.springframework.web.bind.annotation.RestController" />
+      <item index="1" class="java.lang.String" itemvalue="org.openjdk.jmh.annotations.Benchmark" />
+      <item index="2" class="java.lang.String" itemvalue="org.openjdk.jmh.annotations.Setup" />
+      <item index="3" class="java.lang.String" itemvalue="org.springframework.web.bind.annotation.RestController" />
     </list>
   </component>
   <component name="JavaScriptSettings">
