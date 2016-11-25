@@ -48,6 +48,11 @@ public class FakeEventStore implements EventStore {
     }
 
     @Override
+    public int getCurrentVersion(UUID streamId) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public long getCurrentPosition() {
         throw new UnsupportedOperationException();
     }

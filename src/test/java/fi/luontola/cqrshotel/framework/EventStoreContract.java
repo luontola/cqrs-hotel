@@ -13,6 +13,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -82,6 +83,27 @@ public abstract class EventStoreContract {
         thrown.expect(EventStreamNotFoundException.class);
         thrown.expectMessage(id.toString());
         eventStore.getEventsForStream(id);
+    }
+
+    @Test
+    public void reports_current_stream_version() {
+        UUID id = UUID.randomUUID();
+
+        int v0 = eventStore.getCurrentVersion(id);
+        eventStore.saveEvents(id, Arrays.asList(new DummyEvent("foo")), v0);
+        int v1 = eventStore.getCurrentVersion(id);
+
+        assertThat("v0", v0, is(0));
+        assertThat("v1", v1, is(1));
+    }
+
+    @Test
+    public void reports_current_global_position() {
+        long pos0 = eventStore.getCurrentPosition();
+        eventStore.saveEvents(UUID.randomUUID(), Arrays.asList(new DummyEvent("foo")), EventStore.BEGINNING);
+        long pos1 = eventStore.getCurrentPosition();
+
+        assertThat(pos1, is(pos0 + 1));
     }
 
     @Test

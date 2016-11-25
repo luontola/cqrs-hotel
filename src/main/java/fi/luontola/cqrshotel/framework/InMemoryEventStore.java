@@ -64,6 +64,17 @@ public class InMemoryEventStore implements EventStore {
     }
 
     @Override
+    public int getCurrentVersion(UUID streamId) {
+        List<Event> events = streamsById.get(streamId);
+        if (events == null) {
+            return BEGINNING;
+        }
+        synchronized (events) {
+            return events.size();
+        }
+    }
+
+    @Override
     public long getCurrentPosition() {
         synchronized (allEvents) {
             return allEvents.size();

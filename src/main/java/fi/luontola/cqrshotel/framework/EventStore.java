@@ -25,5 +25,7 @@ public interface EventStore {
 
     List<Event> getAllEvents(long sincePosition);
 
+    int getCurrentVersion(UUID streamId);
+
     long getCurrentPosition();
 }

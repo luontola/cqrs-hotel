@@ -103,6 +103,14 @@ public class PsqlEventStore implements EventStore {
     }
 
     @Override
+    public int getCurrentVersion(UUID streamId) {
+        return jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM event WHERE stream_id = :stream_id",
+                new MapSqlParameterSource("stream_id", streamId),
+                Integer.class);
+    }
+
+    @Override
     public long getCurrentPosition() {
         List<Long> position = jdbcTemplate.queryForList(
                 "SELECT position FROM event_sequence ORDER BY position DESC  LIMIT 1",
