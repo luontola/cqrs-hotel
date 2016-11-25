@@ -13,20 +13,21 @@ DECLARE
   _event         RECORD;
 BEGIN
 
-  -- initialize stream
+  -- check for concurrent modification of the stream
 
   LOOP
     SELECT version
     INTO _base_version
     FROM stream
     WHERE stream_id = _stream_id
-    FOR UPDATE;
+    FOR UPDATE; -- lock the stream; allow only reads to proceed in parallel
 
     IF _base_version IS NULL
     THEN
+      -- initialize a new stream, then retry locking the stream
       INSERT INTO stream (stream_id, version)
       VALUES (_stream_id, 0)
-      ON CONFLICT DO NOTHING;
+      ON CONFLICT DO NOTHING; -- conflict means that the stream was initialized in parallel
     ELSE
       EXIT;
     END IF;
@@ -37,7 +38,7 @@ BEGIN
     RAISE EXCEPTION 'optimistic locking failure, current version is %', _base_version;
   END IF;
 
-  -- append events to stream
+  -- append events to the stream
 
   _version := _base_version;
   FOR _event IN SELECT *
@@ -54,7 +55,7 @@ BEGIN
 
   -- set the global order of events
 
-  LOCK TABLE event_sequence IN EXCLUSIVE MODE;
+  LOCK TABLE event_sequence IN EXCLUSIVE MODE; -- allow only reads to proceed in parallel
 
   SELECT position
   INTO _base_position
