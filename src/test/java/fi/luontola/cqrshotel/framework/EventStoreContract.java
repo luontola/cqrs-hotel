@@ -154,23 +154,20 @@ public abstract class EventStoreContract {
     @Test
     public void concurrent_writers_to_same_stream() throws ExecutionException, InterruptedException {
         final int BATCH_SIZE = 10;
-        final int ITERATIONS = 100;
+        final int ITERATIONS = 20;
 
-        UUID id = UUID.randomUUID();
+        UUID streamId = UUID.randomUUID();
         long initialPosition = eventStore.getCurrentPosition();
         AtomicInteger taskIdSeq = new AtomicInteger(0);
 
         repeatInParallel(ITERATIONS, () -> {
             int taskId = taskIdSeq.incrementAndGet();
-            List<Event> events = new ArrayList<>();
-            for (int i = 0; i < BATCH_SIZE; i++) {
-                events.add(new DummyEvent(taskId + "." + i));
-            }
+            List<Event> batch = createBatch(BATCH_SIZE, taskId);
 
             while (true) {
                 try {
-                    int version1 = eventStore.getCurrentVersion(id);
-                    eventStore.saveEvents(id, events, version1);
+                    int version1 = eventStore.getCurrentVersion(streamId);
+                    eventStore.saveEvents(streamId, batch, version1);
                     return;
                 } catch (OptimisticLockingException e) {
                     // retry
@@ -178,11 +175,32 @@ public abstract class EventStoreContract {
             }
         });
 
-        List<Event> streamEvents = eventStore.getEventsForStream(id);
+        List<Event> streamEvents = eventStore.getEventsForStream(streamId);
         assertThat("number of saved events", streamEvents.size(), is(BATCH_SIZE * ITERATIONS));
         assertAtomicBatches(BATCH_SIZE, streamEvents);
         List<Event> allEvents = eventStore.getAllEvents(initialPosition);
         assertThat("global order should equal stream order", allEvents, contains(streamEvents.toArray()));
+    }
+
+    @Test
+    public void concurrent_writers_to_different_streams() throws ExecutionException, InterruptedException {
+        final int BATCH_SIZE = 10;
+        final int ITERATIONS = 20;
+
+        long initialPosition = eventStore.getCurrentPosition();
+        AtomicInteger taskIdSeq = new AtomicInteger(0);
+
+        repeatInParallel(ITERATIONS, () -> {
+            UUID streamId = UUID.randomUUID();
+            int taskId = taskIdSeq.incrementAndGet();
+            List<Event> batch = createBatch(BATCH_SIZE, taskId);
+
+            eventStore.saveEvents(streamId, batch, EventStore.BEGINNING);
+        });
+
+        List<Event> allEvents = eventStore.getAllEvents(initialPosition);
+        assertThat("number of saved events", allEvents.size(), is(BATCH_SIZE * ITERATIONS));
+        assertAtomicBatches(BATCH_SIZE, allEvents);
     }
 
     private static void repeatInParallel(int iterations, Runnable task) throws InterruptedException, ExecutionException {
@@ -200,6 +218,14 @@ public abstract class EventStoreContract {
             executor.shutdownNow();
             executor.awaitTermination(10, TimeUnit.SECONDS);
         }
+    }
+
+    private static List<Event> createBatch(int batchSize, int taskId) {
+        List<Event> events = new ArrayList<>();
+        for (int i = 0; i < batchSize; i++) {
+            events.add(new DummyEvent(taskId + "." + i));
+        }
+        return events;
     }
 
     private static void assertAtomicBatches(int batchSize, List<Event> events) {
@@ -223,8 +249,6 @@ public abstract class EventStoreContract {
     }
 
     // TODO: use a cursor to search results
-    // TODO: concurrency test: multiple writers to same stream, each commit is atomic
-    // TODO: concurrency test: multiple writers to different streams, each commit is atomic
 
 
     public static class DummyEvent extends Struct implements Event {

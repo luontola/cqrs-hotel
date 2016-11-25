@@ -56,6 +56,8 @@ BEGIN
 
   -- set the global order of the events
 
+  LOCK TABLE event_sequence IN EXCLUSIVE MODE;
+
   SELECT count(*)
   INTO _base_position
   FROM event_sequence;
