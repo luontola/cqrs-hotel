@@ -17,8 +17,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
 
 public abstract class EventStoreContract {
@@ -146,6 +149,77 @@ public abstract class EventStoreContract {
                 is(Arrays.asList(new DummyEvent("c"))));
         assertThat("since c", eventStore.getAllEvents(posC),
                 is(Arrays.asList()));
+    }
+
+    @Test
+    public void concurrent_writers_to_same_stream() throws ExecutionException, InterruptedException {
+        final int BATCH_SIZE = 100;
+        final int ITERATIONS = 1000;
+
+        UUID id = UUID.randomUUID();
+        long initialPosition = eventStore.getCurrentPosition();
+        AtomicInteger taskIdSeq = new AtomicInteger(0);
+
+        repeatInParallel(ITERATIONS, () -> {
+            int taskId = taskIdSeq.incrementAndGet();
+            List<Event> events = new ArrayList<>();
+            for (int i = 0; i < BATCH_SIZE; i++) {
+                events.add(new DummyEvent(taskId + "." + i));
+            }
+
+            while (true) {
+                try {
+                    int version1 = eventStore.getCurrentVersion(id);
+                    eventStore.saveEvents(id, events, version1);
+                    return;
+                } catch (OptimisticLockingException e) {
+                    // retry
+                }
+            }
+        });
+
+        List<Event> streamEvents = eventStore.getEventsForStream(id);
+        assertThat("number of saved events", streamEvents.size(), is(BATCH_SIZE * ITERATIONS));
+        assertAtomicBatches(BATCH_SIZE, streamEvents);
+        List<Event> allEvents = eventStore.getAllEvents(initialPosition);
+        assertThat("global order should equal stream order", allEvents, contains(streamEvents.toArray()));
+    }
+
+    private static void repeatInParallel(int iterations, Runnable task) throws InterruptedException, ExecutionException {
+        final int PARALLELISM = 10;
+        ExecutorService executor = Executors.newFixedThreadPool(PARALLELISM);
+        try {
+            List<Future<?>> futures = new ArrayList<>();
+            for (int i = 0; i < iterations; i++) {
+                futures.add(executor.submit(task));
+            }
+            for (Future<?> future : futures) {
+                future.get();
+            }
+        } finally {
+            executor.shutdownNow();
+            executor.awaitTermination(10, TimeUnit.SECONDS);
+        }
+    }
+
+    private static void assertAtomicBatches(int batchSize, List<Event> events) {
+        List<List<Event>> batches = new ArrayList<>();
+        for (int i = 0; i < events.size() / batchSize; i++) {
+            int start = i * batchSize;
+            batches.add(events.subList(start, start + batchSize));
+        }
+        for (List<Event> batch : batches) {
+            DummyEvent sample = (DummyEvent) batch.get(0);
+            String prefix = sample.message.substring(0, sample.message.indexOf('.'));
+            try {
+                for (int i = 0; i < batch.size(); i++) {
+                    DummyEvent event = (DummyEvent) batch.get(i);
+                    assertThat(event.message, is(prefix + "." + i));
+                }
+            } catch (AssertionError e) {
+                throw new AssertionError("non-atomic batch found: " + batch, e);
+            }
+        }
     }
 
     // TODO: use a cursor to search results

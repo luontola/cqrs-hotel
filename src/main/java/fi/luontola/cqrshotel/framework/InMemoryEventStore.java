@@ -34,10 +34,10 @@ public class InMemoryEventStore implements EventStore {
                 int newVersion = events.size();
                 log.info("Saved stream {} version {}: {}", streamId, newVersion, newEvent);
             }
-        }
-        synchronized (allEvents) {
-            allEvents.addAll(newEvents);
-            return allEvents.size();
+            synchronized (allEvents) {
+                allEvents.addAll(newEvents);
+                return allEvents.size();
+            }
         }
     }
 
