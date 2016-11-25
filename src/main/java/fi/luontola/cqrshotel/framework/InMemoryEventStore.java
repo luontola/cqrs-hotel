@@ -31,7 +31,7 @@ public class InMemoryEventStore implements EventStore {
             for (Event newEvent : newEvents) {
                 events.add(newEvent);
                 int newVersion = events.size();
-                log.info("Saved stream {} version {}: {}", streamId, newVersion, newEvent);
+                log.trace("Saved stream {} version {}: {}", streamId, newVersion, newEvent);
             }
             synchronized (allEvents) {
                 allEvents.addAll(newEvents);
