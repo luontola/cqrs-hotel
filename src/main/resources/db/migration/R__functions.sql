@@ -1,9 +1,9 @@
-DROP FUNCTION save_events( UUID, INTEGER, JSONB [], JSONB [] );
+DROP FUNCTION IF EXISTS save_events( UUID, INT4, JSONB [], JSONB [] );
 
-CREATE OR REPLACE FUNCTION save_events(_stream_id        UUID,
-                                       _expected_version INT4,
-                                       _events_data      JSONB [],
-                                       _events_metadata  JSONB [])
+CREATE FUNCTION save_events(_stream_id        UUID,
+                            _expected_version INT4,
+                            _events_data      JSONB [],
+                            _events_metadata  JSONB [])
   RETURNS INT8 AS $$
 DECLARE
   _base_version  INT4;
@@ -13,22 +13,25 @@ DECLARE
   _event         RECORD;
 BEGIN
 
+  -- initialize stream
+
   SELECT version
   INTO _base_version
-  FROM event
-  WHERE event.stream_id = _stream_id
-  ORDER BY version DESC
-  LIMIT 1;
+  FROM stream
+  WHERE stream_id = _stream_id;
 
   IF _base_version IS NULL
   THEN
     _base_version := 0;
+    INSERT INTO stream (stream_id, version) VALUES (_stream_id, _base_version);
   END IF;
 
   IF _base_version != _expected_version
   THEN
     RAISE EXCEPTION 'optimistic locking failure, current version is %', _base_version;
   END IF;
+
+  -- append events to stream
 
   _version := _base_version;
   FOR _event IN SELECT *
@@ -38,6 +41,12 @@ BEGIN
     INSERT INTO event (stream_id, version, data, metadata)
     VALUES (_stream_id, _version, _event.data, _event.metadata);
   END LOOP;
+
+  UPDATE stream
+  SET version = _version
+  WHERE stream_id = _stream_id;
+
+  -- set the global order of the events
 
   SELECT count(*)
   INTO _base_position

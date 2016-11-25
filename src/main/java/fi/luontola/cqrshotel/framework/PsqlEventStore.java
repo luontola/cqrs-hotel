@@ -71,13 +71,12 @@ public class PsqlEventStore implements EventStore {
 
     @Override
     public List<Event> getEventsForStream(UUID streamId, int sinceVersion) {
-        Integer found = jdbcTemplate.queryForObject("SELECT count(*) " +
-                        "FROM event " +
-                        "WHERE stream_id = :stream_id " +
-                        "LIMIT 1",
+        List<UUID> found = jdbcTemplate.queryForList("SELECT stream_id " +
+                        "FROM stream " +
+                        "WHERE stream_id = :stream_id",
                 new MapSqlParameterSource("stream_id", streamId),
-                Integer.class);
-        if (found == 0) {
+                UUID.class);
+        if (found.isEmpty()) {
             throw new EventStreamNotFoundException(streamId);
         }
         return jdbcTemplate.query("SELECT data, metadata " +
@@ -104,10 +103,11 @@ public class PsqlEventStore implements EventStore {
 
     @Override
     public int getCurrentVersion(UUID streamId) {
-        return jdbcTemplate.queryForObject(
-                "SELECT count(*) FROM event WHERE stream_id = :stream_id",
+        List<Integer> version = jdbcTemplate.queryForList(
+                "SELECT version FROM stream WHERE stream_id = :stream_id",
                 new MapSqlParameterSource("stream_id", streamId),
                 Integer.class);
+        return version.isEmpty() ? BEGINNING : version.get(0);
     }
 
     @Override
