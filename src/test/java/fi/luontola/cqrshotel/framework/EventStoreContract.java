@@ -154,7 +154,7 @@ public abstract class EventStoreContract {
     @Test
     public void concurrent_writers_to_same_stream() throws ExecutionException, InterruptedException {
         final int BATCH_SIZE = 10;
-        final int ITERATIONS = 20;
+        final int ITERATIONS = 100;
 
         UUID streamId = UUID.randomUUID();
         long initialPosition = eventStore.getCurrentPosition();
@@ -185,7 +185,7 @@ public abstract class EventStoreContract {
     @Test
     public void concurrent_writers_to_different_streams() throws ExecutionException, InterruptedException {
         final int BATCH_SIZE = 10;
-        final int ITERATIONS = 20;
+        final int ITERATIONS = 100;
 
         long initialPosition = eventStore.getCurrentPosition();
         AtomicInteger taskIdSeq = new AtomicInteger(0);

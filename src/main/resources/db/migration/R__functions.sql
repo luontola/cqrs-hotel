@@ -58,9 +58,11 @@ BEGIN
 
   LOCK TABLE event_sequence IN EXCLUSIVE MODE;
 
-  SELECT count(*)
+  SELECT position
   INTO _base_position
-  FROM event_sequence;
+  FROM event_sequence
+  ORDER BY position DESC
+  LIMIT 1;
 
   _position := _base_position;
   FOR v IN _base_version + 1 .. _version LOOP
