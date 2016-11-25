@@ -4,6 +4,7 @@
 
 package fi.luontola.cqrshotel.pricing;
 
+import fi.luontola.cqrshotel.hotel.Hotel;
 import org.javamoney.moneta.Money;
 
 import java.time.Clock;
@@ -25,7 +26,7 @@ public class RandomPricingEngine implements PricingEngine {
     public Optional<Money> getAccommodationPrice(LocalDate date) {
         LocalDate limit = LocalDate.now(clock).plusDays(MAX_DAYS_IN_FUTURE);
         if (date.isBefore(limit)) {
-            return Optional.of(Money.of(ThreadLocalRandom.current().nextInt(50, 150), "EUR"));
+            return Optional.of(Money.of(ThreadLocalRandom.current().nextInt(50, 150), Hotel.CURRENCY));
         } else {
             return Optional.empty();
         }

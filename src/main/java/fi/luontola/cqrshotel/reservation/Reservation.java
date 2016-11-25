@@ -6,19 +6,20 @@ package fi.luontola.cqrshotel.reservation;
 
 import fi.luontola.cqrshotel.framework.AggregateRoot;
 import fi.luontola.cqrshotel.framework.EventListener;
+import fi.luontola.cqrshotel.hotel.Hotel;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.reservation.events.*;
 
-import java.time.*;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 public class Reservation extends AggregateRoot {
 
-    public static final ZoneId TIMEZONE = ZoneId.systemDefault();
-    public static final LocalTime CHECK_IN_TIME = LocalTime.of(14, 0);
-    public static final LocalTime CHECK_OUT_TIME = LocalTime.of(12, 0);
     public static final Duration PRICE_VALIDITY_DURATION = Duration.ofMinutes(30);
 
     private UUID id;
@@ -71,12 +72,12 @@ public class Reservation extends AggregateRoot {
 
     public void makeReservation(LocalDate startDate, LocalDate endDate) {
         Instant checkInTime = startDate
-                .atTime(CHECK_IN_TIME)
-                .atZone(TIMEZONE)
+                .atTime(Hotel.CHECK_IN_TIME)
+                .atZone(Hotel.TIMEZONE)
                 .toInstant();
         Instant checkOutTime = endDate
-                .atTime(CHECK_OUT_TIME)
-                .atZone(TIMEZONE)
+                .atTime(Hotel.CHECK_OUT_TIME)
+                .atZone(Hotel.TIMEZONE)
                 .toInstant();
         publish(new ReservationMade(id, checkInTime, checkOutTime));
     }

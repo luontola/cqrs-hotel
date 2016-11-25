@@ -6,6 +6,7 @@ package fi.luontola.cqrshotel.reservation;
 
 import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.framework.AggregateRootTester;
+import fi.luontola.cqrshotel.hotel.Hotel;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservationHandler;
 import fi.luontola.cqrshotel.reservation.events.ContactInformationUpdated;
@@ -33,8 +34,8 @@ public class MakeReservationTest extends AggregateRootTester {
         when(new MakeReservation(id, startDate, endDate, "John Doe", "john@example.com"));
         then(new ContactInformationUpdated(id, "John Doe", "john@example.com"),
                 new ReservationMade(id,
-                        ZonedDateTime.of(startDate, Reservation.CHECK_IN_TIME, Reservation.TIMEZONE).toInstant(),
-                        ZonedDateTime.of(endDate, Reservation.CHECK_OUT_TIME, Reservation.TIMEZONE).toInstant()));
+                        ZonedDateTime.of(startDate, Hotel.CHECK_IN_TIME, Hotel.TIMEZONE).toInstant(),
+                        ZonedDateTime.of(endDate, Hotel.CHECK_OUT_TIME, Hotel.TIMEZONE).toInstant()));
     }
 
     // TODO: create line items
