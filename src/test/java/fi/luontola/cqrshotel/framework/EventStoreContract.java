@@ -17,8 +17,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -152,7 +156,7 @@ public abstract class EventStoreContract {
     }
 
     @Test
-    public void concurrent_writers_to_same_stream() throws ExecutionException, InterruptedException {
+    public void concurrent_writers_to_same_stream() throws Exception {
         final int BATCH_SIZE = 10;
         final int ITERATIONS = 100;
 
@@ -173,7 +177,7 @@ public abstract class EventStoreContract {
                     // retry
                 }
             }
-        });
+        }, createRuntimeInvariantChecker(BATCH_SIZE));
 
         List<Event> streamEvents = eventStore.getEventsForStream(streamId);
         assertThat("number of saved events", streamEvents.size(), is(BATCH_SIZE * ITERATIONS));
@@ -183,7 +187,7 @@ public abstract class EventStoreContract {
     }
 
     @Test
-    public void concurrent_writers_to_different_streams() throws ExecutionException, InterruptedException {
+    public void concurrent_writers_to_different_streams() throws Exception {
         final int BATCH_SIZE = 10;
         final int ITERATIONS = 100;
 
@@ -196,28 +200,49 @@ public abstract class EventStoreContract {
             List<Event> batch = createBatch(BATCH_SIZE, taskId);
 
             eventStore.saveEvents(streamId, batch, EventStore.BEGINNING);
-        });
+        }, createRuntimeInvariantChecker(BATCH_SIZE));
 
         List<Event> allEvents = eventStore.getAllEvents(initialPosition);
         assertThat("number of saved events", allEvents.size(), is(BATCH_SIZE * ITERATIONS));
         assertAtomicBatches(BATCH_SIZE, allEvents);
     }
 
-    private static void repeatInParallel(int iterations, Runnable task) throws InterruptedException, ExecutionException {
+    private Runnable createRuntimeInvariantChecker(int batchSize) {
+        long initialPosition = eventStore.getCurrentPosition();
+        AtomicLong position = new AtomicLong(initialPosition);
+        return () -> {
+            long pos = position.get();
+            List<Event> events = eventStore.getAllEvents(pos);
+            assertAtomicBatches(batchSize, events);
+            position.set(pos + events.size());
+        };
+    }
+
+    private static void repeatInParallel(int iterations, Runnable task, Runnable invariantChecker) throws Exception {
         final int PARALLELISM = 10;
-        ExecutorService executor = Executors.newFixedThreadPool(PARALLELISM);
+        ExecutorService executor = Executors.newFixedThreadPool(PARALLELISM + 1);
+        Future<?> checker;
         try {
+            checker = executor.submit(() -> {
+                while (!Thread.interrupted()) {
+                    invariantChecker.run();
+                    Thread.yield();
+                }
+            });
             List<Future<?>> futures = new ArrayList<>();
             for (int i = 0; i < iterations; i++) {
                 futures.add(executor.submit(task));
             }
             for (Future<?> future : futures) {
+                // will throw ExecutionException if there was a problem
                 future.get();
             }
         } finally {
             executor.shutdownNow();
             executor.awaitTermination(10, TimeUnit.SECONDS);
         }
+        // will throw ExecutionException if there was a problem
+        checker.get(10, TimeUnit.SECONDS);
     }
 
     private static List<Event> createBatch(int batchSize, int taskId) {
@@ -229,6 +254,9 @@ public abstract class EventStoreContract {
     }
 
     private static void assertAtomicBatches(int batchSize, List<Event> events) {
+        if (events.size() % batchSize != 0) {
+            throw new AssertionError("incomplete batches found: " + events.size() + " events but " + batchSize + " batch size");
+        }
         List<List<Event>> batches = new ArrayList<>();
         for (int i = 0; i < events.size() / batchSize; i++) {
             int start = i * batchSize;
