@@ -114,6 +114,20 @@ public abstract class EventStoreContract {
     }
 
     @Test
+    public void global_position_starts_from_one() {
+        // ensure at least two events have been saved previously
+        eventStore.saveEvents(UUID.randomUUID(),
+                Arrays.asList(new DummyEvent("one"), new DummyEvent("two")),
+                EventStore.BEGINNING);
+
+        List<Event> sinceBeginning = eventStore.getAllEvents(EventStore.BEGINNING).subList(0, 2);
+        List<Event> sinceOne = eventStore.getAllEvents(1).subList(0, 1);
+
+        // XXX: this test may accidentally pass because it does not check the stream and version of the events, but only their content (which is not unique)
+        assertThat(sinceBeginning.get(1), is(sinceOne.get(0)));
+    }
+
+    @Test
     public void reading_events_since_a_particular_version() {
         UUID id = UUID.randomUUID();
         eventStore.saveEvents(id,

@@ -63,6 +63,11 @@ BEGIN
   ORDER BY position DESC
   LIMIT 1;
 
+  IF _base_position IS NULL
+  THEN
+    _base_position := 0;
+  END IF;
+
   _position := _base_position;
   FOR v IN _base_version + 1 .. _version LOOP
     _position := _position + 1;
