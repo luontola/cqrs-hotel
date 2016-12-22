@@ -13,7 +13,7 @@ This project strives to differ from your typical toy examples in that *the probl
 
 meanwhile in another terminal:
 
-    docker-compose up -d
+    docker-compose up -d db
     mvn spring-boot:run
 
 open http://localhost:8080/
@@ -21,8 +21,7 @@ open http://localhost:8080/
 
 ## Building
 
-    docker-compose up -d
-    mvn clean verify
+    ./build.sh
 
 
 ## More Resources

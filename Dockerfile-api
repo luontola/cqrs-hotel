@@ -1,0 +1,13 @@
+FROM java:8-jre-alpine
+
+RUN adduser -S -h /app app
+
+EXPOSE 8080
+
+WORKDIR /app
+
+USER app
+
+CMD ["java", "-Xmx200m", "-XX:MaxMetaspaceSize=64m", "-jar", "cqrs-hotel.jar", "--spring.profiles.active=docker"]
+
+COPY target/cqrs-hotel.jar /app/cqrs-hotel.jar

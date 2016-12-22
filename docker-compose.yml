@@ -1,5 +1,24 @@
 version: '2'
 services:
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile-web
+    image: cqrs-hotel-web
+    ports:
+    - "8080:80"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile-api
+    image: cqrs-hotel-api
+    environment:
+      DB_USERNAME: cqrshotel
+      DB_PASSWORD: cqrshotel
+      DB_URL: jdbc:postgresql://db:5432/cqrshotel
+
   db:
     image: postgres:9.6.1
     environment:
