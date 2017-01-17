@@ -1,4 +1,4 @@
-// Copyright © 2016 Esko Luontola
+// Copyright © 2016-2017 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -9,13 +9,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import fi.luontola.cqrshotel.framework.EventStore;
-import fi.luontola.cqrshotel.framework.InMemoryEventStore;
+import fi.luontola.cqrshotel.framework.PsqlEventStore;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.pricing.RandomPricingEngine;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
+import javax.sql.DataSource;
 import java.time.Clock;
 
 @SpringBootApplication
@@ -26,8 +27,8 @@ public class Application {
     }
 
     @Bean
-    public EventStore eventStore() {
-        return new InMemoryEventStore();
+    public EventStore eventStore(DataSource dataSource, ObjectMapper objectMapper) {
+        return new PsqlEventStore(dataSource, objectMapper);
     }
 
     @Bean

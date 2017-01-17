@@ -1,4 +1,4 @@
-// Copyright © 2016 Esko Luontola
+// Copyright © 2016-2017 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -31,11 +31,12 @@ public class PsqlEventStore implements EventStore {
 
     private final DataSource dataSource;
     private final NamedParameterJdbcTemplate jdbcTemplate;
-    private final ObjectMapper json = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
-    public PsqlEventStore(DataSource dataSource) {
+    public PsqlEventStore(DataSource dataSource, ObjectMapper objectMapper) {
         this.dataSource = dataSource;
         this.jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -146,7 +147,7 @@ public class PsqlEventStore implements EventStore {
 
     private String serialize(Object event) {
         try {
-            return json.writeValueAsString(event);
+            return objectMapper.writeValueAsString(event);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to serialize: " + event, e);
         }
@@ -154,8 +155,8 @@ public class PsqlEventStore implements EventStore {
 
     private Event deserialize(String dataJson, String metadataJson) {
         try {
-            EventMetadata metadata = json.readValue(metadataJson, EventMetadata.class);
-            return (Event) json.readValue(dataJson, Class.forName(metadata.type));
+            EventMetadata metadata = objectMapper.readValue(metadataJson, EventMetadata.class);
+            return (Event) objectMapper.readValue(dataJson, Class.forName(metadata.type));
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }

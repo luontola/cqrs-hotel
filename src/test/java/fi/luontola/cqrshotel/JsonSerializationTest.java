@@ -4,6 +4,7 @@
 
 package fi.luontola.cqrshotel;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fi.luontola.cqrshotel.framework.Message;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -28,12 +29,27 @@ import static org.hamcrest.Matchers.is;
 @Category(SlowTests.class)
 public class JsonSerializationTest {
 
+    private final ObjectMapper objectMapper = new Application().jacksonObjectMapper();
+
+    @Test
+    public void LocalDate_format() throws JsonProcessingException {
+        assertThat(objectMapper.writeValueAsString(LocalDate.of(2000, 1, 2)), is("\"2000-01-02\""));
+    }
+
+    @Test
+    public void Instant_format() throws JsonProcessingException {
+        assertThat(objectMapper.writeValueAsString(Instant.ofEpochSecond(0)), is("\"1970-01-01T00:00:00Z\""));
+    }
+
+    @Test
+    public void Money_format() throws JsonProcessingException {
+        assertThat(objectMapper.writeValueAsString(Money.of(12.34, "EUR")), is("\"EUR 12.34\""));
+    }
+
     @Test
     public void all_messages_are_serializable() throws Exception {
-        Reflections reflections = new Reflections("fi.luontola.cqrshotel");
-        ObjectMapper objectMapper = new Application().jacksonObjectMapper();
-
-        reflections.getSubTypesOf(Message.class).stream()
+        new Reflections("fi.luontola.cqrshotel")
+                .getSubTypesOf(Message.class).stream()
                 .filter(type -> !type.isInterface())
                 .filter(type -> Modifier.isPublic(type.getModifiers()))
                 .forEach(type -> assertSerializable(type, objectMapper));
