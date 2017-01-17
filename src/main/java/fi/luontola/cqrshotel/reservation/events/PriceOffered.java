@@ -4,6 +4,8 @@
 
 package fi.luontola.cqrshotel.reservation.events;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import fi.luontola.cqrshotel.framework.Event;
 import fi.luontola.cqrshotel.util.Struct;
 import org.javamoney.moneta.Money;
@@ -20,7 +22,11 @@ public class PriceOffered extends Struct implements Event {
     public final Money price;
     public final Instant expires;
 
-    public PriceOffered(UUID reservationId, LocalDate date, Money price, Instant expires) {
+    @JsonCreator
+    public PriceOffered(@JsonProperty("reservationId") UUID reservationId,
+                        @JsonProperty("date") LocalDate date,
+                        @JsonProperty("price") Money price,
+                        @JsonProperty("expires") Instant expires) {
         this.reservationId = reservationId;
         this.date = date;
         this.price = price;
