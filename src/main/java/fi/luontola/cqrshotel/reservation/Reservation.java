@@ -1,4 +1,4 @@
-// Copyright © 2016 Esko Luontola
+// Copyright © 2017 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public class Reservation extends AggregateRoot {
@@ -24,6 +25,7 @@ public class Reservation extends AggregateRoot {
 
     private UUID id;
     private final List<PriceOffered> priceOffers = new ArrayList<>();
+    private int lineItems = 0;
 
     @Override
     public UUID getId() {
@@ -38,6 +40,11 @@ public class Reservation extends AggregateRoot {
     @EventListener
     private void apply(PriceOffered event) {
         priceOffers.add(event);
+    }
+
+    @EventListener
+    private void apply(LineItemCreated event) {
+        lineItems++;
     }
 
     public void initialize(UUID reservationId) {
@@ -62,15 +69,20 @@ public class Reservation extends AggregateRoot {
     }
 
     private boolean hasValidPriceOffer(LocalDate date, Clock clock) {
+        return findValidPriceOffer(date, clock).isPresent();
+    }
+
+    private Optional<PriceOffered> findValidPriceOffer(LocalDate date, Clock clock) {
         return priceOffers.stream()
-                .anyMatch(offer -> offer.date.equals(date) && offer.isStillValid(clock));
+                .filter(offer -> offer.date.equals(date) && offer.isStillValid(clock))
+                .findFirst();
     }
 
     public void updateContactInformation(String name, String email) {
         publish(new ContactInformationUpdated(id, name, email));
     }
 
-    public void makeReservation(LocalDate startDate, LocalDate endDate) {
+    public void makeReservation(LocalDate startDate, LocalDate endDate, Clock clock) {
         Instant checkInTime = startDate
                 .atTime(Hotel.CHECK_IN_TIME)
                 .atZone(Hotel.TIMEZONE)
@@ -80,5 +92,10 @@ public class Reservation extends AggregateRoot {
                 .atZone(Hotel.TIMEZONE)
                 .toInstant();
         publish(new ReservationMade(id, checkInTime, checkOutTime));
+
+        for (LocalDate date = startDate; date.isBefore(endDate); date = date.plusDays(1)) {
+            PriceOffered offer = findValidPriceOffer(date, clock).get();
+            publish(new LineItemCreated(id, lineItems + 1, offer.date, offer.price));
+        }
     }
 }

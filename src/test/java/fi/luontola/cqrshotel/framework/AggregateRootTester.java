@@ -1,10 +1,11 @@
-// Copyright © 2016 Esko Luontola
+// Copyright © 2017 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
 package fi.luontola.cqrshotel.framework;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -26,6 +27,10 @@ public abstract class AggregateRootTester {
     }
 
     public void then(Event... expectedEvents) {
-        assertThat("produced events", eventStore.produced, is(Arrays.asList(expectedEvents)));
+        assertThat("produced events", producedEvents(), is(Arrays.asList(expectedEvents)));
+    }
+
+    public List<Event> producedEvents() {
+        return eventStore.produced;
     }
 }
