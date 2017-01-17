@@ -14,9 +14,8 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class Reservation extends AggregateRoot {
@@ -24,7 +23,7 @@ public class Reservation extends AggregateRoot {
     public static final Duration PRICE_VALIDITY_DURATION = Duration.ofMinutes(30);
 
     private UUID id;
-    private final List<PriceOffered> priceOffers = new ArrayList<>();
+    private final Map<LocalDate, PriceOffered> priceOffersByDate = new HashMap<>();
     private int lineItems = 0;
 
     @Override
@@ -39,7 +38,7 @@ public class Reservation extends AggregateRoot {
 
     @EventListener
     private void apply(PriceOffered event) {
-        priceOffers.add(event);
+        priceOffersByDate.put(event.date, event);
     }
 
     @EventListener
@@ -69,13 +68,8 @@ public class Reservation extends AggregateRoot {
     }
 
     private boolean hasValidPriceOffer(LocalDate date, Clock clock) {
-        return findValidPriceOffer(date, clock).isPresent();
-    }
-
-    private Optional<PriceOffered> findValidPriceOffer(LocalDate date, Clock clock) {
-        return priceOffers.stream()
-                .filter(offer -> offer.date.equals(date) && offer.isStillValid(clock))
-                .findFirst();
+        PriceOffered offer = priceOffersByDate.get(date);
+        return offer != null && offer.isStillValid(clock);
     }
 
     public void updateContactInformation(String name, String email) {
@@ -100,18 +94,13 @@ public class Reservation extends AggregateRoot {
     }
 
     private PriceOffered getValidPriceOffer(LocalDate date, Clock clock) {
-        return priceOffers.stream()
-                .filter(offer -> offer.date.equals(date))
-                .findFirst()
-                .map(offer -> {
-                    if (offer.isStillValid(clock)) {
-                        return offer;
-                    } else {
-                        throw new IllegalStateException("price offer for date " + date + " has expired");
-                    }
-                })
-                .orElseGet(() -> {
-                    throw new IllegalStateException("no price offer for date " + date);
-                });
+        PriceOffered offer = priceOffersByDate.get(date);
+        if (offer == null) {
+            throw new IllegalStateException("no price offer for date " + date);
+        }
+        if (offer.hasExpired(clock)) {
+            throw new IllegalStateException("price offer for date " + date + " has expired");
+        }
+        return offer;
     }
 }

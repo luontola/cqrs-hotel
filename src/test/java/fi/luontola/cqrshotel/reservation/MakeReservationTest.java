@@ -61,7 +61,7 @@ public class MakeReservationTest extends AggregateRootTester {
 
         when(new MakeReservation(id, date1, date4, "John Doe", "john@example.com"));
 
-        then(e -> e instanceof LineItemCreated,
+        then(event -> event instanceof LineItemCreated,
                 new LineItemCreated(id, 1, date1, price1),
                 new LineItemCreated(id, 2, date2, price2),
                 new LineItemCreated(id, 3, date3, price3));
@@ -88,5 +88,22 @@ public class MakeReservationTest extends AggregateRootTester {
         thrown.expect(IllegalStateException.class);
         thrown.expectMessage("price offer for date 2000-01-13 has expired");
         when(new MakeReservation(id, date1, date4, "John Doe", "john@example.com"));
+    }
+
+    @Test
+    public void uses_the_new_price_if_an_expired_price_offer_has_been_replaced() {
+        Money newPrice3 = price3.add(Money.of(10, "EUR"));
+        given(new ReservationInitialized(id),
+                new PriceOffered(id, date1, price1, expiresInFuture),
+                new PriceOffered(id, date2, price2, expiresInFuture),
+                new PriceOffered(id, date3, price3, now),
+                new PriceOffered(id, date3, newPrice3, expiresInFuture));
+
+        when(new MakeReservation(id, date1, date4, "John Doe", "john@example.com"));
+
+        then(event -> event instanceof LineItemCreated,
+                new LineItemCreated(id, 1, date1, price1),
+                new LineItemCreated(id, 2, date2, price2),
+                new LineItemCreated(id, 3, date3, newPrice3));
     }
 }

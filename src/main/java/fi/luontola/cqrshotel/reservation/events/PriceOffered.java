@@ -1,4 +1,4 @@
-// Copyright © 2016 Esko Luontola
+// Copyright © 2017 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -30,6 +30,10 @@ public class PriceOffered extends Struct implements Event {
     public boolean isInRange(LocalDate startDate, LocalDate endDate) {
         return (date.equals(startDate) || date.isAfter(startDate))
                 && date.isBefore(endDate);
+    }
+
+    public boolean hasExpired(Clock clock) {
+        return !isStillValid(clock);
     }
 
     public boolean isStillValid(Clock clock) {
