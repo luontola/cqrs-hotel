@@ -4,10 +4,14 @@
 
 package fi.luontola.cqrshotel.framework;
 
+import fi.luontola.cqrshotel.reservation.events.LineItemCreated;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Predicate;
 
+import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
@@ -27,7 +31,14 @@ public abstract class AggregateRootTester {
     }
 
     public void then(Event... expectedEvents) {
-        assertThat("produced events", producedEvents(), is(Arrays.asList(expectedEvents)));
+        assertThat(producedEvents(), is(Arrays.asList(expectedEvents)));
+    }
+
+    public void then(Predicate<Event> filter, LineItemCreated... expectedEvents) {
+        List<Event> events = producedEvents().stream()
+                .filter(filter)
+                .collect(toList());
+        assertThat(events, is(Arrays.asList(expectedEvents)));
     }
 
     public List<Event> producedEvents() {

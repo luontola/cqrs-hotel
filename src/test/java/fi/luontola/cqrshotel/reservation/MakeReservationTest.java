@@ -16,9 +16,6 @@ import org.junit.experimental.categories.Category;
 
 import java.time.*;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasItems;
-
 @Category(FastTests.class)
 public class MakeReservationTest extends AggregateRootTester {
 
@@ -55,11 +52,10 @@ public class MakeReservationTest extends AggregateRootTester {
                 new PriceOffered(id, date2, price2, expires),
                 new PriceOffered(id, date3, price3, expires));
         when(new MakeReservation(id, date1, date4, "John Doe", "john@example.com"));
-        assertThat(producedEvents(), hasItems(
+        then(e -> e instanceof LineItemCreated,
                 new LineItemCreated(id, 1, date1, price1),
                 new LineItemCreated(id, 2, date2, price2),
-                new LineItemCreated(id, 3, date3, price3)
-        ));
+                new LineItemCreated(id, 3, date3, price3));
     }
 
     // TODO: check price offer existence
