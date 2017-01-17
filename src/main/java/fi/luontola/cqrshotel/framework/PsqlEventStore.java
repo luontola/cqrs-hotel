@@ -8,6 +8,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.postgresql.util.PSQLException;
 import org.postgresql.util.ServerErrorMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.UncategorizedSQLException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -25,6 +27,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class PsqlEventStore implements EventStore {
+
+    private static final Logger log = LoggerFactory.getLogger(PsqlEventStore.class);
 
     private static final Pattern OPTIMISTIC_LOCKING_FAILURE_MESSAGE =
             Pattern.compile("^optimistic locking failure, current version is (\\d+)$");
@@ -45,7 +49,7 @@ public class PsqlEventStore implements EventStore {
             Array data = connection.createArrayOf("jsonb", serializeData(newEvents));
             Array metadata = connection.createArrayOf("jsonb", serializeMetadata(newEvents));
 
-            return jdbcTemplate.queryForObject(
+            long endPosition = jdbcTemplate.queryForObject(
                     "SELECT save_events(:stream_id, :expected_version, :data, :metadata)",
                     new MapSqlParameterSource()
                             .addValue("stream_id", streamId)
@@ -53,6 +57,15 @@ public class PsqlEventStore implements EventStore {
                             .addValue("data", data)
                             .addValue("metadata", metadata),
                     Long.class);
+
+            if (log.isTraceEnabled()) {
+                for (int i = 0; i < newEvents.size(); i++) {
+                    int newVersion = expectedVersion + 1 + i;
+                    Event newEvent = newEvents.get(i);
+                    log.trace("Saved stream {} version {}: {}", streamId, newVersion, newEvent);
+                }
+            }
+            return endPosition;
 
         } catch (UncategorizedSQLException e) {
             if (e.getCause() instanceof PSQLException) {
