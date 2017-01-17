@@ -94,8 +94,24 @@ public class Reservation extends AggregateRoot {
         publish(new ReservationMade(id, checkInTime, checkOutTime));
 
         for (LocalDate date = startDate; date.isBefore(endDate); date = date.plusDays(1)) {
-            PriceOffered offer = findValidPriceOffer(date, clock).get();
+            PriceOffered offer = getValidPriceOffer(date, clock);
             publish(new LineItemCreated(id, lineItems + 1, offer.date, offer.price));
         }
+    }
+
+    private PriceOffered getValidPriceOffer(LocalDate date, Clock clock) {
+        return priceOffers.stream()
+                .filter(offer -> offer.date.equals(date))
+                .findFirst()
+                .map(offer -> {
+                    if (offer.isStillValid(clock)) {
+                        return offer;
+                    } else {
+                        throw new IllegalStateException("price offer for date " + date + " has expired");
+                    }
+                })
+                .orElseGet(() -> {
+                    throw new IllegalStateException("no price offer for date " + date);
+                });
     }
 }

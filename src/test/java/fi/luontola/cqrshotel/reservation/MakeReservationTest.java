@@ -11,8 +11,10 @@ import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservationHandler;
 import fi.luontola.cqrshotel.reservation.events.*;
 import org.javamoney.moneta.Money;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 
 import java.time.*;
 
@@ -27,17 +29,22 @@ public class MakeReservationTest extends AggregateRootTester {
     private static final Money price2 = Money.of(102, "EUR");
     private static final Money price3 = Money.of(103, "EUR");
     private static final Instant now = Instant.now();
-    private static final Instant expires = now.plus(Duration.ofHours(1));
+    private static final Instant expiresInFuture = now.plus(Duration.ofHours(1));
 
     {
         commandHandler = new MakeReservationHandler(new ReservationRepo(eventStore), Clock.fixed(now, ZoneId.systemDefault()));
     }
 
+    @Rule
+    public final ExpectedException thrown = ExpectedException.none();
+
     @Test
     public void make_reservation() {
         given(new ReservationInitialized(id),
-                new PriceOffered(id, date1, price1, expires));
+                new PriceOffered(id, date1, price1, expiresInFuture));
+
         when(new MakeReservation(id, date1, date2, "John Doe", "john@example.com"));
+
         then(new ContactInformationUpdated(id, "John Doe", "john@example.com"),
                 new ReservationMade(id,
                         ZonedDateTime.of(date1, Hotel.CHECK_IN_TIME, Hotel.TIMEZONE).toInstant(),
@@ -48,16 +55,38 @@ public class MakeReservationTest extends AggregateRootTester {
     @Test
     public void produces_line_items_for_every_date_in_range() {
         given(new ReservationInitialized(id),
-                new PriceOffered(id, date1, price1, expires),
-                new PriceOffered(id, date2, price2, expires),
-                new PriceOffered(id, date3, price3, expires));
+                new PriceOffered(id, date1, price1, expiresInFuture),
+                new PriceOffered(id, date2, price2, expiresInFuture),
+                new PriceOffered(id, date3, price3, expiresInFuture));
+
         when(new MakeReservation(id, date1, date4, "John Doe", "john@example.com"));
+
         then(e -> e instanceof LineItemCreated,
                 new LineItemCreated(id, 1, date1, price1),
                 new LineItemCreated(id, 2, date2, price2),
                 new LineItemCreated(id, 3, date3, price3));
     }
 
-    // TODO: check price offer existence
-    // TODO: check price offer expiry
+    @Test
+    public void rejects_if_a_price_offer_is_missing() {
+        given(new ReservationInitialized(id),
+                new PriceOffered(id, date1, price1, expiresInFuture),
+                new PriceOffered(id, date2, price2, expiresInFuture));
+
+        thrown.expect(IllegalStateException.class);
+        thrown.expectMessage("no price offer for date 2000-01-13");
+        when(new MakeReservation(id, date1, date4, "John Doe", "john@example.com"));
+    }
+
+    @Test
+    public void rejects_if_a_price_offer_has_expired() {
+        given(new ReservationInitialized(id),
+                new PriceOffered(id, date1, price1, expiresInFuture),
+                new PriceOffered(id, date2, price2, expiresInFuture),
+                new PriceOffered(id, date3, price3, now));
+
+        thrown.expect(IllegalStateException.class);
+        thrown.expectMessage("price offer for date 2000-01-13 has expired");
+        when(new MakeReservation(id, date1, date4, "John Doe", "john@example.com"));
+    }
 }
