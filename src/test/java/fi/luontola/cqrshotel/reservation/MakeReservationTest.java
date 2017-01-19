@@ -39,14 +39,14 @@ public class MakeReservationTest extends AggregateRootTester {
     public final ExpectedException thrown = ExpectedException.none();
 
     @Test
-    public void make_reservation() {
-        given(new ReservationInitialized(id),
+    public void make_reservation_for_one_night() {
+        given(new CustomerDiscovered(id),
                 new PriceOffered(id, date1, price1, expiresInFuture));
 
         when(new MakeReservation(id, date1, date2, "John Doe", "john@example.com"));
 
         then(new ContactInformationUpdated(id, "John Doe", "john@example.com"),
-                new ReservationMade(id,
+                new ReservationInitiated(id,
                         ZonedDateTime.of(date1, Hotel.CHECK_IN_TIME, Hotel.TIMEZONE).toInstant(),
                         ZonedDateTime.of(date2, Hotel.CHECK_OUT_TIME, Hotel.TIMEZONE).toInstant()),
                 new LineItemCreated(id, 1, date1, price1));
@@ -54,7 +54,7 @@ public class MakeReservationTest extends AggregateRootTester {
 
     @Test
     public void produces_line_items_for_every_date_in_range() {
-        given(new ReservationInitialized(id),
+        given(new CustomerDiscovered(id),
                 new PriceOffered(id, date1, price1, expiresInFuture),
                 new PriceOffered(id, date2, price2, expiresInFuture),
                 new PriceOffered(id, date3, price3, expiresInFuture));
@@ -69,7 +69,7 @@ public class MakeReservationTest extends AggregateRootTester {
 
     @Test
     public void rejects_if_a_price_offer_is_missing() {
-        given(new ReservationInitialized(id),
+        given(new CustomerDiscovered(id),
                 new PriceOffered(id, date1, price1, expiresInFuture),
                 new PriceOffered(id, date2, price2, expiresInFuture));
 
@@ -80,7 +80,7 @@ public class MakeReservationTest extends AggregateRootTester {
 
     @Test
     public void rejects_if_a_price_offer_has_expired() {
-        given(new ReservationInitialized(id),
+        given(new CustomerDiscovered(id),
                 new PriceOffered(id, date1, price1, expiresInFuture),
                 new PriceOffered(id, date2, price2, expiresInFuture),
                 new PriceOffered(id, date3, price3, now));
@@ -93,7 +93,7 @@ public class MakeReservationTest extends AggregateRootTester {
     @Test
     public void uses_the_new_price_if_an_expired_price_offer_has_been_replaced() {
         Money newPrice3 = price3.add(Money.of(10, "EUR"));
-        given(new ReservationInitialized(id),
+        given(new CustomerDiscovered(id),
                 new PriceOffered(id, date1, price1, expiresInFuture),
                 new PriceOffered(id, date2, price2, expiresInFuture),
                 new PriceOffered(id, date3, price3, now),

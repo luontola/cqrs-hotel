@@ -9,21 +9,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import fi.luontola.cqrshotel.framework.Event;
 import fi.luontola.cqrshotel.util.Struct;
 
-import java.time.Instant;
 import java.util.UUID;
 
-public class ReservationMade extends Struct implements Event {
+public class CustomerDiscovered extends Struct implements Event {
 
     public final UUID reservationId;
-    public final Instant checkInTime;
-    public final Instant checkOutTime;
 
     @JsonCreator
-    public ReservationMade(@JsonProperty("reservationId") UUID reservationId,
-                           @JsonProperty("checkInTime") Instant checkInTime,
-                           @JsonProperty("checkOutTime") Instant checkOutTime) {
+    public CustomerDiscovered(@JsonProperty("reservationId") UUID reservationId) {
         this.reservationId = reservationId;
-        this.checkInTime = checkInTime;
-        this.checkOutTime = checkOutTime;
     }
 }

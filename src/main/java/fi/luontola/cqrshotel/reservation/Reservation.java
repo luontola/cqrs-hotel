@@ -32,7 +32,8 @@ public class Reservation extends AggregateRoot {
     }
 
     @EventListener
-    private void apply(ReservationInitialized event) {
+    private void apply(CustomerDiscovered event) {
+        // TODO: we shouldn't care that which event was the first one; consider setting the ID automatically by the repository
         id = event.reservationId;
     }
 
@@ -46,8 +47,8 @@ public class Reservation extends AggregateRoot {
         lineItems++;
     }
 
-    public void initialize(UUID reservationId) {
-        publish(new ReservationInitialized(reservationId));
+    public void discoverCustomer(UUID reservationId) {
+        publish(new CustomerDiscovered(reservationId));
     }
 
     public void searchForAccommodation(LocalDate startDate, LocalDate endDate, PricingEngine pricing, Clock clock) {
@@ -85,7 +86,7 @@ public class Reservation extends AggregateRoot {
                 .atTime(Hotel.CHECK_OUT_TIME)
                 .atZone(Hotel.TIMEZONE)
                 .toInstant();
-        publish(new ReservationMade(id, checkInTime, checkOutTime));
+        publish(new ReservationInitiated(id, checkInTime, checkOutTime));
 
         for (LocalDate date = startDate; date.isBefore(endDate); date = date.plusDays(1)) {
             PriceOffered offer = getValidPriceOffer(date, clock);

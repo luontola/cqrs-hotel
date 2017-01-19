@@ -1,4 +1,4 @@
-// Copyright © 2016 Esko Luontola
+// Copyright © 2016-2017 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -10,8 +10,8 @@ import fi.luontola.cqrshotel.pricing.InMemoryPricingEngine;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodationHandler;
+import fi.luontola.cqrshotel.reservation.events.CustomerDiscovered;
 import fi.luontola.cqrshotel.reservation.events.PriceOffered;
-import fi.luontola.cqrshotel.reservation.events.ReservationInitialized;
 import fi.luontola.cqrshotel.reservation.events.SearchedForAccommodation;
 import org.javamoney.moneta.Money;
 import org.junit.Test;
@@ -43,7 +43,7 @@ public class SearchForAccommodationTest extends AggregateRootTester {
     @Test
     public void first_search_initializes_the_reservation_and_records_the_search_and_offered_prices() {
         when(new SearchForAccommodation(id, date1, date3));
-        then(new ReservationInitialized(id),
+        then(new CustomerDiscovered(id),
                 new SearchedForAccommodation(id, date1, date3),
                 new PriceOffered(id, date1, price1, expires),
                 new PriceOffered(id, date2, price2, expires));
@@ -51,7 +51,7 @@ public class SearchForAccommodationTest extends AggregateRootTester {
 
     @Test
     public void subsequent_search_records_the_search_and_only_new_offered_prices() {
-        given(new ReservationInitialized(id),
+        given(new CustomerDiscovered(id),
                 new SearchedForAccommodation(id, date1, date2),
                 new PriceOffered(id, date1, price1, expires));
         when(new SearchForAccommodation(id, date1, date3));
@@ -61,14 +61,14 @@ public class SearchForAccommodationTest extends AggregateRootTester {
 
     @Test
     public void if_price_not_available_then_does_not_record_a_price_offer() {
-        given(new ReservationInitialized(id));
+        given(new CustomerDiscovered(id));
         when(new SearchForAccommodation(id, date3, date3.plusDays(1)));
         then(new SearchedForAccommodation(id, date3, date3.plusDays(1)));
     }
 
     @Test
     public void if_old_price_offer_has_expired_then_produces_a_new_price_offer() {
-        given(new ReservationInitialized(id),
+        given(new CustomerDiscovered(id),
                 new PriceOffered(id, date1, Money.of(9, "EUR"), now.minusSeconds(1)));
         when(new SearchForAccommodation(id, date1, date2));
         then(new SearchedForAccommodation(id, date1, date2),
