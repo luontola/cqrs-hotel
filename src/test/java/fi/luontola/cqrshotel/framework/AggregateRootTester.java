@@ -22,7 +22,7 @@ public abstract class AggregateRootTester {
     protected Handler<? extends Command, Void> commandHandler;
 
     public void given(Event... events) {
-        eventStore.existing = Arrays.asList(events);
+        eventStore.populateExistingEvents(id, Arrays.asList(events));
     }
 
     public void when(Command command) {

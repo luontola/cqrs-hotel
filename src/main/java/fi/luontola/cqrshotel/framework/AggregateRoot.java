@@ -23,6 +23,9 @@ public abstract class AggregateRoot {
     }
 
     public final UUID getId() {
+        if (id == null) {
+            throw new IllegalStateException("id not set");
+        }
         return id;
     }
 
