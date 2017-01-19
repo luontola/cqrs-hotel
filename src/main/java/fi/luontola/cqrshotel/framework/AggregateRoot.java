@@ -1,4 +1,4 @@
-// Copyright © 2016 Esko Luontola
+// Copyright © 2016-2017 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -15,13 +15,23 @@ public abstract class AggregateRoot {
     private static final Map<Class<?>, Map<Class<?>, Method>> eventListenersByAggregate = new ConcurrentHashMap<>();
     private final Map<Class<?>, Method> eventListeners;
     private final List<Event> changes = new ArrayList<>();
+    private UUID id;
     private int version = 0;
 
     public AggregateRoot() {
         eventListeners = eventListenersByAggregate.computeIfAbsent(getClass(), AggregateRoot::findEventListeners);
     }
 
-    public abstract UUID getId();
+    public final UUID getId() {
+        return id;
+    }
+
+    final void setId(UUID id) {
+        if (this.id != null) {
+            throw new IllegalStateException("id already set");
+        }
+        this.id = id;
+    }
 
     public final int getVersion() {
         return version;

@@ -4,7 +4,6 @@
 
 package fi.luontola.cqrshotel.reservation.commands;
 
-import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.EventStreamNotFoundException;
 import fi.luontola.cqrshotel.framework.Handler;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
@@ -29,33 +28,14 @@ public class SearchForAccommodationHandler implements Handler<SearchForAccommoda
     public Void handle(SearchForAccommodation command) {
         Reservation reservation;
         int originalVersion;
-
         try {
             reservation = repo.getById(command.reservationId);
             originalVersion = reservation.getVersion();
         } catch (EventStreamNotFoundException e) {
-            reservation = new Reservation();
-            reservation.discoverCustomer(command.reservationId);
-            originalVersion = EventStore.BEGINNING;
+            reservation = repo.create(command.reservationId);
+            originalVersion = reservation.getVersion();
+            reservation.discoverCustomer();
         }
-
-        // TODO: alternative 1: return value instead of exception for checking the reservation existence
-//        reservation = repo.findById(command.reservationId);
-//        if (reservation == null) {
-//            reservation = new Reservation();
-//            reservation.initialize(command.reservationId);
-//            originalVersion = EventStore.BEGINNING;
-//        } else {
-//            originalVersion = reservation.getVersion();
-//        }
-
-        // TODO: alternative 2: create a new reservation inside the repository, and check if it's a new reservation to initialize
-//        reservation = repo.getOrCreate(command.reservationId);
-//        originalVersion = reservation.getVersion();
-//        if (reservation.getVersion() == EventStore.BEGINNING) {
-//            reservation.initialize(command.reservationId);
-//        }
-
         reservation.searchForAccommodation(command.startDate, command.endDate, pricing, clock);
         repo.save(reservation, originalVersion);
         return null;

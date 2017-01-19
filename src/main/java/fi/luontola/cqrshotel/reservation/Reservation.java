@@ -16,26 +16,13 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 public class Reservation extends AggregateRoot {
 
     public static final Duration PRICE_VALIDITY_DURATION = Duration.ofMinutes(30);
 
-    private UUID id;
     private final Map<LocalDate, PriceOffered> priceOffersByDate = new HashMap<>();
     private int lineItems = 0;
-
-    @Override
-    public UUID getId() {
-        return id;
-    }
-
-    @EventListener
-    private void apply(CustomerDiscovered event) {
-        // TODO: we shouldn't care that which event was the first one; consider setting the ID automatically by the repository
-        id = event.reservationId;
-    }
 
     @EventListener
     private void apply(PriceOffered event) {
@@ -47,12 +34,12 @@ public class Reservation extends AggregateRoot {
         lineItems++;
     }
 
-    public void discoverCustomer(UUID reservationId) {
-        publish(new CustomerDiscovered(reservationId));
+    public void discoverCustomer() {
+        publish(new CustomerDiscovered(getId()));
     }
 
     public void searchForAccommodation(LocalDate startDate, LocalDate endDate, PricingEngine pricing, Clock clock) {
-        publish(new SearchedForAccommodation(id, startDate, endDate));
+        publish(new SearchedForAccommodation(getId(), startDate, endDate));
         for (LocalDate date = startDate; date.isBefore(endDate); date = date.plusDays(1)) {
             makePriceOffer(date, pricing, clock);
         }
@@ -64,7 +51,7 @@ public class Reservation extends AggregateRoot {
         }
         pricing.getAccommodationPrice(date).ifPresent(price -> {
             Instant expires = clock.instant().plus(PRICE_VALIDITY_DURATION);
-            publish(new PriceOffered(id, date, price, expires));
+            publish(new PriceOffered(getId(), date, price, expires));
         });
     }
 
@@ -74,7 +61,7 @@ public class Reservation extends AggregateRoot {
     }
 
     public void updateContactInformation(String name, String email) {
-        publish(new ContactInformationUpdated(id, name, email));
+        publish(new ContactInformationUpdated(getId(), name, email));
     }
 
     public void makeReservation(LocalDate startDate, LocalDate endDate, Clock clock) {
@@ -86,11 +73,11 @@ public class Reservation extends AggregateRoot {
                 .atTime(Hotel.CHECK_OUT_TIME)
                 .atZone(Hotel.TIMEZONE)
                 .toInstant();
-        publish(new ReservationInitiated(id, checkInTime, checkOutTime));
+        publish(new ReservationInitiated(getId(), checkInTime, checkOutTime));
 
         for (LocalDate date = startDate; date.isBefore(endDate); date = date.plusDays(1)) {
             PriceOffered offer = getValidPriceOffer(date, clock);
-            publish(new LineItemCreated(id, lineItems + 1, offer.date, offer.price));
+            publish(new LineItemCreated(getId(), lineItems + 1, offer.date, offer.price));
         }
     }
 

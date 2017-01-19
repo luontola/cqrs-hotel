@@ -1,4 +1,4 @@
-// Copyright © 2016 Esko Luontola
+// Copyright © 2016-2017 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -29,15 +29,21 @@ public class Repository<T extends AggregateRoot> {
         }
     }
 
-    public T getById(UUID id) {
+    public T create(UUID id) {
         try {
             T aggregate = aggregateType.newInstance();
-            List<Event> events = eventStore.getEventsForStream(id);
-            aggregate.loadFromHistory(events);
+            aggregate.setId(id);
             return aggregate;
         } catch (InstantiationException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public T getById(UUID id) {
+        T aggregate = create(id);
+        List<Event> events = eventStore.getEventsForStream(id);
+        aggregate.loadFromHistory(events);
+        return aggregate;
     }
 
     public void save(T aggregate, int expectedVersion) {
