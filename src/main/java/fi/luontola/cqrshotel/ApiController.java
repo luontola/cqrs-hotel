@@ -7,6 +7,7 @@ package fi.luontola.cqrshotel;
 import fi.luontola.cqrshotel.framework.Command;
 import fi.luontola.cqrshotel.framework.CompositeHandler;
 import fi.luontola.cqrshotel.framework.EventStore;
+import fi.luontola.cqrshotel.framework.InMemoryProjectionUpdater;
 import fi.luontola.cqrshotel.framework.Query;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.reservation.ReservationRepo;
@@ -14,13 +15,16 @@ import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservationHandler;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodationHandler;
+import fi.luontola.cqrshotel.reservation.queries.ReservationDto;
 import fi.luontola.cqrshotel.reservation.queries.ReservationOffer;
+import fi.luontola.cqrshotel.reservation.queries.ReservationsView;
 import fi.luontola.cqrshotel.reservation.queries.SearchForAccommodationQuery;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Clock;
+import java.util.List;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
@@ -30,6 +34,8 @@ public class ApiController {
 
     private final CompositeHandler<Command, Void> commandHandler;
     private final CompositeHandler<Query, Object> queryHandler;
+    private final ReservationsView reservationsView = new ReservationsView();
+    private final InMemoryProjectionUpdater reservationsViewUpdater;
 
     public ApiController(EventStore eventStore, PricingEngine pricing, Clock clock) {
         ReservationRepo reservationRepo = new ReservationRepo(eventStore);
@@ -42,6 +48,8 @@ public class ApiController {
         CompositeHandler<Query, Object> queryHandler = new CompositeHandler<>();
         queryHandler.register(SearchForAccommodation.class, new SearchForAccommodationQuery(eventStore, clock));
         this.queryHandler = queryHandler;
+
+        this.reservationsViewUpdater = new InMemoryProjectionUpdater(reservationsView, eventStore);
     }
 
     @RequestMapping(path = "/api", method = GET)
@@ -50,7 +58,7 @@ public class ApiController {
     }
 
     @RequestMapping(path = "/api/search-for-accommodation", method = POST)
-    public ReservationOffer findAvailableRoom(@RequestBody SearchForAccommodation command) {
+    public ReservationOffer searchForAccommodation(@RequestBody SearchForAccommodation command) {
         commandHandler.handle(command);
         return (ReservationOffer) queryHandler.handle(command);
     }
@@ -59,5 +67,11 @@ public class ApiController {
     public Boolean makeReservation(@RequestBody MakeReservation command) {
         commandHandler.handle(command);
         return true;
+    }
+
+    @RequestMapping(path = "/api/reservations", method = GET)
+    public List<ReservationDto> reservations() {
+        reservationsViewUpdater.update(); // TODO: update asynchronously when events are created
+        return reservationsView.findAll();
     }
 }

@@ -4,22 +4,22 @@
 
 package fi.luontola.cqrshotel.framework;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
+import static fi.luontola.cqrshotel.framework.EventListeners.Requirements.MUST_BE_PRIVATE;
 
 public abstract class AggregateRoot {
 
-    private static final Map<Class<?>, Map<Class<?>, Method>> eventListenersByAggregate = new ConcurrentHashMap<>();
-    private final Map<Class<?>, Method> eventListeners;
+    private final EventListeners eventListeners;
     private final List<Event> changes = new ArrayList<>();
     private UUID id;
     private int version = 0;
 
     public AggregateRoot() {
-        eventListeners = eventListenersByAggregate.computeIfAbsent(getClass(), AggregateRoot::findEventListeners);
+        eventListeners = EventListeners.of(this, MUST_BE_PRIVATE);
     }
 
     public final UUID getId() {
@@ -59,38 +59,10 @@ public abstract class AggregateRoot {
     }
 
     private void applyChange(Event event, boolean isNew) {
-        Method eventListener = eventListeners.get(event.getClass());
-        if (eventListener != null) {
-            try {
-                eventListener.invoke(this, event);
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                throw new RuntimeException("failed to apply change: " + event, e);
-            }
-        }
+        eventListeners.send(event);
         version++;
         if (isNew) {
             changes.add(event);
         }
-    }
-
-    private static Map<Class<?>, Method> findEventListeners(Class<?> aggregate) {
-        Map<Class<?>, Method> eventListeners = new HashMap<>();
-        for (Method method : aggregate.getDeclaredMethods()) {
-            if (method.isAnnotationPresent(EventListener.class)) {
-                if (method.getParameterCount() != 1) {
-                    throw new AssertionError("expected method to take exactly one parameter: " + method);
-                }
-                Class<?> eventType = method.getParameterTypes()[0];
-                if (!Event.class.isAssignableFrom(eventType)) {
-                    throw new AssertionError("expected method to take an event parameter: " + method);
-                }
-                if (!Modifier.isPrivate(method.getModifiers())) {
-                    throw new AssertionError("expected method to be private: " + method);
-                }
-                method.setAccessible(true);
-                eventListeners.put(eventType, method);
-            }
-        }
-        return Collections.unmodifiableMap(eventListeners);
     }
 }
