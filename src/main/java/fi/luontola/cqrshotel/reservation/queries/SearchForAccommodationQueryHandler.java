@@ -6,7 +6,7 @@ package fi.luontola.cqrshotel.reservation.queries;
 
 import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.Handler;
-import fi.luontola.cqrshotel.framework.InMemoryPerStreamProjectionUpdater;
+import fi.luontola.cqrshotel.framework.InMemorySingleStreamProjectionUpdater;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
 
 import java.time.Clock;
@@ -24,7 +24,7 @@ public class SearchForAccommodationQueryHandler implements Handler<SearchForAcco
     @Override
     public ReservationOffer handle(SearchForAccommodation command) {
         ReservationOfferView projection = new ReservationOfferView(clock);
-        new InMemoryPerStreamProjectionUpdater(command.reservationId, projection, eventStore).update();
+        new InMemorySingleStreamProjectionUpdater(command.reservationId, projection, eventStore).update();
         return projection.query(command);
     }
 }

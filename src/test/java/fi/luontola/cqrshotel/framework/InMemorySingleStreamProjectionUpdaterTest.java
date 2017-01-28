@@ -20,7 +20,7 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 
 @Category(FastTests.class)
-public class InMemoryPerStreamProjectionUpdaterTest {
+public class InMemorySingleStreamProjectionUpdaterTest {
 
     private static final DummyEvent one = new DummyEvent("one");
     private static final DummyEvent two = new DummyEvent("two");
@@ -29,7 +29,7 @@ public class InMemoryPerStreamProjectionUpdaterTest {
     private final EventStore eventStore = new InMemoryEventStore();
     private final UUID streamId = UUID.randomUUID();
     private final SpyProjection projection = new SpyProjection();
-    private final InMemoryPerStreamProjectionUpdater updater = new InMemoryPerStreamProjectionUpdater(streamId, projection, eventStore);
+    private final InMemorySingleStreamProjectionUpdater updater = new InMemorySingleStreamProjectionUpdater(streamId, projection, eventStore);
 
     @Test
     public void does_nothing_if_no_events() {
@@ -59,7 +59,7 @@ public class InMemoryPerStreamProjectionUpdaterTest {
         assertThat("new events", projection.receivedEvents, is(singletonList(three)));
     }
 
-    private static class SpyProjection implements Projection {
+    private static class SpyProjection implements SingleStreamProjection {
         public final List<DummyEvent> receivedEvents = new ArrayList<>();
 
         @EventListener
