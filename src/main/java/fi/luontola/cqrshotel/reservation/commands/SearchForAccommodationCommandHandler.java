@@ -12,13 +12,13 @@ import fi.luontola.cqrshotel.reservation.ReservationRepo;
 
 import java.time.Clock;
 
-public class SearchForAccommodationHandler implements Handler<SearchForAccommodation, Void> {
+public class SearchForAccommodationCommandHandler implements Handler<SearchForAccommodation, Void> {
 
     private final ReservationRepo repo;
     private final PricingEngine pricing;
     private final Clock clock;
 
-    public SearchForAccommodationHandler(ReservationRepo repo, PricingEngine pricing, Clock clock) {
+    public SearchForAccommodationCommandHandler(ReservationRepo repo, PricingEngine pricing, Clock clock) {
         this.repo = repo;
         this.pricing = pricing;
         this.clock = clock;

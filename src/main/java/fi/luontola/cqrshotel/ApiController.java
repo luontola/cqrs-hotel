@@ -14,11 +14,11 @@ import fi.luontola.cqrshotel.reservation.ReservationRepo;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservationHandler;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
-import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodationHandler;
+import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodationCommandHandler;
 import fi.luontola.cqrshotel.reservation.queries.ReservationDto;
 import fi.luontola.cqrshotel.reservation.queries.ReservationOffer;
 import fi.luontola.cqrshotel.reservation.queries.ReservationsView;
-import fi.luontola.cqrshotel.reservation.queries.SearchForAccommodationQuery;
+import fi.luontola.cqrshotel.reservation.queries.SearchForAccommodationQueryHandler;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -41,12 +41,12 @@ public class ApiController {
         ReservationRepo reservationRepo = new ReservationRepo(eventStore);
 
         CompositeHandler<Command, Void> commandHandler = new CompositeHandler<>();
-        commandHandler.register(SearchForAccommodation.class, new SearchForAccommodationHandler(reservationRepo, pricing, clock));
+        commandHandler.register(SearchForAccommodation.class, new SearchForAccommodationCommandHandler(reservationRepo, pricing, clock));
         commandHandler.register(MakeReservation.class, new MakeReservationHandler(reservationRepo, clock));
         this.commandHandler = commandHandler;
 
         CompositeHandler<Query, Object> queryHandler = new CompositeHandler<>();
-        queryHandler.register(SearchForAccommodation.class, new SearchForAccommodationQuery(eventStore, clock));
+        queryHandler.register(SearchForAccommodation.class, new SearchForAccommodationQueryHandler(eventStore, clock));
         this.queryHandler = queryHandler;
 
         this.reservationsViewUpdater = new InMemoryProjectionUpdater(reservationsView, eventStore);

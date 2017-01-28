@@ -9,7 +9,7 @@ import fi.luontola.cqrshotel.framework.AggregateRootTester;
 import fi.luontola.cqrshotel.pricing.InMemoryPricingEngine;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
-import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodationHandler;
+import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodationCommandHandler;
 import fi.luontola.cqrshotel.reservation.events.CustomerDiscovered;
 import fi.luontola.cqrshotel.reservation.events.PriceOffered;
 import fi.luontola.cqrshotel.reservation.events.SearchedForAccommodation;
@@ -37,7 +37,7 @@ public class SearchForAccommodationTest extends AggregateRootTester {
         PricingEngine pricing = new InMemoryPricingEngine()
                 .setPrice(date1, price1)
                 .setPrice(date2, price2);
-        commandHandler = new SearchForAccommodationHandler(new ReservationRepo(eventStore), pricing, Clock.fixed(now, ZoneId.systemDefault()));
+        commandHandler = new SearchForAccommodationCommandHandler(new ReservationRepo(eventStore), pricing, Clock.fixed(now, ZoneId.systemDefault()));
     }
 
     @Test

@@ -1,4 +1,4 @@
-// Copyright © 2016 Esko Luontola
+// Copyright © 2016-2017 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -10,7 +10,7 @@ import fi.luontola.cqrshotel.framework.InMemoryEventStore;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
 import fi.luontola.cqrshotel.reservation.events.PriceOffered;
 import fi.luontola.cqrshotel.reservation.queries.ReservationOffer;
-import fi.luontola.cqrshotel.reservation.queries.SearchForAccommodationQuery;
+import fi.luontola.cqrshotel.reservation.queries.SearchForAccommodationQueryHandler;
 import org.javamoney.moneta.Money;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -27,7 +27,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 
 @Category(FastTests.class)
-public class SearchForAccommodationQueryTest {
+public class SearchForAccommodationQueryHandlerTest {
 
     private final UUID id = UUID.randomUUID();
     private static final LocalDate date1 = LocalDate.of(2000, 1, 1);
@@ -40,7 +40,7 @@ public class SearchForAccommodationQueryTest {
     private static final Instant expires = now.plus(Reservation.PRICE_VALIDITY_DURATION);
 
     private final EventStore eventStore = new InMemoryEventStore();
-    private final SearchForAccommodationQuery queryHandler = new SearchForAccommodationQuery(eventStore, Clock.fixed(now, ZoneId.systemDefault()));
+    private final SearchForAccommodationQueryHandler queryHandler = new SearchForAccommodationQueryHandler(eventStore, Clock.fixed(now, ZoneId.systemDefault()));
 
     @Test
     public void calculates_total_price_from_price_offers() {
