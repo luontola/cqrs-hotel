@@ -1,4 +1,4 @@
-// Copyright © 2016 Esko Luontola
+// Copyright © 2016-2017 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 
 public abstract class EventStoreContract {
@@ -85,11 +86,11 @@ public abstract class EventStoreContract {
     }
 
     @Test
-    public void cannot_read_events_from_non_existing_streams() {
+    public void non_existing_streams_are_reported_as_empty() {
         UUID id = UUID.randomUUID();
-        thrown.expect(EventStreamNotFoundException.class);
-        thrown.expectMessage(id.toString());
-        eventStore.getEventsForStream(id);
+
+        List<Event> events = eventStore.getEventsForStream(id);
+        assertThat(events, is(empty()));
     }
 
     @Test

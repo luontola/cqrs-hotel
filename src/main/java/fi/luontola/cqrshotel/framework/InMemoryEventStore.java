@@ -1,4 +1,4 @@
-// Copyright © 2016 Esko Luontola
+// Copyright © 2016-2017 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,10 +43,7 @@ public class InMemoryEventStore implements EventStore {
 
     @Override
     public List<Event> getEventsForStream(UUID streamId, int sinceVersion) {
-        List<Event> events = streamsById.get(streamId);
-        if (events == null) {
-            throw new EventStreamNotFoundException(streamId);
-        }
+        List<Event> events = streamsById.getOrDefault(streamId, Collections.emptyList());
         synchronized (events) {
             return readSince(sinceVersion, events);
         }

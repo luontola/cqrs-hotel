@@ -85,14 +85,6 @@ public class PsqlEventStore implements EventStore {
 
     @Override
     public List<Event> getEventsForStream(UUID streamId, int sinceVersion) {
-        List<UUID> found = jdbcTemplate.queryForList("SELECT stream_id " +
-                        "FROM stream " +
-                        "WHERE stream_id = :stream_id",
-                new MapSqlParameterSource("stream_id", streamId),
-                UUID.class);
-        if (found.isEmpty()) {
-            throw new EventStreamNotFoundException(streamId);
-        }
         return jdbcTemplate.query("SELECT data, metadata " +
                         "FROM event " +
                         "WHERE stream_id = :stream_id " +

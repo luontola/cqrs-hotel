@@ -21,14 +21,10 @@ public class InMemorySingleStreamProjectionUpdater {
     }
 
     public void update() {
-        try {
-            List<Event> events = eventStore.getEventsForStream(streamId, version);
-            for (Event event : events) {
-                projection.send(event);
-                version++;
-            }
-        } catch (EventStreamNotFoundException e) {
-            // TODO: make getEventsForStream return an empty list instead of throwing?
+        List<Event> events = eventStore.getEventsForStream(streamId, version);
+        for (Event event : events) {
+            projection.send(event);
+            version++;
         }
     }
 }

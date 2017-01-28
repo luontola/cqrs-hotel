@@ -6,9 +6,15 @@ package fi.luontola.cqrshotel.reservation;
 
 import fi.luontola.cqrshotel.framework.AggregateRoot;
 import fi.luontola.cqrshotel.framework.EventListener;
+import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.hotel.Hotel;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
-import fi.luontola.cqrshotel.reservation.events.*;
+import fi.luontola.cqrshotel.reservation.events.ContactInformationUpdated;
+import fi.luontola.cqrshotel.reservation.events.CustomerDiscovered;
+import fi.luontola.cqrshotel.reservation.events.LineItemCreated;
+import fi.luontola.cqrshotel.reservation.events.PriceOffered;
+import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
+import fi.luontola.cqrshotel.reservation.events.SearchedForAccommodation;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -35,7 +41,9 @@ public class Reservation extends AggregateRoot {
     }
 
     public void discoverCustomer() {
-        publish(new CustomerDiscovered(getId()));
+        if (getVersion() == EventStore.BEGINNING) {
+            publish(new CustomerDiscovered(getId()));
+        }
     }
 
     public void searchForAccommodation(LocalDate startDate, LocalDate endDate, PricingEngine pricing, Clock clock) {

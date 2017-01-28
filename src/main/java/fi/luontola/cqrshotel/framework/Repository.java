@@ -34,15 +34,23 @@ public class Repository<T extends AggregateRoot> {
             T aggregate = aggregateType.newInstance();
             aggregate.setId(id);
             return aggregate;
-        } catch (InstantiationException | IllegalAccessException e) {
+        } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public T getById(UUID id) {
+    public T createOrGet(UUID id) {
         T aggregate = create(id);
         List<Event> events = eventStore.getEventsForStream(id);
         aggregate.loadFromHistory(events);
+        return aggregate;
+    }
+
+    public T getById(UUID id) {
+        T aggregate = createOrGet(id);
+        if (aggregate.getVersion() == EventStore.BEGINNING) {
+            throw new EventStreamNotFoundException(id);
+        }
         return aggregate;
     }
 
