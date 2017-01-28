@@ -5,7 +5,8 @@
 package fi.luontola.cqrshotel.reservation.queries;
 
 import fi.luontola.cqrshotel.framework.EventListener;
-import fi.luontola.cqrshotel.framework.SingleStreamProjection;
+import fi.luontola.cqrshotel.framework.EventStore;
+import fi.luontola.cqrshotel.framework.StreamProjection;
 import fi.luontola.cqrshotel.hotel.Hotel;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
 import fi.luontola.cqrshotel.reservation.events.PriceOffered;
@@ -14,14 +15,16 @@ import org.javamoney.moneta.Money;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ReservationOfferView implements SingleStreamProjection {
+public class ReservationOfferView extends StreamProjection {
 
     private final Map<LocalDate, PriceOffered> offersByDate = new ConcurrentHashMap<>();
     private final Clock clock;
 
-    public ReservationOfferView(Clock clock) {
+    public ReservationOfferView(UUID streamId, EventStore eventStore, Clock clock) {
+        super(streamId, eventStore);
         this.clock = clock;
     }
 

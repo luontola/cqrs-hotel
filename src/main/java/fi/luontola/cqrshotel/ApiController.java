@@ -7,7 +7,6 @@ package fi.luontola.cqrshotel;
 import fi.luontola.cqrshotel.framework.Command;
 import fi.luontola.cqrshotel.framework.CompositeHandler;
 import fi.luontola.cqrshotel.framework.EventStore;
-import fi.luontola.cqrshotel.framework.InMemoryProjectionUpdater;
 import fi.luontola.cqrshotel.framework.Query;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.reservation.ReservationRepo;
@@ -34,8 +33,7 @@ public class ApiController {
 
     private final CompositeHandler<Command, Void> commandHandler;
     private final CompositeHandler<Query, Object> queryHandler;
-    private final ReservationsView reservationsView = new ReservationsView();
-    private final InMemoryProjectionUpdater reservationsViewUpdater;
+    private final ReservationsView reservationsView;
 
     public ApiController(EventStore eventStore, PricingEngine pricing, Clock clock) {
         ReservationRepo reservationRepo = new ReservationRepo(eventStore);
@@ -49,7 +47,7 @@ public class ApiController {
         queryHandler.register(SearchForAccommodation.class, new SearchForAccommodationQueryHandler(eventStore, clock));
         this.queryHandler = queryHandler;
 
-        this.reservationsViewUpdater = new InMemoryProjectionUpdater(reservationsView, eventStore);
+        reservationsView = new ReservationsView(eventStore);
     }
 
     @RequestMapping(path = "/api", method = GET)
@@ -71,7 +69,7 @@ public class ApiController {
 
     @RequestMapping(path = "/api/reservations", method = GET)
     public List<ReservationDto> reservations() {
-        reservationsViewUpdater.update(); // TODO: update asynchronously when events are created
+        reservationsView.update(); // TODO: update asynchronously when events are created
         return reservationsView.findAll();
     }
 }

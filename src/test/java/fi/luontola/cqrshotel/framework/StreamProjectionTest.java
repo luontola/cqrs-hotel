@@ -20,47 +20,50 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 
 @Category(FastTests.class)
-public class InMemoryProjectionUpdaterTest {
+public class StreamProjectionTest {
 
     private static final DummyEvent one = new DummyEvent("one");
     private static final DummyEvent two = new DummyEvent("two");
     private static final DummyEvent three = new DummyEvent("three");
 
     private final EventStore eventStore = new InMemoryEventStore();
-    private final SpyProjection projection = new SpyProjection();
-    private final InMemoryProjectionUpdater updater = new InMemoryProjectionUpdater(projection, eventStore);
+    private final UUID streamId = UUID.randomUUID();
+    private final SpyProjection projection = new SpyProjection(streamId, eventStore);
 
     @Test
     public void does_nothing_if_no_events() {
-        updater.update();
+        projection.update();
 
         assertThat(projection.receivedEvents, is(empty()));
     }
 
     @Test
-    public void updates_events_for_all_aggregates() {
-        eventStore.saveEvents(UUID.randomUUID(), singletonList(one), EventStore.BEGINNING);
+    public void updates_events_for_only_the_selected_stream() {
+        eventStore.saveEvents(streamId, singletonList(one), EventStore.BEGINNING);
         eventStore.saveEvents(UUID.randomUUID(), singletonList(two), EventStore.BEGINNING);
-        updater.update();
+        projection.update();
 
-        assertThat(projection.receivedEvents, is(asList(one, two)));
+        assertThat(projection.receivedEvents, is(asList(one)));
     }
 
     @Test
     public void updates_only_new_events_since_last_update() {
-        eventStore.saveEvents(UUID.randomUUID(), singletonList(one), EventStore.BEGINNING);
-        eventStore.saveEvents(UUID.randomUUID(), singletonList(two), EventStore.BEGINNING);
-        updater.update();
+        eventStore.saveEvents(streamId, asList(one, two), EventStore.BEGINNING);
+        projection.update();
         projection.receivedEvents.clear();
 
-        eventStore.saveEvents(UUID.randomUUID(), singletonList(three), EventStore.BEGINNING);
-        updater.update();
+        eventStore.saveEvents(streamId, singletonList(three), EventStore.BEGINNING + 2);
+        projection.update();
 
         assertThat("new events", projection.receivedEvents, is(singletonList(three)));
     }
 
-    private static class SpyProjection implements Projection {
+    private static class SpyProjection extends StreamProjection {
         public final List<DummyEvent> receivedEvents = new ArrayList<>();
+
+        public SpyProjection(UUID streamId, EventStore eventStore) {
+            super(streamId, eventStore);
+        }
 
         @EventListener
         private void apply(DummyEvent event) {

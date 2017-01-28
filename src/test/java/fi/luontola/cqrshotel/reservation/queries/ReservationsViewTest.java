@@ -5,6 +5,7 @@
 package fi.luontola.cqrshotel.reservation.queries;
 
 import fi.luontola.cqrshotel.FastTests;
+import fi.luontola.cqrshotel.framework.InMemoryEventStore;
 import fi.luontola.cqrshotel.reservation.events.ContactInformationUpdated;
 import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
 import org.junit.Test;
@@ -28,7 +29,7 @@ public class ReservationsViewTest {
 
     @Test
     public void fills_in_all_fields() {
-        ReservationsView view = new ReservationsView();
+        ReservationsView view = new ReservationsView(new InMemoryEventStore());
         view.apply(new ReservationInitiated(reservationId, checkInTime, checkOutTime));
         view.apply(new ContactInformationUpdated(reservationId, "name", "email"));
 
@@ -46,7 +47,7 @@ public class ReservationsViewTest {
 
     @Test
     public void lists_all_reservations() {
-        ReservationsView view = new ReservationsView();
+        ReservationsView view = new ReservationsView(new InMemoryEventStore());
         view.apply(new ReservationInitiated(reservationId, checkInTime, checkOutTime));
         view.apply(new ReservationInitiated(reservationId2, checkInTime, checkOutTime));
 

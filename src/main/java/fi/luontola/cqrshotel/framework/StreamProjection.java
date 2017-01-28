@@ -7,23 +7,23 @@ package fi.luontola.cqrshotel.framework;
 import java.util.List;
 import java.util.UUID;
 
-public class InMemorySingleStreamProjectionUpdater {
+public abstract class StreamProjection {
 
     private final UUID streamId;
-    private final EventListeners projection;
+    private final EventListeners eventListeners;
     private final EventStore eventStore;
     private int version = EventStore.BEGINNING;
 
-    public InMemorySingleStreamProjectionUpdater(UUID streamId, SingleStreamProjection projection, EventStore eventStore) {
+    public StreamProjection(UUID streamId, EventStore eventStore) {
         this.streamId = streamId;
-        this.projection = EventListeners.of(projection);
+        this.eventListeners = EventListeners.of(this);
         this.eventStore = eventStore;
     }
 
-    public void update() {
+    public final void update() {
         List<Event> events = eventStore.getEventsForStream(streamId, version);
         for (Event event : events) {
-            projection.send(event);
+            eventListeners.send(event);
             version++;
         }
     }
