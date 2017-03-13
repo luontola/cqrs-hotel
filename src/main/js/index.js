@@ -2,6 +2,7 @@
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
+import "babel-polyfill";
 import "purecss/build/pure-min.css";
 import "../css/layout.css";
 import React from "react";
@@ -13,6 +14,7 @@ import {BookingPage} from "./ui/BookingPage";
 import reducers from "./reducers";
 import history from "./history";
 import {Link} from "./ui/Link";
+import router from "./router";
 
 class HomePage extends React.Component {
   render() {
@@ -51,6 +53,10 @@ const routes = [
         <BookingPage/>
       </Provider>
   },
+  {
+    path: '/error',
+    action: ({error}) => <h1>Error {error.status}: {error.message}</h1>
+  },
 ];
 
 function renderComponent(component) {
@@ -69,8 +75,10 @@ function resolveRoute(routes, location) {
 }
 
 function render(location) {
-  const component = resolveRoute(routes, location);
-  renderComponent(component);
+  router.resolve(routes, location)
+    .then(renderComponent)
+    .catch(error => router.resolve(routes, {...location, error})
+      .then(renderComponent));
 }
 
 render(history.location);
