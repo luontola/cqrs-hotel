@@ -4,7 +4,7 @@
 
 import toRegex from "path-to-regexp";
 
-function matchURI(path, uri) {
+export function matchURI(path, uri) {
   const keys = [];
   const pattern = toRegex(path, keys); // TODO: Use caching
   const match = pattern.exec(uri);
