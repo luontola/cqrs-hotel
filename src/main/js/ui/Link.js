@@ -6,7 +6,6 @@ import React from "react";
 import history from "../history";
 
 function handleClick(event) {
-  console.log(event);
   event.preventDefault();
   history.push({
     pathname: event.currentTarget.pathname,
@@ -14,8 +13,8 @@ function handleClick(event) {
   });
 }
 
-const Link = ({to, children}) => (
-  <a href={to} onClick={handleClick}>{children}</a>
+const Link = ({to, children, ...props}) => (
+  <a href={to} onClick={handleClick} {...props}>{children}</a>
 );
 
 export {Link};

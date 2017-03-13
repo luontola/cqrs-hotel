@@ -1,8 +1,8 @@
-// Copyright © 2016 Esko Luontola
+// Copyright © 2016-2017 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
-
 import React from "react";
+import {Link} from "./Link";
 
 /*
  Based on http://purecss.io/layouts/side-menu/
@@ -39,17 +39,17 @@ class Layout extends React.Component {
 
       <div id="menu" className={this.maybeActive()}>
         <div className="pure-menu">
-          <a className="pure-menu-heading" href="#">CQRS Hotel</a>
+          <Link to="/" className="pure-menu-heading">CQRS Hotel</Link>
 
           <ul className="pure-menu-list">
-            <li className="pure-menu-item"><a href="#" className="pure-menu-link">Home</a></li>
-            <li className="pure-menu-item"><a href="#" className="pure-menu-link">About</a></li>
+            <li className="pure-menu-item"><Link to="/" className="pure-menu-link">Home</Link></li>
+            <li className="pure-menu-item"><Link to="/admin" className="pure-menu-link">Admin</Link></li>
 
             <li className="pure-menu-item menu-item-divided pure-menu-selected">
-              <a href="#" className="pure-menu-link">Services</a>
+              <Link to="/services" className="pure-menu-link">Services</Link>
             </li>
 
-            <li className="pure-menu-item"><a href="#" className="pure-menu-link">Contact</a></li>
+            <li className="pure-menu-item"><Link to="/contact" className="pure-menu-link">Contact</Link></li>
           </ul>
         </div>
       </div>

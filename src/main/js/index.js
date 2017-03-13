@@ -11,23 +11,11 @@ import {Provider} from "react-redux";
 import {createStore, applyMiddleware} from "redux";
 import createLogger from "redux-logger";
 import {BookingPage} from "./ui/BookingPage";
+import {AdminPage} from "./ui/AdminPage";
+import {ErrorPage} from "./ui/ErrorPage";
 import reducers from "./reducers";
 import history from "./history";
-import {Link} from "./ui/Link";
 import router from "./router";
-
-class HomePage extends React.Component {
-  render() {
-    return (
-      <ul>
-        <li><Link to="/">Home</Link></li>
-        <li><Link to="/one">One</Link></li>
-        <li><Link to="/two">Two</Link></li>
-        <li><Link to="/booking">Booking</Link></li>
-      </ul>
-    );
-  }
-}
 
 const logger = createLogger();
 const store = createStore(reducers, applyMiddleware(logger));
@@ -36,42 +24,23 @@ const root = document.getElementById('root');
 const routes = [
   {
     path: '/',
-    action: () => <HomePage />
-  },
-  {
-    path: '/one',
-    action: () => <HomePage />
-  },
-  {
-    path: '/two',
-    action: () => <HomePage />
-  },
-  {
-    path: '/booking',
     action: () =>
       <Provider store={store}>
         <BookingPage/>
       </Provider>
   },
   {
+    path: '/admin',
+    action: () => <AdminPage />
+  },
+  {
     path: '/error',
-    action: ({error}) => <h1>Error {error.status}: {error.message}</h1>
+    action: ({error}) => <ErrorPage error={error}/>
   },
 ];
 
 function renderComponent(component) {
   ReactDOM.render(component, root);
-}
-
-function resolveRoute(routes, location) {
-  for (const route of routes) {
-    if (location.pathname === route.path) {
-      return route.action();
-    }
-  }
-  return (
-    <div>Page not found: {location.pathname}</div>
-  );
 }
 
 function render(location) {
