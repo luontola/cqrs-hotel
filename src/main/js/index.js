@@ -7,37 +7,11 @@ import "purecss/build/pure-min.css";
 import "../css/layout.css";
 import React from "react";
 import ReactDOM from "react-dom";
-import {Provider} from "react-redux";
-import {createStore, applyMiddleware} from "redux";
-import createLogger from "redux-logger";
-import {BookingPage} from "./ui/BookingPage";
-import {AdminPage} from "./ui/AdminPage";
-import {ErrorPage} from "./ui/ErrorPage";
-import reducers from "./reducers";
 import history from "./history";
 import router from "./router";
+import routes from "./routes";
 
-const logger = createLogger();
-const store = createStore(reducers, applyMiddleware(logger));
 const root = document.getElementById('root');
-
-const routes = [
-  {
-    path: '/',
-    action: () =>
-      <Provider store={store}>
-        <BookingPage/>
-      </Provider>
-  },
-  {
-    path: '/admin',
-    action: () => <AdminPage />
-  },
-  {
-    path: '/error',
-    action: ({error}) => <ErrorPage error={error}/>
-  },
-];
 
 function renderComponent(component) {
   ReactDOM.render(component, root);
@@ -53,7 +27,6 @@ function render(location) {
 
 render(history.location);
 history.listen((location, action) => {
-  console.log(`The current URL is ${location.pathname}${location.search}${location.hash}`);
-  console.log(`The last navigation action was ${action}`);
+  console.log(`Current URL is now ${location.pathname}${location.search}${location.hash} (${action})`);
   render(location);
 });
