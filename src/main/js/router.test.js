@@ -94,5 +94,23 @@ describe("router", () => {
           expect(page).to.eql('error page');
         });
     });
+
+    it("supports asynchronous routes", () => {
+      const routes = [
+        {
+          path: '/foo',
+          async action() {
+            const data = await Promise.resolve('foo');
+            return 'async page ' + data;
+          }
+        },
+      ];
+      const context = {pathname: '/foo'};
+
+      return router.resolve(routes, context)
+        .then(page => {
+          expect(page).to.eql('async page foo');
+        });
+    })
   });
 });
