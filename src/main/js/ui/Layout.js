@@ -1,12 +1,28 @@
 // Copyright © 2016-2017 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
+
 import React from "react";
 import {Link} from "./Link";
+import history from "../history";
 
-/*
- Based on http://purecss.io/layouts/side-menu/
- */
+// layout based on http://purecss.io/layouts/side-menu/
+
+const MenuLink = ({to, title, divided = false}) => {
+  let className = "pure-menu-item";
+  if (divided) {
+    className += " menu-item-divided";
+  }
+  if (history.location.pathname === to) {
+    className += " pure-menu-selected";
+  }
+  return (
+    <li className={className}>
+      <Link to={to} className="pure-menu-link">{title}</Link>
+    </li>
+  );
+};
+
 class Layout extends React.Component {
 
   constructor(props) {
@@ -42,14 +58,10 @@ class Layout extends React.Component {
           <Link to="/" className="pure-menu-heading">CQRS Hotel</Link>
 
           <ul className="pure-menu-list">
-            <li className="pure-menu-item"><Link to="/" className="pure-menu-link">Home</Link></li>
-            <li className="pure-menu-item"><Link to="/admin" className="pure-menu-link">Admin</Link></li>
-
-            <li className="pure-menu-item menu-item-divided pure-menu-selected">
-              <Link to="/services" className="pure-menu-link">Services</Link>
-            </li>
-
-            <li className="pure-menu-item"><Link to="/contact" className="pure-menu-link">Contact</Link></li>
+            <MenuLink to="/" title="Home"/>
+            <MenuLink to="/admin" title="Admin" divided/>
+            <MenuLink to="/services" title="Services"/>
+            <MenuLink to="/contact" title="Contact"/>
           </ul>
         </div>
       </div>
