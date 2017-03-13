@@ -46,8 +46,9 @@ function renderComponent(component) {
 function render(location) {
   router.resolve(routes, location)
     .then(renderComponent)
-    .catch(error => router.resolve(routes, {...location, error})
-      .then(renderComponent));
+    .catch(error =>
+      router.resolve(routes, {...location, error})
+        .then(renderComponent));
 }
 
 render(history.location);
