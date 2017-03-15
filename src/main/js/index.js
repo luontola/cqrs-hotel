@@ -7,14 +7,20 @@ import "purecss/build/pure-min.css";
 import "../css/layout.css";
 import React from "react";
 import ReactDOM from "react-dom";
+import {Provider} from "react-redux";
+import {createStore, applyMiddleware} from "redux";
+import createLogger from "redux-logger";
+import reducers from "./reducers";
 import history from "./history";
 import router from "./router";
 import routes from "./routes";
 
+const logger = createLogger();
+const store = createStore(reducers, applyMiddleware(logger));
 const root = document.getElementById('root');
 
 function renderComponent(component) {
-  ReactDOM.render(component, root);
+  ReactDOM.render(<Provider store={store}>{component}</Provider>, root);
 }
 
 function render(location) {
