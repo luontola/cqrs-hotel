@@ -255,3 +255,15 @@ Hides the menu at `48em`, but modify this based on your app's needs.
     }
 }
 
+/* -- Customizations to the off-the-shelf styles -------------------------------- */
+
+/*
+Fix the menu link being highlighted still after clicking it due to focus lingering there.
+*/
+.pure-menu-selected a.pure-menu-link:focus {
+    background-color: #1f8dd6 !important;
+}
+
+.pure-menu-selected a.pure-menu-link:hover {
+    background-color: #1f9ce5 !important;
+}
