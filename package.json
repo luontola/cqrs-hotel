@@ -31,6 +31,7 @@
     "css-loader": "0.27.3",
     "jsx-loader": "0.13.2",
     "mocha": "3.2.0",
+    "source-map-explorer": "1.3.3",
     "style-loader": "0.14.0",
     "webpack": "2.2.1",
     "webpack-dev-server": "2.4.2"
@@ -39,7 +40,8 @@
     "test": "mocha --compilers js:babel-core/register --require ./src/main/js/test_setup.js 'src/main/js/**/*.test.js'",
     "build": "NODE_ENV=production webpack --progress --colors -p",
     "autobuild": "webpack --progress --colors --watch",
-    "start": "webpack-dev-server --content-base src/main/web --host 0.0.0.0 --progress --colors"
+    "start": "webpack-dev-server --content-base src/main/web --host 0.0.0.0 --progress --colors",
+    "analyze": "source-map-explorer target/webpack/bundle.js"
   },
   "repository": {
     "type": "git",
