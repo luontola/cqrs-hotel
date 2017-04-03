@@ -2,14 +2,16 @@
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
-var path = require('path');
+const path = require('path');
+
+const isProd = process.env.NODE_ENV === 'production';
 
 function getEntrySources() {
-  var sources = [];
-  if (process.env.NODE_ENV !== 'production') {
+  const sources = [];
+  if (!isProd) {
     sources.push('webpack-dev-server/client?http://localhost:8080');
   }
-  for (var i = 0; i < arguments.length; i++) {
+  for (let i = 0; i < arguments.length; i++) {
     sources.push(arguments[i]);
   }
   return sources;
@@ -24,9 +26,16 @@ module.exports = {
     filename: 'bundle.js',
   },
   module: {
-    loaders: [
-      {test: /\.js$/, loaders: ['jsx', 'babel'], exclude: /node_modules/},
-      {test: /\.css$/, loader: 'style!css'},
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        use: ['babel-loader'],
+      },
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader'],
+      },
     ]
   },
   devtool: 'source-map',

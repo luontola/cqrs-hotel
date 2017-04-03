@@ -32,12 +32,12 @@
     "jsx-loader": "0.13.2",
     "mocha": "3.2.0",
     "style-loader": "0.14.0",
-    "webpack": "1.13.3",
-    "webpack-dev-server": "1.16.2"
+    "webpack": "2.2.1",
+    "webpack-dev-server": "2.4.2"
   },
   "scripts": {
     "test": "mocha --compilers js:babel-core/register --require ./src/main/js/test_setup.js 'src/main/js/**/*.test.js'",
-    "build": "NODE_ENV=production webpack --progress --colors --optimize-minimize",
+    "build": "NODE_ENV=production webpack --progress --colors -p",
     "autobuild": "webpack --progress --colors --watch",
     "start": "webpack-dev-server --content-base src/main/web --host 0.0.0.0 --progress --colors"
   },
