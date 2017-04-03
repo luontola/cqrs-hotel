@@ -1,11 +1,10 @@
-// Copyright © 2016 Esko Luontola
+// Copyright © 2016-2017 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
-
 import React from "react";
 import {connect} from "react-redux";
 import {reduxForm, Field, SubmissionError} from "redux-form";
-import uuid from "node-uuid";
+import uuid from "uuid/v4";
 import {api} from "../util";
 import {reservationOfferReceived} from "../reservationActions";
 import moment from "moment";
