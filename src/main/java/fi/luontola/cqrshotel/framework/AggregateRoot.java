@@ -50,19 +50,17 @@ public abstract class AggregateRoot {
 
     public final void loadFromHistory(Iterable<Event> history) {
         for (Event event : history) {
-            applyChange(event, false);
+            applyChange(event);
         }
     }
 
     protected final void publish(Event event) {
-        applyChange(event, true);
+        applyChange(event);
+        changes.add(event);
     }
 
-    private void applyChange(Event event, boolean isNew) {
+    private void applyChange(Event event) {
         eventListeners.send(event);
         version++;
-        if (isNew) {
-            changes.add(event);
-        }
     }
 }
