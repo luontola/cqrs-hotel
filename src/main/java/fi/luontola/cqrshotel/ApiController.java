@@ -41,6 +41,7 @@ public class ApiController {
         CompositeHandler<Command, Void> commandHandler = new CompositeHandler<>();
         commandHandler.register(SearchForAccommodation.class, new SearchForAccommodationCommandHandler(reservationRepo, pricing, clock));
         commandHandler.register(MakeReservation.class, new MakeReservationHandler(reservationRepo, clock));
+        // TODO: trigger updating projections after processing any command
         this.commandHandler = commandHandler;
 
         CompositeHandler<Query, Object> queryHandler = new CompositeHandler<>();
