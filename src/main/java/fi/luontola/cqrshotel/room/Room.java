@@ -5,11 +5,26 @@
 package fi.luontola.cqrshotel.room;
 
 import fi.luontola.cqrshotel.framework.AggregateRoot;
+import fi.luontola.cqrshotel.framework.EventListener;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
+import fi.luontola.cqrshotel.room.events.RoomReserved;
 
 public class Room extends AggregateRoot {
+    private boolean reserved = false;
+
+    @EventListener
+    private void apply(RoomReserved event) {
+        reserved = true;
+    }
 
     public void createRoom(String number) {
         publish(new RoomCreated(getId(), number));
+    }
+
+    public void reserveRoom() {
+        if (reserved) {
+            throw new RoomAlreadyReservedException();
+        }
+        publish(new RoomReserved(getId()));
     }
 }
