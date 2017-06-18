@@ -11,12 +11,12 @@ import fi.luontola.cqrshotel.util.Struct;
 
 import java.util.UUID;
 
-public class ReserveRoom extends Struct implements Command {
+public class OccupyRoom extends Struct implements Command {
 
     public final UUID roomId;
 
     @JsonCreator
-    public ReserveRoom(@JsonProperty("roomId") UUID roomId) {
+    public OccupyRoom(@JsonProperty("roomId") UUID roomId) {
         this.roomId = roomId;
     }
 }

@@ -9,11 +9,11 @@ import fi.luontola.cqrshotel.util.Struct;
 
 import java.util.UUID;
 
-public class RoomReserved extends Struct implements Event {
+public class RoomOccupied extends Struct implements Event {
 
     public final UUID roomId;
 
-    public RoomReserved(UUID roomId) {
+    public RoomOccupied(UUID roomId) {
         this.roomId = roomId;
     }
 }

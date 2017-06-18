@@ -4,5 +4,5 @@
 
 package fi.luontola.cqrshotel.room;
 
-public class RoomAlreadyReservedException extends RuntimeException {
+public class RoomAlreadyOccupiedException extends RuntimeException {
 }

@@ -6,40 +6,41 @@ package fi.luontola.cqrshotel.room;
 
 import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.framework.AggregateRootTester;
-import fi.luontola.cqrshotel.room.commands.ReserveRoom;
-import fi.luontola.cqrshotel.room.commands.ReserveRoomHandler;
+import fi.luontola.cqrshotel.room.commands.OccupyRoom;
+import fi.luontola.cqrshotel.room.commands.OccupyRoomHandler;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
-import fi.luontola.cqrshotel.room.events.RoomReserved;
+import fi.luontola.cqrshotel.room.events.RoomOccupied;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 
 @Category(FastTests.class)
-public class ReserveRoomTest extends AggregateRootTester {
+public class OccupyRoomTest extends AggregateRootTester {
 
     {
-        commandHandler = new ReserveRoomHandler(new RoomRepo(eventStore));
+        commandHandler = new OccupyRoomHandler(new RoomRepo(eventStore));
     }
 
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
     @Test
-    public void empty_room_can_be_reserved() {
+    public void empty_room_can_be_occupied() {
         given(new RoomCreated(id, "123"));
 
-        when(new ReserveRoom(id));
+        when(new OccupyRoom(id));
 
-        then(new RoomReserved(id));
+        then(new RoomOccupied(id));
     }
 
+    // TODO: occupy a time range, not the whole room
     @Test
-    public void room_cannot_be_reserved_twice() {
+    public void occupied_room_cannot_be_occupied() {
         given(new RoomCreated(id, "123"),
-                new RoomReserved(id));
+                new RoomOccupied(id));
 
-        thrown.expect(RoomAlreadyReservedException.class);
-        when(new ReserveRoom(id));
+        thrown.expect(RoomAlreadyOccupiedException.class);
+        when(new OccupyRoom(id));
     }
 }

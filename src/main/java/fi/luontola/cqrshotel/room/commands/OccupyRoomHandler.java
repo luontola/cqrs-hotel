@@ -8,19 +8,19 @@ import fi.luontola.cqrshotel.framework.Handler;
 import fi.luontola.cqrshotel.room.Room;
 import fi.luontola.cqrshotel.room.RoomRepo;
 
-public class ReserveRoomHandler implements Handler<ReserveRoom, Void> {
+public class OccupyRoomHandler implements Handler<OccupyRoom, Void> {
 
     private final RoomRepo repo;
 
-    public ReserveRoomHandler(RoomRepo repo) {
+    public OccupyRoomHandler(RoomRepo repo) {
         this.repo = repo;
     }
 
     @Override
-    public Void handle(ReserveRoom command) {
+    public Void handle(OccupyRoom command) {
         Room room = repo.getById(command.roomId);
         int originalVersion = room.getVersion();
-        room.reserveRoom();
+        room.occupy();
         repo.save(room, originalVersion);
         return null;
     }
