@@ -5,10 +5,10 @@
 import React from "react";
 import {Layout} from "./Layout";
 
-let AdminPage = () => (
+let ReservationsPage = () => (
   <Layout>
-    <h2 className="content-subhead">Admin</h2>
+    <h2 className="content-subhead">Reservations</h2>
   </Layout>
 );
 
-export {AdminPage};
+export {ReservationsPage};

@@ -4,7 +4,8 @@
 
 import React from "react";
 import {BookingPage} from "./ui/BookingPage";
-import {AdminPage} from "./ui/AdminPage";
+import {ReservationsPage} from "./ui/ReservationsPage";
+import {RoomsPage} from "./ui/RoomsPage";
 import {ErrorPage} from "./ui/ErrorPage";
 
 const routes = [
@@ -13,8 +14,12 @@ const routes = [
     action: () => <BookingPage/>
   },
   {
-    path: '/admin',
-    action: () => <AdminPage />
+    path: '/reservations',
+    action: () => <ReservationsPage/>
+  },
+  {
+    path: '/rooms',
+    action: () => <RoomsPage/>
   },
   {
     path: '/error',
