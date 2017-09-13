@@ -8,13 +8,18 @@ This project strives to differ from your typical toy examples in that *the probl
 
 ## Running
 
-    npm install
-    npm start
-
-meanwhile in another terminal:
+Start the database:
 
     docker-compose up -d db
+
+Start the application:
+
     mvn spring-boot:run
+
+Start the web frontend:
+
+    yarn install
+    yarn start
 
 open http://localhost:8080/
 
