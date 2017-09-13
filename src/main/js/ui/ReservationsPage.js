@@ -5,9 +5,31 @@
 import React from "react";
 import Layout from "./Layout";
 
-const ReservationsPage = () => (
+const ReservationsPage = ({reservations}) => (
   <Layout>
     <h2 className="content-subhead">Reservations</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>Status</th>
+        <th>Start</th>
+        <th>End</th>
+        <th>Guest</th>
+        <th>E-mail</th>
+      </tr>
+      </thead>
+      <tbody>
+      {reservations.map(reservation =>
+        <tr key={reservation.reservationId}>
+          <td>{reservation.status}</td>
+          <td>{reservation.checkInTime}</td>
+          <td>{reservation.checkOutTime}</td>
+          <td>{reservation.name}</td>
+          <td>{reservation.email}</td>
+        </tr>
+      )}
+      </tbody>
+    </table>
   </Layout>
 );
 

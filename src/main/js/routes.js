@@ -7,6 +7,12 @@ import BookingPage from "./ui/BookingPage";
 import ReservationsPage from "./ui/ReservationsPage";
 import RoomsPage from "./ui/RoomsPage";
 import ErrorPage from "./ui/ErrorPage";
+import api from "./api";
+
+async function getReservations() {
+  const response = await api.get('/api/reservations');
+  return response.data;
+}
 
 export default [
   {
@@ -15,7 +21,10 @@ export default [
   },
   {
     path: '/reservations',
-    action: () => <ReservationsPage/>
+    action: async () => {
+      const reservations = await getReservations();
+      return <ReservationsPage reservations={reservations}/>;
+    }
   },
   {
     path: '/rooms',

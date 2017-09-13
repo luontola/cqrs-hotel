@@ -5,10 +5,11 @@
 import "babel-polyfill";
 import "purecss/build/pure-min.css";
 import "../css/layout.css";
+import "../css/tables.css";
 import React from "react";
 import ReactDOM from "react-dom";
 import {Provider} from "react-redux";
-import {createStore, applyMiddleware} from "redux";
+import {applyMiddleware, createStore} from "redux";
 import createLogger from "redux-logger";
 import reducers from "./reducers";
 import history from "./history";
