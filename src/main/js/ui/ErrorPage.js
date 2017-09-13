@@ -3,12 +3,12 @@
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
 import React from "react";
-import {Layout} from "./Layout";
+import Layout from "./Layout";
 
-let ErrorPage = ({error}) => (
+const ErrorPage = ({error}) => (
   <Layout>
     <h2 className="content-subhead">Error {error.status}: {error.message}</h2>
   </Layout>
 );
 
-export {ErrorPage};
+export default ErrorPage;

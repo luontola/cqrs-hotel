@@ -3,7 +3,7 @@
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
 import React from "react";
-import {Link} from "./Link";
+import Link from "./Link";
 import history from "../history";
 
 // layout based on http://purecss.io/layouts/side-menu/
@@ -80,4 +80,4 @@ class Layout extends React.Component {
   }
 }
 
-export {Layout};
+export default Layout;

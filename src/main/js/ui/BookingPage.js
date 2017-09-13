@@ -1,15 +1,15 @@
-// Copyright © 2016 Esko Luontola
+// Copyright © 2016-2017 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
 import React from "react";
 import {connect} from "react-redux";
-import {Layout} from "./Layout";
-import {api} from "../util";
-import {AccommodationSearchForm} from "./AccommodationSearchForm";
+import Layout from "./Layout";
+import api from "../api";
+import AccommodationSearchForm from "./AccommodationSearchForm";
 import {reservationMade} from "../reservationActions";
 
-let BookingPage = ({reservation, reservationOffer, makeReservation}) => (
+const BookingPage = ({reservation, reservationOffer, makeReservation}) => (
   <Layout>
     <h2 className="content-subhead">Booking a Room</h2>
     <AccommodationSearchForm/>
@@ -56,6 +56,4 @@ function mapDispatchToProps(dispatch) {
   }
 }
 
-BookingPage = connect(mapStateToProps, mapDispatchToProps)(BookingPage);
-
-export {BookingPage};
+export default connect(mapStateToProps, mapDispatchToProps)(BookingPage);

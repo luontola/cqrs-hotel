@@ -3,9 +3,9 @@
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 import React from "react";
 import {connect} from "react-redux";
-import {reduxForm, Field, SubmissionError} from "redux-form";
+import {Field, reduxForm, SubmissionError} from "redux-form";
 import uuid from "uuid/v4";
-import {api} from "../util";
+import api from "../api";
 import {reservationOfferReceived} from "../reservationActions";
 import moment from "moment";
 
@@ -51,6 +51,4 @@ function mapStateToProps(state) {
   }
 }
 
-AccommodationSearchForm = connect(mapStateToProps)(AccommodationSearchForm);
-
-export {AccommodationSearchForm};
+export default connect(mapStateToProps)(AccommodationSearchForm);

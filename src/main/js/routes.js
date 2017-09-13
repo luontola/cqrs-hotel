@@ -3,12 +3,12 @@
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
 import React from "react";
-import {BookingPage} from "./ui/BookingPage";
-import {ReservationsPage} from "./ui/ReservationsPage";
-import {RoomsPage} from "./ui/RoomsPage";
-import {ErrorPage} from "./ui/ErrorPage";
+import BookingPage from "./ui/BookingPage";
+import ReservationsPage from "./ui/ReservationsPage";
+import RoomsPage from "./ui/RoomsPage";
+import ErrorPage from "./ui/ErrorPage";
 
-const routes = [
+export default [
   {
     path: '/',
     action: () => <BookingPage/>
@@ -26,5 +26,3 @@ const routes = [
     action: ({error}) => <ErrorPage error={error}/>
   },
 ];
-
-export default routes;
