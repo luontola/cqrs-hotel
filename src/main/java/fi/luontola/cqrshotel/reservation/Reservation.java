@@ -20,6 +20,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -73,14 +74,12 @@ public class Reservation extends AggregateRoot {
     }
 
     public void makeReservation(LocalDate startDate, LocalDate endDate, Clock clock) {
-        Instant checkInTime = startDate
+        ZonedDateTime checkInTime = startDate
                 .atTime(Hotel.CHECK_IN_TIME)
-                .atZone(Hotel.TIMEZONE)
-                .toInstant();
-        Instant checkOutTime = endDate
+                .atZone(Hotel.TIMEZONE);
+        ZonedDateTime checkOutTime = endDate
                 .atTime(Hotel.CHECK_OUT_TIME)
-                .atZone(Hotel.TIMEZONE)
-                .toInstant();
+                .atZone(Hotel.TIMEZONE);
         publish(new ReservationInitiated(getId(), checkInTime, checkOutTime));
 
         for (LocalDate date = startDate; date.isBefore(endDate); date = date.plusDays(1)) {

@@ -19,6 +19,8 @@ import java.lang.reflect.Modifier;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Month;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -94,6 +96,10 @@ public class JsonSerializationTest {
         }
         if (type == Instant.class) {
             return Instant.ofEpochMilli(random.nextLong());
+        }
+        if (type == ZonedDateTime.class) {
+            ZoneId zoneId = ZoneId.of(pickRandom(ZoneId.getAvailableZoneIds()));
+            return Instant.ofEpochMilli(random.nextLong()).atZone(zoneId);
         }
         if (type == String.class) {
             return RandomStringUtils.randomAlphanumeric(random.nextInt(10));

@@ -6,14 +6,14 @@ package fi.luontola.cqrshotel.reservation.queries;
 
 import fi.luontola.cqrshotel.util.Struct;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 public class ReservationDto extends Struct {
 
     public UUID reservationId;
-    public Instant checkInTime;
-    public Instant checkOutTime;
+    public ZonedDateTime checkInTime;
+    public ZonedDateTime checkOutTime;
     public String name;
     public String email;
     public String status;

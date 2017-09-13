@@ -9,14 +9,23 @@ import fi.luontola.cqrshotel.framework.AggregateRootTester;
 import fi.luontola.cqrshotel.hotel.Hotel;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservationHandler;
-import fi.luontola.cqrshotel.reservation.events.*;
+import fi.luontola.cqrshotel.reservation.events.ContactInformationUpdated;
+import fi.luontola.cqrshotel.reservation.events.CustomerDiscovered;
+import fi.luontola.cqrshotel.reservation.events.LineItemCreated;
+import fi.luontola.cqrshotel.reservation.events.PriceOffered;
+import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
 import org.javamoney.moneta.Money;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 
-import java.time.*;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 @Category(FastTests.class)
 public class MakeReservationTest extends AggregateRootTester {
@@ -47,8 +56,8 @@ public class MakeReservationTest extends AggregateRootTester {
 
         then(new ContactInformationUpdated(id, "John Doe", "john@example.com"),
                 new ReservationInitiated(id,
-                        ZonedDateTime.of(date1, Hotel.CHECK_IN_TIME, Hotel.TIMEZONE).toInstant(),
-                        ZonedDateTime.of(date2, Hotel.CHECK_OUT_TIME, Hotel.TIMEZONE).toInstant()),
+                        ZonedDateTime.of(date1, Hotel.CHECK_IN_TIME, Hotel.TIMEZONE),
+                        ZonedDateTime.of(date2, Hotel.CHECK_OUT_TIME, Hotel.TIMEZONE)),
                 new LineItemCreated(id, 1, date1, price1));
     }
 

@@ -49,6 +49,9 @@ public class Application {
         om.configure(SerializationFeature.INDENT_OUTPUT, true);
         om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         om.configure(DeserializationFeature.FAIL_ON_NUMBERS_FOR_ENUMS, true);
+        // preserve time zone information
+        om.configure(SerializationFeature.WRITE_DATES_WITH_ZONE_ID, true);
+        om.configure(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE, false);
         return om;
     }
 }
