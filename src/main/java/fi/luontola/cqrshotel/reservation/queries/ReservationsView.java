@@ -10,6 +10,7 @@ import fi.luontola.cqrshotel.framework.Projection;
 import fi.luontola.cqrshotel.reservation.events.ContactInformationUpdated;
 import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -17,6 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 public class ReservationsView extends Projection {
+
+    public static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("d.M.yyyy HH:mm");
 
     private final ConcurrentMap<UUID, ReservationDto> reservationsById = new ConcurrentHashMap<>();
 
@@ -31,8 +34,8 @@ public class ReservationsView extends Projection {
     @EventListener
     public void apply(ReservationInitiated event) {
         ReservationDto reservation = getReservation(event.reservationId);
-        reservation.checkInTime = event.checkInTime;
-        reservation.checkOutTime = event.checkOutTime;
+        reservation.checkInTime = event.checkInTime.format(DATE_TIME_FORMAT);
+        reservation.checkOutTime = event.checkOutTime.format(DATE_TIME_FORMAT);
         reservation.status = "initiated";
     }
 
