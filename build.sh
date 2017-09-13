@@ -3,6 +3,7 @@ set -eux
 
 docker-compose up -d db
 mvn clean verify
-npm install
-npm run build
+yarn install
+yarn run test
+yarn run build
 docker-compose build

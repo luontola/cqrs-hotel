@@ -4,6 +4,8 @@
 
 package fi.luontola.cqrshotel.room.events;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import fi.luontola.cqrshotel.framework.Event;
 import fi.luontola.cqrshotel.util.Struct;
 
@@ -13,7 +15,8 @@ public class RoomOccupied extends Struct implements Event {
 
     public final UUID roomId;
 
-    public RoomOccupied(UUID roomId) {
+    @JsonCreator
+    public RoomOccupied(@JsonProperty("roomId") UUID roomId) {
         this.roomId = roomId;
     }
 }

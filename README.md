@@ -26,7 +26,7 @@ open http://localhost:8080/
 
 ## Building
 
-You must have installed Java 8, Maven 3.2.5, Node.js 6.8.0, Docker 1.12 or higher versions of those. Then build this project with the command:
+You must have installed Java 8, Maven 3.2.5, Node.js 6.8.0, Yarn 1.0, Docker 1.12 or higher versions of those. Then build this project with the command:
 
     ./build.sh
 

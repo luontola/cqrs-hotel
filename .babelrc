@@ -1,10 +1,24 @@
 {
   "presets": [
-    ["es2015", {"modules": false}],
+    [
+      "env", {
+      "targets": {"browsers": ["last 2 versions"]},
+      "modules": false,
+      "useBuiltIns": true,
+      "debug": false
+    }
+    ],
     "react"
   ],
   "plugins": [
-    "transform-object-rest-spread",
-    "transform-async-to-generator"
-  ]
+    "transform-object-rest-spread"
+  ],
+  "env": {
+    "test": {
+      "presets": [
+        ["env", {"targets": {"node": "current"}}],
+        "react"
+      ]
+    }
+  }
 }
