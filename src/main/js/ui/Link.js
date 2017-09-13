@@ -6,6 +6,9 @@ import React from "react";
 import history from "../history";
 
 function handleClick(event) {
+  if (event.currentTarget.origin !== document.location.origin) {
+    return; // link to an external site; preserve the default event handing
+  }
   event.preventDefault();
   history.push({
     pathname: event.currentTarget.pathname,
