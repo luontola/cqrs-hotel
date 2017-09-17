@@ -27,7 +27,7 @@ const ReservationsPage = ({reservations}) => (
           <td>{reservation.checkInTime}</td>
           <td>{reservation.checkOutTime}</td>
           <td>{reservation.name}</td>
-          <td>{reservation.email}</td>
+          <td><a href={`mailto:${reservation.email}`}>{reservation.email}</a></td>
         </tr>
       )}
       </tbody>
