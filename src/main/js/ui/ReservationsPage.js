@@ -9,7 +9,7 @@ import sortBy from "lodash-es/sortBy";
 const ReservationsPage = ({reservations}) => (
   <Layout>
     <h2 className="content-subhead">Reservations</h2>
-    <table>
+    <table className="pure-table">
       <thead>
       <tr>
         <th>Status</th>

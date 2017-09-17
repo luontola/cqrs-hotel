@@ -9,10 +9,10 @@ import sortBy from "lodash-es/sortBy";
 const RoomsPage = ({rooms}) => (
   <Layout>
     <h2 className="content-subhead">Rooms</h2>
-    <table>
+    <table className="pure-table">
       <thead>
       <tr>
-        <th>Room</th>
+        <th>Number</th>
       </tr>
       </thead>
       <tbody>

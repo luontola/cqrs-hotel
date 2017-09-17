@@ -5,7 +5,6 @@
 import "babel-polyfill";
 import "purecss/build/pure-min.css";
 import "../css/layout.css";
-import "../css/tables.css";
 import React from "react";
 import ReactDOM from "react-dom";
 import {Provider} from "react-redux";
