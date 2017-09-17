@@ -14,6 +14,11 @@ async function getReservations() {
   return response.data;
 }
 
+async function getRooms() {
+  const response = await api.get('/api/rooms');
+  return response.data;
+}
+
 export default [
   {
     path: '/',
@@ -28,7 +33,10 @@ export default [
   },
   {
     path: '/rooms',
-    action: () => <RoomsPage/>
+    action: async () => {
+      const rooms = await getRooms();
+      return <RoomsPage rooms={rooms}/>;
+    }
   },
   {
     path: '/error',

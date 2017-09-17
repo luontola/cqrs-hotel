@@ -4,10 +4,26 @@
 
 import React from "react";
 import Layout from "./Layout";
+import sortBy from "lodash-es/sortBy";
 
-const RoomsPage = () => (
+const RoomsPage = ({rooms}) => (
   <Layout>
     <h2 className="content-subhead">Rooms</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>Room</th>
+      </tr>
+      </thead>
+      <tbody>
+      {sortBy(rooms, ['number', 'roomId']).map(room =>
+        <tr key={room.roomId}>
+          <td>{room.number}</td>
+        </tr>
+      )}
+      </tbody>
+    </table>
+
   </Layout>
 );
 

@@ -12,18 +12,33 @@ import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.PsqlEventStore;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.pricing.RandomPricingEngine;
+import fi.luontola.cqrshotel.room.commands.CreateRoom;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 
 import javax.sql.DataSource;
 import java.time.Clock;
+import java.util.Arrays;
+import java.util.UUID;
 
 @SpringBootApplication
 public class Application {
 
     public static void main(String[] args) throws Exception {
-        SpringApplication.run(Application.class, args);
+        ConfigurableApplicationContext app = SpringApplication.run(Application.class, args);
+        EventStore eventStore = app.getBean(EventStore.class);
+        if (eventStore.getCurrentPosition() == 0) {
+            ApiController api = app.getBean(ApiController.class);
+            initializeTestData(api);
+        }
+    }
+
+    private static void initializeTestData(ApiController api) {
+        for (String roomNumber : Arrays.asList("101", "102", "103", "104", "105")) {
+            api.createRoom(new CreateRoom(UUID.randomUUID(), roomNumber));
+        }
     }
 
     @Bean

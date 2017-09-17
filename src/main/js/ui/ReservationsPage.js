@@ -4,6 +4,7 @@
 
 import React from "react";
 import Layout from "./Layout";
+import sortBy from "lodash-es/sortBy";
 
 const ReservationsPage = ({reservations}) => (
   <Layout>
@@ -19,7 +20,7 @@ const ReservationsPage = ({reservations}) => (
       </tr>
       </thead>
       <tbody>
-      {reservations.map(reservation =>
+      {sortBy(reservations, ['checkInTime', 'checkOutTime', 'name', 'reservationId']).map(reservation =>
         <tr key={reservation.reservationId}>
           <td>{reservation.status}</td>
           <td>{reservation.checkInTime}</td>

@@ -18,6 +18,11 @@ import fi.luontola.cqrshotel.reservation.queries.ReservationDto;
 import fi.luontola.cqrshotel.reservation.queries.ReservationOffer;
 import fi.luontola.cqrshotel.reservation.queries.ReservationsView;
 import fi.luontola.cqrshotel.reservation.queries.SearchForAccommodationQueryHandler;
+import fi.luontola.cqrshotel.room.RoomRepo;
+import fi.luontola.cqrshotel.room.commands.CreateRoom;
+import fi.luontola.cqrshotel.room.commands.CreateRoomHandler;
+import fi.luontola.cqrshotel.room.queries.RoomDto;
+import fi.luontola.cqrshotel.room.queries.RoomsView;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,13 +39,16 @@ public class ApiController {
     private final CompositeHandler<Command, Void> commandHandler;
     private final CompositeHandler<Query, Object> queryHandler;
     private final ReservationsView reservationsView;
+    private final RoomsView roomsView;
 
     public ApiController(EventStore eventStore, PricingEngine pricing, Clock clock) {
         ReservationRepo reservationRepo = new ReservationRepo(eventStore);
+        RoomRepo roomRepo = new RoomRepo(eventStore);
 
         CompositeHandler<Command, Void> commandHandler = new CompositeHandler<>();
         commandHandler.register(SearchForAccommodation.class, new SearchForAccommodationCommandHandler(reservationRepo, pricing, clock));
         commandHandler.register(MakeReservation.class, new MakeReservationHandler(reservationRepo, clock));
+        commandHandler.register(CreateRoom.class, new CreateRoomHandler(roomRepo));
         // TODO: trigger updating projections after processing any command
         this.commandHandler = commandHandler;
 
@@ -49,6 +57,7 @@ public class ApiController {
         this.queryHandler = queryHandler;
 
         reservationsView = new ReservationsView(eventStore);
+        roomsView = new RoomsView(eventStore);
     }
 
     @RequestMapping(path = "/api", method = GET)
@@ -72,5 +81,17 @@ public class ApiController {
     public List<ReservationDto> reservations() {
         reservationsView.update(); // TODO: update asynchronously when events are created
         return reservationsView.findAll();
+    }
+
+    @RequestMapping(path = "/api/create-room", method = POST)
+    public Boolean createRoom(@RequestBody CreateRoom command) {
+        commandHandler.handle(command);
+        return true;
+    }
+
+    @RequestMapping(path = "/api/rooms", method = GET)
+    public List<RoomDto> rooms() {
+        roomsView.update(); // TODO: update asynchronously when events are created
+        return roomsView.findAll();
     }
 }
