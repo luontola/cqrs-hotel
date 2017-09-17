@@ -15,8 +15,15 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 
+import java.time.Instant;
+
 @Category(FastTests.class)
 public class OccupyRoomTest extends AggregateRootTester {
+
+    private static final Instant t1 = Instant.ofEpochSecond(1);
+    private static final Instant t2 = Instant.ofEpochSecond(2);
+    private static final Instant t3 = Instant.ofEpochSecond(3);
+    private static final Instant t4 = Instant.ofEpochSecond(4);
 
     {
         commandHandler = new OccupyRoomHandler(new RoomRepo(eventStore));
@@ -29,18 +36,92 @@ public class OccupyRoomTest extends AggregateRootTester {
     public void empty_room_can_be_occupied() {
         given(new RoomCreated(id, "123"));
 
-        when(new OccupyRoom(id));
+        when(new OccupyRoom(id, t1, t2));
 
-        then(new RoomOccupied(id));
+        then(new RoomOccupied(id, t1, t2));
     }
 
-    // TODO: occupy a time range, not the whole room
     @Test
-    public void occupied_room_cannot_be_occupied() {
+    public void can_occupy_room_at_disjoined_time() {
         given(new RoomCreated(id, "123"),
-                new RoomOccupied(id));
+                new RoomOccupied(id, t1, t2));
+
+        when(new OccupyRoom(id, t3, t4));
+
+        then(new RoomOccupied(id, t3, t4));
+    }
+
+    @Test
+    public void can_occupy_room_at_adjacent_earlier_time() {
+        given(new RoomCreated(id, "123"),
+                new RoomOccupied(id, t2, t3));
+
+        when(new OccupyRoom(id, t1, t2));
+
+        then(new RoomOccupied(id, t1, t2));
+    }
+
+    @Test
+    public void can_occupy_room_at_adjacent_later_time() {
+        given(new RoomCreated(id, "123"),
+                new RoomOccupied(id, t2, t3));
+
+        when(new OccupyRoom(id, t3, t4));
+
+        then(new RoomOccupied(id, t3, t4));
+    }
+
+    @Test
+    public void cannot_occupy_room_at_exactly_same_time() {
+        given(new RoomCreated(id, "123"),
+                new RoomOccupied(id, t1, t2));
 
         thrown.expect(RoomAlreadyOccupiedException.class);
-        when(new OccupyRoom(id));
+        when(new OccupyRoom(id, t1, t2));
+    }
+
+    @Test
+    public void cannot_occupy_room_at_subset_time() {
+        given(new RoomCreated(id, "123"),
+                new RoomOccupied(id, t1, t4));
+
+        thrown.expect(RoomAlreadyOccupiedException.class);
+        when(new OccupyRoom(id, t2, t3));
+    }
+
+    @Test
+    public void cannot_occupy_room_at_overlapping_earlier_time() {
+        given(new RoomCreated(id, "123"),
+                new RoomOccupied(id, t2, t4));
+
+        thrown.expect(RoomAlreadyOccupiedException.class);
+        when(new OccupyRoom(id, t1, t3));
+    }
+
+    @Test
+    public void cannot_occupy_room_at_overlapping_later_time() {
+        given(new RoomCreated(id, "123"),
+                new RoomOccupied(id, t1, t3));
+
+        thrown.expect(RoomAlreadyOccupiedException.class);
+        when(new OccupyRoom(id, t2, t4));
+    }
+
+    @Test
+    public void start_cannot_equal_end() {
+        given(new RoomCreated(id, "123"));
+
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("start must be before end, but was: start 1970-01-01T00:00:01Z, end 1970-01-01T00:00:01Z");
+        when(new OccupyRoom(id, t1, t1));
+    }
+
+    @Test
+    public void start_cannot_be_after_end() {
+        given(new RoomCreated(id, "123"));
+
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("start must be before end, but was: start 1970-01-01T00:00:02Z, end 1970-01-01T00:00:01Z");
+        when(new OccupyRoom(id, t2, t1));
     }
 }

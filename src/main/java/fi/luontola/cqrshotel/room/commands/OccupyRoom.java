@@ -9,14 +9,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import fi.luontola.cqrshotel.framework.Command;
 import fi.luontola.cqrshotel.util.Struct;
 
+import java.time.Instant;
 import java.util.UUID;
 
 public class OccupyRoom extends Struct implements Command {
 
     public final UUID roomId;
+    public final Instant start;
+    public final Instant end;
 
     @JsonCreator
-    public OccupyRoom(@JsonProperty("roomId") UUID roomId) {
+    public OccupyRoom(@JsonProperty("roomId") UUID roomId,
+                      @JsonProperty("start") Instant start,
+                      @JsonProperty("end") Instant end) {
         this.roomId = roomId;
+        this.start = start;
+        this.end = end;
     }
 }

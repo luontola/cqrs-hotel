@@ -9,23 +9,30 @@ import fi.luontola.cqrshotel.framework.EventListener;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
 import fi.luontola.cqrshotel.room.events.RoomOccupied;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Room extends AggregateRoot {
 
-    private boolean occupied = false;
+    private final List<Range> occupiedRanges = new ArrayList<>();
 
     @EventListener
     private void apply(RoomOccupied event) {
-        occupied = true;
+        occupiedRanges.add(new Range(event.start, event.end));
     }
 
     public void createRoom(String number) {
         publish(new RoomCreated(getId(), number));
     }
 
-    public void occupy() {
-        if (occupied) {
+    public void occupy(Range range) {
+        if (isOccupiedAt(range)) {
             throw new RoomAlreadyOccupiedException();
         }
-        publish(new RoomOccupied(getId()));
+        publish(new RoomOccupied(getId(), range.start, range.end));
+    }
+
+    private boolean isOccupiedAt(Range range) {
+        return occupiedRanges.stream().anyMatch(range::overlaps);
     }
 }
