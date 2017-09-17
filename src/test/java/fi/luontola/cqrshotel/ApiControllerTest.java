@@ -4,6 +4,7 @@
 
 package fi.luontola.cqrshotel;
 
+import fi.luontola.cqrshotel.capacity.CapacityDto;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
@@ -30,6 +31,7 @@ import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Matchers.any;
@@ -111,7 +113,7 @@ public class ApiControllerTest {
     }
 
     public void test_reservationById() {
-        ReservationDto result = restTemplate.getForObject("/api/reservations/" + reservationId, ReservationDto.class);
+        ReservationDto result = restTemplate.getForObject("/api/reservations/{id}", ReservationDto.class, reservationId);
 
         assertThat(result.reservationId, is(reservationId));
     }
@@ -134,5 +136,25 @@ public class ApiControllerTest {
         assertThat(results.stream()
                 .filter(room -> room.get("roomId").equals(roomId))
                 .findFirst(), is(notNullValue()));
+    }
+
+    @Test
+    public void test_capacityByDate() {
+        LocalDate date = LocalDate.now();
+
+        CapacityDto results = restTemplate.getForObject("/api/capacity/{date}", CapacityDto.class, date);
+
+        assertThat("date", results.date, is(date));
+        assertThat("capacity", results.capacity, is(notNullValue()));
+        assertThat("reserved", results.reserved, is(notNullValue()));
+    }
+
+    @Test
+    public void test_capacityByDateRange() {
+        LocalDate date = LocalDate.now();
+
+        List<Map<String, Object>> results = restTemplate.getForObject("/api/capacity/{start}/{end}", List.class, date, date);
+
+        assertThat(results, hasSize(1));
     }
 }

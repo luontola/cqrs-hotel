@@ -4,6 +4,8 @@
 
 package fi.luontola.cqrshotel;
 
+import fi.luontola.cqrshotel.capacity.CapacityDto;
+import fi.luontola.cqrshotel.capacity.CapacityView;
 import fi.luontola.cqrshotel.framework.Command;
 import fi.luontola.cqrshotel.framework.CompositeHandler;
 import fi.luontola.cqrshotel.framework.EventStore;
@@ -29,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Clock;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,6 +45,7 @@ public class ApiController {
     private final CompositeHandler<Query, Object> queryHandler;
     private final ReservationsView reservationsView;
     private final RoomsView roomsView;
+    private final CapacityView capacityView;
 
     public ApiController(EventStore eventStore, PricingEngine pricing, Clock clock) {
         ReservationRepo reservationRepo = new ReservationRepo(eventStore);
@@ -60,6 +64,7 @@ public class ApiController {
 
         reservationsView = new ReservationsView(eventStore);
         roomsView = new RoomsView(eventStore);
+        capacityView = new CapacityView(eventStore);
     }
 
     @RequestMapping(path = "/api", method = GET)
@@ -101,5 +106,18 @@ public class ApiController {
     public List<RoomDto> rooms() {
         roomsView.update(); // TODO: update asynchronously when events are created
         return roomsView.findAll();
+    }
+
+    @RequestMapping(path = "/api/capacity/{date}", method = GET)
+    public CapacityDto capacityByDate(@PathVariable String date) {
+        capacityView.update(); // TODO: update asynchronously when events are created
+        return capacityView.getCapacityByDate(LocalDate.parse(date));
+    }
+
+    @RequestMapping(path = "/api/capacity/{start}/{end}", method = GET)
+    public List<CapacityDto> capacityByDateRange(@PathVariable String start,
+                                                 @PathVariable String end) {
+        capacityView.update(); // TODO: update asynchronously when events are created
+        return capacityView.getCapacityByDateRange(LocalDate.parse(start), LocalDate.parse(end));
     }
 }
