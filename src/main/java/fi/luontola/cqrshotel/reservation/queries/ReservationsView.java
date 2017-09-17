@@ -38,6 +38,8 @@ public class ReservationsView extends Projection {
     @EventListener
     public void apply(ReservationInitiated event) {
         ReservationDto reservation = getReservation(event.reservationId);
+        reservation.arrival = event.arrival;
+        reservation.departure = event.departure;
         reservation.checkInTime = event.checkInTime.format(DATE_TIME_FORMAT);
         reservation.checkOutTime = event.checkOutTime.format(DATE_TIME_FORMAT);
         reservation.status = "initiated";

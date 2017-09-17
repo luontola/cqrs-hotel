@@ -55,7 +55,7 @@ public class MakeReservationTest extends AggregateRootTester {
         when(new MakeReservation(id, date1, date2, "John Doe", "john@example.com"));
 
         then(new ContactInformationUpdated(id, "John Doe", "john@example.com"),
-                new ReservationInitiated(id,
+                new ReservationInitiated(id, date1, date2,
                         ZonedDateTime.of(date1, Hotel.CHECK_IN_TIME, Hotel.TIMEZONE),
                         ZonedDateTime.of(date2, Hotel.CHECK_OUT_TIME, Hotel.TIMEZONE)),
                 new LineItemCreated(id, 1, date1, price1));
@@ -64,7 +64,7 @@ public class MakeReservationTest extends AggregateRootTester {
     @Test
     public void cannot_make_reservation_twice() {
         given(new CustomerDiscovered(id),
-                new ReservationInitiated(id,
+                new ReservationInitiated(id, date1, date2,
                         ZonedDateTime.of(date1, Hotel.CHECK_IN_TIME, Hotel.TIMEZONE),
                         ZonedDateTime.of(date2, Hotel.CHECK_OUT_TIME, Hotel.TIMEZONE)));
 

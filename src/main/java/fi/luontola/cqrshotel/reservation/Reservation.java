@@ -99,7 +99,7 @@ public class Reservation extends AggregateRoot {
         ZonedDateTime checkOutTime = departure
                 .atTime(Hotel.CHECK_OUT_TIME)
                 .atZone(Hotel.TIMEZONE);
-        publish(new ReservationInitiated(getId(), checkInTime, checkOutTime));
+        publish(new ReservationInitiated(getId(), arrival, departure, checkInTime, checkOutTime));
 
         for (LocalDate date = arrival; date.isBefore(departure); date = date.plusDays(1)) {
             PriceOffered offer = getValidPriceOffer(date, clock);
