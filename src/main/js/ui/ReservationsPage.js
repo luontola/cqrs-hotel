@@ -12,8 +12,8 @@ const ReservationsPage = ({reservations}) => (
       <thead>
       <tr>
         <th>Status</th>
-        <th>Start</th>
-        <th>End</th>
+        <th>Check-In</th>
+        <th>Check-Out</th>
         <th>Guest</th>
         <th>E-mail</th>
       </tr>
