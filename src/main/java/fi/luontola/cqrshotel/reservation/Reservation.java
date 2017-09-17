@@ -24,16 +24,32 @@ import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import static fi.luontola.cqrshotel.reservation.Reservation.State.INITIATED;
+import static fi.luontola.cqrshotel.reservation.Reservation.State.PROSPECT;
+
 public class Reservation extends AggregateRoot {
 
     public static final Duration PRICE_VALIDITY_DURATION = Duration.ofMinutes(30);
 
+    enum State {PROSPECT, INITIATED}
+
+    private State state;
     private final Map<LocalDate, PriceOffered> priceOffersByDate = new HashMap<>();
     private int lineItems = 0;
 
     @EventListener
+    private void apply(CustomerDiscovered event) {
+        state = PROSPECT;
+    }
+
+    @EventListener
     private void apply(PriceOffered event) {
         priceOffersByDate.put(event.date, event);
+    }
+
+    @EventListener
+    private void apply(ReservationInitiated event) {
+        state = INITIATED;
     }
 
     @EventListener
@@ -74,6 +90,9 @@ public class Reservation extends AggregateRoot {
     }
 
     public void makeReservation(LocalDate startDate, LocalDate endDate, Clock clock) {
+        if (state != PROSPECT) {
+            throw new IllegalStateException("unexpected state: " + state);
+        }
         ZonedDateTime checkInTime = startDate
                 .atTime(Hotel.CHECK_IN_TIME)
                 .atZone(Hotel.TIMEZONE);

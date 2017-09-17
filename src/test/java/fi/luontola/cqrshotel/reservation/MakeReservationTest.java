@@ -62,6 +62,18 @@ public class MakeReservationTest extends AggregateRootTester {
     }
 
     @Test
+    public void cannot_make_reservation_twice() {
+        given(new CustomerDiscovered(id),
+                new ReservationInitiated(id,
+                        ZonedDateTime.of(date1, Hotel.CHECK_IN_TIME, Hotel.TIMEZONE),
+                        ZonedDateTime.of(date2, Hotel.CHECK_OUT_TIME, Hotel.TIMEZONE)));
+
+        thrown.expect(IllegalStateException.class);
+        thrown.expectMessage("unexpected state: INITIATED");
+        when(new MakeReservation(id, date1, date2, "John Doe", "john@example.com"));
+    }
+
+    @Test
     public void produces_line_items_for_every_date_in_range() {
         given(new CustomerDiscovered(id),
                 new PriceOffered(id, date1, price1, expiresInFuture),
