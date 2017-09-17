@@ -7,7 +7,7 @@ import {connect} from "react-redux";
 import Layout from "./Layout";
 import api from "../api";
 import AccommodationSearchForm from "./AccommodationSearchForm";
-import {reservationMade} from "../reservationActions";
+import history from "../history";
 
 const BookingPage = ({reservation, reservationOffer, makeReservation}) => (
   <Layout>
@@ -47,10 +47,13 @@ function mapDispatchToProps(dispatch) {
         email: "john@example.com",
       })
         .then(response => {
-          dispatch(reservationMade(response.data));
+          const {reservationId} = reservationOffer;
+          history.push({pathname: `/reservations/${reservationId}`});
+          // TODO: empty the state; must not be able to go back and make the same reservation again
         })
         .catch(error => {
-          console.log("makeReservation failed", error);
+          console.log("makeReservation failed", error.response, error);
+          alert(`Something went wrong in making the reservation.\n${error.response.data.exception}: ${error.response.data.message}`);
         });
     },
   }
