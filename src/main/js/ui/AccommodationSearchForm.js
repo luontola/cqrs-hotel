@@ -7,7 +7,8 @@ import {Field, reduxForm, SubmissionError} from "redux-form";
 import uuid from "uuid/v4";
 import api from "../api";
 import {reservationOfferReceived} from "../reservationActions";
-import moment from "moment";
+import format from "date-fns/format";
+import addDays from "date-fns/add_days";
 
 let AccommodationSearchForm = ({handleSubmit, submitting, error}) => (
   <form onSubmit={handleSubmit(searchForAccommodation)}>
@@ -42,11 +43,12 @@ function searchForAccommodation(form, dispatch, props) {
 }
 
 function mapStateToProps(state) {
+  const today = new Date();
   return {
     reservationId: state.reservation.id || uuid(),
     initialValues: {
-      arrival: moment().format('YYYY-MM-DD'),
-      departure: moment().add(1, 'days').format('YYYY-MM-DD'),
+      arrival: format(today, 'YYYY-MM-DD'),
+      departure: format(addDays(today, 1), 'YYYY-MM-DD'),
     }
   }
 }
