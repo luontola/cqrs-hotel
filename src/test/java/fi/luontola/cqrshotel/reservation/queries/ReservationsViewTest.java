@@ -28,9 +28,10 @@ public class ReservationsViewTest {
     private static final ZonedDateTime checkInTime = ZonedDateTime.of(2000, 1, 3, 14, 30, 0, 0, ZoneId.of("Europe/Helsinki"));
     private static final ZonedDateTime checkOutTime = ZonedDateTime.of(2000, 2, 4, 10, 30, 0, 0, ZoneId.of("Europe/Helsinki"));
 
+    private final ReservationsView view = new ReservationsView(new InMemoryEventStore());
+
     @Test
     public void fills_in_all_fields() {
-        ReservationsView view = new ReservationsView(new InMemoryEventStore());
         view.apply(new ReservationInitiated(reservationId, checkInTime, checkOutTime));
         view.apply(new ContactInformationUpdated(reservationId, "name", "email"));
 
@@ -48,7 +49,6 @@ public class ReservationsViewTest {
 
     @Test
     public void lists_all_reservations() {
-        ReservationsView view = new ReservationsView(new InMemoryEventStore());
         view.apply(new ReservationInitiated(reservationId, checkInTime, checkOutTime));
         view.apply(new ReservationInitiated(reservationId2, checkInTime, checkOutTime));
 
@@ -58,7 +58,6 @@ public class ReservationsViewTest {
 
     @Test
     public void finds_reservations_by_id() {
-        ReservationsView view = new ReservationsView(new InMemoryEventStore());
         view.apply(new ReservationInitiated(reservationId, checkInTime, checkOutTime));
         view.apply(new ReservationInitiated(reservationId2, checkInTime, checkOutTime));
 

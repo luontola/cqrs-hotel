@@ -33,9 +33,9 @@ public class PriceOffered extends Struct implements Event {
         this.expires = expires;
     }
 
-    public boolean isInRange(LocalDate startDate, LocalDate endDate) {
-        return (date.equals(startDate) || date.isAfter(startDate))
-                && date.isBefore(endDate);
+    public boolean isInRange(LocalDate arrival, LocalDate departure) {
+        return (date.equals(arrival) || date.isAfter(arrival))
+                && date.isBefore(departure);
     }
 
     public boolean hasExpired(Clock clock) {

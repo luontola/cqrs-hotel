@@ -28,7 +28,7 @@ public class SearchForAccommodationCommandHandler implements Handler<SearchForAc
         Reservation reservation = repo.createOrGet(command.reservationId);
         int originalVersion = reservation.getVersion();
         reservation.discoverCustomer();
-        reservation.searchForAccommodation(command.startDate, command.endDate, pricing, clock);
+        reservation.searchForAccommodation(command.arrival, command.departure, pricing, clock);
         repo.save(reservation, originalVersion);
         return null;
     }

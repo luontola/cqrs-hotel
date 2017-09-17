@@ -1,4 +1,4 @@
-// Copyright © 2016 Esko Luontola
+// Copyright © 2016-2017 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -15,20 +15,20 @@ import java.util.UUID;
 public class MakeReservation extends Struct implements Command {
 
     public final UUID reservationId;
-    public final LocalDate startDate;
-    public final LocalDate endDate;
+    public final LocalDate arrival;
+    public final LocalDate departure;
     public final String name;
     public final String email;
 
     @JsonCreator
     public MakeReservation(@JsonProperty("reservationId") UUID reservationId,
-                           @JsonProperty("startDate") LocalDate startDate,
-                           @JsonProperty("endDate") LocalDate endDate,
+                           @JsonProperty("arrival") LocalDate arrival,
+                           @JsonProperty("departure") LocalDate departure,
                            @JsonProperty("name") String name,
                            @JsonProperty("email") String email) {
         this.reservationId = reservationId;
-        this.startDate = startDate;
-        this.endDate = endDate;
+        this.arrival = arrival;
+        this.departure = departure;
         this.name = name;
         this.email = email;
     }

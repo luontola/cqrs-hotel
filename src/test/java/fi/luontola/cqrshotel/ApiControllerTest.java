@@ -45,8 +45,8 @@ public class ApiControllerTest {
 
     private final Money pricePerDay = Money.of(100, "EUR");
     private final UUID reservationId = UUID.randomUUID();
-    private final LocalDate startDate = LocalDate.now();
-    private final LocalDate endDate = startDate.plusDays(2);
+    private final LocalDate arrival = LocalDate.now();
+    private final LocalDate departure = arrival.plusDays(2);
 
     @Before
     public void initMocks() {
@@ -64,13 +64,13 @@ public class ApiControllerTest {
     @Test
     public void search_for_accommodation() {
         ReservationOffer offer = restTemplate.postForObject("/api/search-for-accommodation",
-                new SearchForAccommodation(reservationId, startDate, endDate),
+                new SearchForAccommodation(reservationId, arrival, departure),
                 ReservationOffer.class);
 
         ReservationOffer expected = new ReservationOffer();
         expected.reservationId = reservationId;
-        expected.startDate = startDate;
-        expected.endDate = endDate;
+        expected.arrival = arrival;
+        expected.departure = departure;
         expected.totalPrice = pricePerDay.multiply(2);
         assertThat(offer, is(expected));
     }
@@ -78,12 +78,12 @@ public class ApiControllerTest {
     @Test
     public void make_reservation() {
         ReservationOffer offer = restTemplate.postForObject("/api/search-for-accommodation",
-                new SearchForAccommodation(reservationId, startDate, endDate),
+                new SearchForAccommodation(reservationId, arrival, departure),
                 ReservationOffer.class);
 
         Boolean reservation = restTemplate.postForObject("/api/make-reservation",
                 new MakeReservation(
-                        offer.reservationId, offer.startDate, offer.endDate,
+                        offer.reservationId, offer.arrival, offer.departure,
                         "John Doe", "john@example.com"),
                 Boolean.class);
 

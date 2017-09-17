@@ -63,9 +63,9 @@ public class Reservation extends AggregateRoot {
         }
     }
 
-    public void searchForAccommodation(LocalDate startDate, LocalDate endDate, PricingEngine pricing, Clock clock) {
-        publish(new SearchedForAccommodation(getId(), startDate, endDate));
-        for (LocalDate date = startDate; date.isBefore(endDate); date = date.plusDays(1)) {
+    public void searchForAccommodation(LocalDate arrival, LocalDate departure, PricingEngine pricing, Clock clock) {
+        publish(new SearchedForAccommodation(getId(), arrival, departure));
+        for (LocalDate date = arrival; date.isBefore(departure); date = date.plusDays(1)) {
             makePriceOffer(date, pricing, clock);
         }
     }
@@ -89,19 +89,19 @@ public class Reservation extends AggregateRoot {
         publish(new ContactInformationUpdated(getId(), name, email));
     }
 
-    public void makeReservation(LocalDate startDate, LocalDate endDate, Clock clock) {
+    public void makeReservation(LocalDate arrival, LocalDate departure, Clock clock) {
         if (state != PROSPECT) {
             throw new IllegalStateException("unexpected state: " + state);
         }
-        ZonedDateTime checkInTime = startDate
+        ZonedDateTime checkInTime = arrival
                 .atTime(Hotel.CHECK_IN_TIME)
                 .atZone(Hotel.TIMEZONE);
-        ZonedDateTime checkOutTime = endDate
+        ZonedDateTime checkOutTime = departure
                 .atTime(Hotel.CHECK_OUT_TIME)
                 .atZone(Hotel.TIMEZONE);
         publish(new ReservationInitiated(getId(), checkInTime, checkOutTime));
 
-        for (LocalDate date = startDate; date.isBefore(endDate); date = date.plusDays(1)) {
+        for (LocalDate date = arrival; date.isBefore(departure); date = date.plusDays(1)) {
             PriceOffered offer = getValidPriceOffer(date, clock);
             publish(new LineItemCreated(getId(), lineItems + 1, offer.date, offer.price));
         }

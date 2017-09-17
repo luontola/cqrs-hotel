@@ -12,8 +12,8 @@ import moment from "moment";
 let AccommodationSearchForm = ({handleSubmit, submitting, error}) => (
   <form onSubmit={handleSubmit(searchForAccommodation)}>
     <div>
-      <Field name="startDate" component="input" type="text"/>
-      <Field name="endDate" component="input" type="text"/>
+      <Field name="arrival" component="input" type="text"/>
+      <Field name="departure" component="input" type="text"/>
       <button type="submit" disabled={submitting}>Find A Room</button>
       {error && <div style={{color: 'red'}}>{error}</div>}
     </div>
@@ -25,12 +25,12 @@ AccommodationSearchForm = reduxForm({
 })(AccommodationSearchForm);
 
 function searchForAccommodation(form, dispatch, props) {
-  const {startDate, endDate} = form;
+  const {arrival, departure} = form;
   const {reservationId} = props;
   return api.post('/api/search-for-accommodation', {
-    reservationId: reservationId,
-    startDate: startDate,
-    endDate: endDate,
+    reservationId,
+    arrival,
+    departure,
   })
     .then(response => {
       dispatch(reservationOfferReceived(response.data))
@@ -45,8 +45,8 @@ function mapStateToProps(state) {
   return {
     reservationId: state.reservation.id || uuid(),
     initialValues: {
-      startDate: moment().format('YYYY-MM-DD'),
-      endDate: moment().add(1, 'days').format('YYYY-MM-DD'),
+      arrival: moment().format('YYYY-MM-DD'),
+      departure: moment().add(1, 'days').format('YYYY-MM-DD'),
     }
   }
 }

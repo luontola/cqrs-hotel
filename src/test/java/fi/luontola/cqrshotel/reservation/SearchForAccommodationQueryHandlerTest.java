@@ -53,8 +53,8 @@ public class SearchForAccommodationQueryHandlerTest {
 
         ReservationOffer expected = new ReservationOffer();
         expected.reservationId = id;
-        expected.startDate = date1;
-        expected.endDate = date3;
+        expected.arrival = date1;
+        expected.departure = date3;
         expected.totalPrice = price1.add(price2);
         assertThat(result, is(expected));
     }

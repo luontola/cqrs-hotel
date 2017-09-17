@@ -23,9 +23,10 @@ public class RoomsViewTest {
     private static final UUID roomId = UUID.randomUUID();
     private static final UUID roomId2 = UUID.randomUUID();
 
+    private final RoomsView view = new RoomsView(new InMemoryEventStore());
+
     @Test
     public void fills_in_all_fields() {
-        RoomsView view = new RoomsView(new InMemoryEventStore());
         view.apply(new RoomCreated(roomId, "123"));
 
         RoomDto expected = new RoomDto();
@@ -38,7 +39,6 @@ public class RoomsViewTest {
 
     @Test
     public void lists_all_rooms() {
-        RoomsView view = new RoomsView(new InMemoryEventStore());
         view.apply(new RoomCreated(roomId, "101"));
         view.apply(new RoomCreated(roomId2, "102"));
 

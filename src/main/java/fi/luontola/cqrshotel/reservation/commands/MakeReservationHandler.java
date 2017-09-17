@@ -25,7 +25,7 @@ public class MakeReservationHandler implements Handler<MakeReservation, Void> {
         Reservation reservation = repo.getById(command.reservationId);
         int originalVersion = reservation.getVersion();
         reservation.updateContactInformation(command.name, command.email);
-        reservation.makeReservation(command.startDate, command.endDate, clock);
+        reservation.makeReservation(command.arrival, command.departure, clock);
         repo.save(reservation, originalVersion);
         return null;
     }

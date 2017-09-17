@@ -15,15 +15,15 @@ import java.util.UUID;
 public class SearchedForAccommodation extends Struct implements Event {
 
     public final UUID reservationId;
-    public final LocalDate startDate;
-    public final LocalDate endDate;
+    public final LocalDate arrival;
+    public final LocalDate departure;
 
     @JsonCreator
     public SearchedForAccommodation(@JsonProperty("reservationId") UUID reservationId,
-                                    @JsonProperty("startDate") LocalDate startDate,
-                                    @JsonProperty("endDate") LocalDate endDate) {
+                                    @JsonProperty("arrival") LocalDate arrival,
+                                    @JsonProperty("departure") LocalDate departure) {
         this.reservationId = reservationId;
-        this.startDate = startDate;
-        this.endDate = endDate;
+        this.arrival = arrival;
+        this.departure = departure;
     }
 }

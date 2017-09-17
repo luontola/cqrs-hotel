@@ -36,11 +36,11 @@ public class ReservationOfferView extends StreamProjection {
     public ReservationOffer query(SearchForAccommodation query) {
         ReservationOffer result = new ReservationOffer();
         result.reservationId = query.reservationId;
-        result.startDate = query.startDate;
-        result.endDate = query.endDate;
+        result.arrival = query.arrival;
+        result.departure = query.departure;
 
         Money totalPrice = Money.of(0, Hotel.CURRENCY);
-        for (LocalDate date = query.startDate; date.isBefore(query.endDate); date = date.plusDays(1)) {
+        for (LocalDate date = query.arrival; date.isBefore(query.departure); date = date.plusDays(1)) {
             PriceOffered offer = offersByDate.get(date);
             if (offer != null && offer.isStillValid(clock)) {
                 totalPrice = totalPrice.add(offer.price);

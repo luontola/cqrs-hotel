@@ -14,8 +14,8 @@ const BookingPage = ({reservation, reservationOffer, makeReservation}) => (
     <h2 className="content-subhead">Booking a Room</h2>
     <AccommodationSearchForm/>
     {reservationOffer && <div>
-      <b>Check in:</b> {reservationOffer.startDate}<br/>
-      <b>Check out:</b> {reservationOffer.endDate}<br/>
+      <b>Arrival:</b> {reservationOffer.arrival}<br/>
+      <b>Departure:</b> {reservationOffer.departure}<br/>
       {reservationOffer.totalPrice ? <div>
         <b>Cost:</b> {reservationOffer.totalPrice}<br/>
         <button type="button" onClick={() => makeReservation(reservationOffer)}>Make Reservation</button>
