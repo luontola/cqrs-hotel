@@ -55,4 +55,14 @@ public class ReservationsViewTest {
         List<ReservationDto> results = view.findAll();
         assertThat(results, hasSize(2));
     }
+
+    @Test
+    public void finds_reservations_by_id() {
+        ReservationsView view = new ReservationsView(new InMemoryEventStore());
+        view.apply(new ReservationInitiated(reservationId, checkInTime, checkOutTime));
+        view.apply(new ReservationInitiated(reservationId2, checkInTime, checkOutTime));
+
+        ReservationDto results = view.findById(reservationId);
+        assertThat(results.reservationId, is(reservationId));
+    }
 }

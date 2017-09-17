@@ -31,6 +31,10 @@ public class ReservationsView extends Projection {
         return new ArrayList<>(reservationsById.values());
     }
 
+    public ReservationDto findById(UUID reservationId) {
+        return reservationsById.get(reservationId);
+    }
+
     @EventListener
     public void apply(ReservationInitiated event) {
         ReservationDto reservation = getReservation(event.reservationId);

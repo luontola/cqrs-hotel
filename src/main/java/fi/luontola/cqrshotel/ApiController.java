@@ -23,12 +23,14 @@ import fi.luontola.cqrshotel.room.commands.CreateRoom;
 import fi.luontola.cqrshotel.room.commands.CreateRoomHandler;
 import fi.luontola.cqrshotel.room.queries.RoomDto;
 import fi.luontola.cqrshotel.room.queries.RoomsView;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Clock;
 import java.util.List;
+import java.util.UUID;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
@@ -81,6 +83,12 @@ public class ApiController {
     public List<ReservationDto> reservations() {
         reservationsView.update(); // TODO: update asynchronously when events are created
         return reservationsView.findAll();
+    }
+
+    @RequestMapping(path = "/api/reservations/{reservationId}", method = GET)
+    public ReservationDto reservation(@PathVariable String reservationId) {
+        reservationsView.update(); // TODO: update asynchronously when events are created
+        return reservationsView.findById(UUID.fromString(reservationId));
     }
 
     @RequestMapping(path = "/api/create-room", method = POST)

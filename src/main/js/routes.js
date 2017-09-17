@@ -8,9 +8,15 @@ import ReservationsPage from "./ui/ReservationsPage";
 import RoomsPage from "./ui/RoomsPage";
 import ErrorPage from "./ui/ErrorPage";
 import api from "./api";
+import ReservationPage from "./ui/ReservationPage";
 
 async function getReservations() {
   const response = await api.get('/api/reservations');
+  return response.data;
+}
+
+async function getReservation(reservationId) {
+  const response = await api.get('/api/reservations/' + reservationId);
   return response.data;
 }
 
@@ -29,6 +35,14 @@ export default [
     action: async () => {
       const reservations = await getReservations();
       return <ReservationsPage reservations={reservations}/>;
+    }
+  },
+  {
+    path: '/reservations/:reservationId',
+    action: async (context) => {
+      const {reservationId} = context.params;
+      const reservation = await getReservation(reservationId);
+      return <ReservationPage reservation={reservation}/>;
     }
   },
   {
