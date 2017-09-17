@@ -86,7 +86,7 @@ public class ApiController {
     }
 
     @RequestMapping(path = "/api/reservations/{reservationId}", method = GET)
-    public ReservationDto reservation(@PathVariable String reservationId) {
+    public ReservationDto reservationById(@PathVariable String reservationId) {
         reservationsView.update(); // TODO: update asynchronously when events are created
         return reservationsView.findById(UUID.fromString(reservationId));
     }

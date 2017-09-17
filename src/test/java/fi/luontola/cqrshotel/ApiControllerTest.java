@@ -7,7 +7,9 @@ package fi.luontola.cqrshotel;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
+import fi.luontola.cqrshotel.reservation.queries.ReservationDto;
 import fi.luontola.cqrshotel.reservation.queries.ReservationOffer;
+import fi.luontola.cqrshotel.room.commands.CreateRoom;
 import org.javamoney.moneta.Money;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,12 +23,15 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.stub;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
@@ -45,6 +50,7 @@ public class ApiControllerTest {
 
     private final Money pricePerDay = Money.of(100, "EUR");
     private final UUID reservationId = UUID.randomUUID();
+    private final UUID roomId = UUID.randomUUID();
     private final LocalDate arrival = LocalDate.now();
     private final LocalDate departure = arrival.plusDays(2);
 
@@ -81,12 +87,52 @@ public class ApiControllerTest {
                 new SearchForAccommodation(reservationId, arrival, departure),
                 ReservationOffer.class);
 
-        Boolean reservation = restTemplate.postForObject("/api/make-reservation",
+        Boolean result = restTemplate.postForObject("/api/make-reservation",
                 new MakeReservation(
                         offer.reservationId, offer.arrival, offer.departure,
                         "John Doe", "john@example.com"),
                 Boolean.class);
 
-        assertThat(reservation, is(true));
+        assertThat(result, is(true));
+        test_reservations();
+        test_reservationById();
+    }
+
+    // XXX: implement the following as dependent tests
+
+    public void test_reservations() {
+        // TODO: figure out how to parameterize the list element type
+        List<Map<String, Object>> results = restTemplate.getForObject("/api/reservations", List.class);
+
+        String reservationId = this.reservationId.toString();
+        assertThat(results.stream()
+                .filter(reservation -> reservation.get("reservationId").equals(reservationId))
+                .findFirst(), is(notNullValue()));
+    }
+
+    public void test_reservationById() {
+        ReservationDto result = restTemplate.getForObject("/api/reservations/" + reservationId, ReservationDto.class);
+
+        assertThat(result.reservationId, is(reservationId));
+    }
+
+    @Test
+    public void create_room() {
+        Boolean result = restTemplate.postForObject("/api/create-room",
+                new CreateRoom(roomId, "123"),
+                Boolean.class);
+
+        assertThat(result, is(true));
+        test_rooms();
+    }
+
+    public void test_rooms() {
+        // TODO: figure out how to parameterize the list element type
+        List<Map<String, Object>> results = restTemplate.getForObject("/api/rooms", List.class);
+
+        String roomId = this.roomId.toString();
+        assertThat(results.stream()
+                .filter(room -> room.get("roomId").equals(roomId))
+                .findFirst(), is(notNullValue()));
     }
 }
