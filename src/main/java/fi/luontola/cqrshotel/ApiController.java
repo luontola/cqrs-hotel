@@ -31,6 +31,7 @@ import fi.luontola.cqrshotel.room.queries.RoomDto;
 import fi.luontola.cqrshotel.room.queries.RoomsView;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -45,6 +46,8 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 @RestController
 public class ApiController {
+
+    public static final String OBSERVED_POSITION_HEADER = "X-Observed-Position";
 
     private final Handler<Command, Commit> commandHandler;
     private final Handler<Query, Object> queryHandler;
@@ -88,6 +91,7 @@ public class ApiController {
     @RequestMapping(path = "/api/search-for-accommodation", method = POST)
     public ReservationOffer searchForAccommodation(@RequestBody SearchForAccommodation command) {
         Commit commit = commandHandler.handle(command);
+        waitForProjectionsToUpdate(commit.committedPosition);
         return (ReservationOffer) queryHandler.handle(command);
     }
 
@@ -97,12 +101,15 @@ public class ApiController {
     }
 
     @RequestMapping(path = "/api/reservations", method = GET)
-    public List<ReservationDto> reservations() {
+    public List<ReservationDto> reservations(@RequestHeader(value = OBSERVED_POSITION_HEADER, defaultValue = "0") String observedPosition) {
+        waitForProjectionsToUpdate(Long.parseLong(observedPosition));
         return reservationsView.findAll();
     }
 
     @RequestMapping(path = "/api/reservations/{reservationId}", method = GET)
-    public ReservationDto reservationById(@PathVariable String reservationId) {
+    public ReservationDto reservationById(@PathVariable String reservationId,
+                                          @RequestHeader(value = OBSERVED_POSITION_HEADER, defaultValue = "0") String observedPosition) {
+        waitForProjectionsToUpdate(Long.parseLong(observedPosition));
         return reservationsView.findById(UUID.fromString(reservationId));
     }
 
@@ -112,18 +119,34 @@ public class ApiController {
     }
 
     @RequestMapping(path = "/api/rooms", method = GET)
-    public List<RoomDto> rooms() {
+    public List<RoomDto> rooms(@RequestHeader(value = OBSERVED_POSITION_HEADER, defaultValue = "0") String observedPosition) {
+        waitForProjectionsToUpdate(Long.parseLong(observedPosition));
         return roomsView.findAll();
     }
 
     @RequestMapping(path = "/api/capacity/{date}", method = GET)
-    public CapacityDto capacityByDate(@PathVariable String date) {
+    public CapacityDto capacityByDate(@PathVariable String date,
+                                      @RequestHeader(value = OBSERVED_POSITION_HEADER, defaultValue = "0") String observedPosition) {
+        waitForProjectionsToUpdate(Long.parseLong(observedPosition));
         return capacityView.getCapacityByDate(LocalDate.parse(date));
     }
 
     @RequestMapping(path = "/api/capacity/{start}/{end}", method = GET)
     public List<CapacityDto> capacityByDateRange(@PathVariable String start,
-                                                 @PathVariable String end) {
+                                                 @PathVariable String end,
+                                                 @RequestHeader(value = OBSERVED_POSITION_HEADER, defaultValue = "0") String observedPosition) {
+        waitForProjectionsToUpdate(Long.parseLong(observedPosition));
         return capacityView.getCapacityByDateRange(LocalDate.parse(start), LocalDate.parse(end));
+    }
+
+    private void waitForProjectionsToUpdate(long observedPosition) {
+        // XXX: use a more reliable mechanism to give the client a consistent view
+        if (observedPosition > 0) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 }

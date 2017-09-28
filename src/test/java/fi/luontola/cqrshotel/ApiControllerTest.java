@@ -22,6 +22,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -41,6 +45,8 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.stub;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.springframework.http.HttpMethod.GET;
+import static org.springframework.http.HttpMethod.POST;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
@@ -59,6 +65,7 @@ public class ApiControllerTest {
     private final UUID roomId = UUID.randomUUID();
     private final LocalDate arrival = LocalDate.now();
     private final LocalDate departure = arrival.plusDays(2);
+    private String observedPosition = "0";
 
     @Before
     public void initMocks() {
@@ -68,14 +75,14 @@ public class ApiControllerTest {
 
     @Test
     public void home() {
-        String response = restTemplate.getForObject("/api", String.class);
+        String response = getForObject("/api", String.class);
 
         assertThat(response, containsString("CQRS Hotel"));
     }
 
     @Test
     public void search_for_accommodation() {
-        ReservationOffer offer = restTemplate.postForObject("/api/search-for-accommodation",
+        ReservationOffer offer = postForObject("/api/search-for-accommodation",
                 new SearchForAccommodation(reservationId, arrival, departure),
                 ReservationOffer.class);
 
@@ -89,18 +96,17 @@ public class ApiControllerTest {
 
     @Test
     public void make_reservation() {
-        ReservationOffer offer = restTemplate.postForObject("/api/search-for-accommodation",
+        ReservationOffer offer = postForObject("/api/search-for-accommodation",
                 new SearchForAccommodation(reservationId, arrival, departure),
                 ReservationOffer.class);
 
-        Commit response = restTemplate.postForObject("/api/make-reservation",
+        Commit response = postForObject("/api/make-reservation",
                 new MakeReservation(
                         offer.reservationId, offer.arrival, offer.departure,
                         "John Doe", "john@example.com"),
                 Commit.class);
 
         assertThat(response, is(notNullValue()));
-        waitForProjectionsToUpdate();
         test_reservations();
         test_reservationById();
     }
@@ -108,7 +114,7 @@ public class ApiControllerTest {
     // XXX: implement the following as dependent tests
 
     public void test_reservations() {
-        ReservationDto[] reservations = restTemplate.getForObject("/api/reservations", ReservationDto[].class);
+        ReservationDto[] reservations = getForObject("/api/reservations", ReservationDto[].class);
 
         assertThat("reservations", reservations, is(not(emptyArray())));
         assertThat("reservation " + reservationId, Stream.of(reservations)
@@ -117,7 +123,7 @@ public class ApiControllerTest {
     }
 
     public void test_reservationById() {
-        ReservationDto reservation = restTemplate.getForObject("/api/reservations/{id}", ReservationDto.class, reservationId);
+        ReservationDto reservation = getForObject("/api/reservations/{id}", ReservationDto.class, reservationId);
 
         assertThat("reservation", reservation, is(notNullValue()));
         assertThat("reservationId", reservation.reservationId, is(reservationId));
@@ -125,18 +131,17 @@ public class ApiControllerTest {
 
     @Test
     public void create_room() {
-        Commit response = restTemplate.postForObject("/api/create-room",
+        Commit response = postForObject("/api/create-room",
                 new CreateRoom(roomId, "123"),
                 Commit.class);
 
         assertThat(response, is(notNullValue()));
-        waitForProjectionsToUpdate();
         test_rooms();
         test_capacityByDate();
     }
 
     public void test_rooms() {
-        RoomDto[] rooms = restTemplate.getForObject("/api/rooms", RoomDto[].class);
+        RoomDto[] rooms = getForObject("/api/rooms", RoomDto[].class);
 
         assertThat("rooms", rooms, is(not(emptyArray())));
         assertThat("room " + roomId, Stream.of(rooms)
@@ -147,7 +152,7 @@ public class ApiControllerTest {
     public void test_capacityByDate() {
         LocalDate date = LocalDate.now();
 
-        CapacityDto capacity = restTemplate.getForObject("/api/capacity/{date}", CapacityDto.class, date);
+        CapacityDto capacity = getForObject("/api/capacity/{date}", CapacityDto.class, date);
 
         assertThat("date", capacity.date, is(date));
         assertThat("capacity", capacity.capacity, is(greaterThan(0)));
@@ -159,17 +164,43 @@ public class ApiControllerTest {
         LocalDate start = LocalDate.now();
         LocalDate end = start.plusDays(2); // 3 days inclusive
 
-        CapacityDto[] capacities = restTemplate.getForObject("/api/capacity/{start}/{end}", CapacityDto[].class, start, end);
+        CapacityDto[] capacities = getForObject("/api/capacity/{start}/{end}", CapacityDto[].class, start, end);
 
         assertThat("capacities", capacities, arrayWithSize(3));
     }
 
-    private static void waitForProjectionsToUpdate() {
-        // XXX: use a more reliable mechanism to give the client a consistent view
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+
+    // helpers
+
+    private <T> T postForObject(String url, Object request, Class<T> responseType, Object... urlVariables) {
+        ResponseEntity<T> response = restTemplate.exchange(url, POST, new HttpEntity<>(request, headers()), responseType, urlVariables);
+        assert2xxSuccessful(response);
+        T body = response.getBody();
+        if (body instanceof Commit) {
+            Commit commit = (Commit) body;
+            this.observedPosition = String.valueOf(commit.committedPosition);
+        }
+        return body;
+    }
+
+    private <T> T getForObject(String url, Class<T> responseType, Object... urlVariables) {
+        ResponseEntity<T> response = restTemplate.exchange(url, GET, new HttpEntity<>(headers()), responseType, urlVariables);
+        assert2xxSuccessful(response);
+        return response.getBody();
+    }
+
+    private HttpHeaders headers() {
+        HttpHeaders headers = new HttpHeaders();
+        if (observedPosition != null) {
+            headers.set(ApiController.OBSERVED_POSITION_HEADER, observedPosition);
+        }
+        return headers;
+    }
+
+    private static void assert2xxSuccessful(ResponseEntity<?> response) {
+        HttpStatus statusCode = response.getStatusCode();
+        if (!statusCode.is2xxSuccessful()) {
+            throw new AssertionError("HTTP " + statusCode + " " + statusCode.getReasonPhrase());
         }
     }
 }
