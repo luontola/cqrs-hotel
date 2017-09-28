@@ -9,7 +9,10 @@ import fi.luontola.cqrshotel.capacity.CapacityView;
 import fi.luontola.cqrshotel.framework.Command;
 import fi.luontola.cqrshotel.framework.CompositeHandler;
 import fi.luontola.cqrshotel.framework.EventStore;
+import fi.luontola.cqrshotel.framework.Handler;
+import fi.luontola.cqrshotel.framework.ProjectionsUpdater;
 import fi.luontola.cqrshotel.framework.Query;
+import fi.luontola.cqrshotel.framework.UpdateProjectionsAfterHandling;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.reservation.ReservationRepo;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
@@ -41,8 +44,8 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 @RestController
 public class ApiController {
 
-    private final CompositeHandler<Command, Void> commandHandler;
-    private final CompositeHandler<Query, Object> queryHandler;
+    private final Handler<Command, Void> commandHandler;
+    private final Handler<Query, Object> queryHandler;
     private final ReservationsView reservationsView;
     private final RoomsView roomsView;
     private final CapacityView capacityView;
@@ -51,20 +54,21 @@ public class ApiController {
         ReservationRepo reservationRepo = new ReservationRepo(eventStore);
         RoomRepo roomRepo = new RoomRepo(eventStore);
 
+        ProjectionsUpdater projections = new ProjectionsUpdater(
+                reservationsView = new ReservationsView(eventStore),
+                roomsView = new RoomsView(eventStore),
+                capacityView = new CapacityView(eventStore)
+        );
+
         CompositeHandler<Command, Void> commandHandler = new CompositeHandler<>();
         commandHandler.register(SearchForAccommodation.class, new SearchForAccommodationCommandHandler(reservationRepo, pricing, clock));
         commandHandler.register(MakeReservation.class, new MakeReservationHandler(reservationRepo, clock));
         commandHandler.register(CreateRoom.class, new CreateRoomHandler(roomRepo));
-        // TODO: trigger updating projections after processing any command
-        this.commandHandler = commandHandler;
+        this.commandHandler = new UpdateProjectionsAfterHandling<>(projections, commandHandler);
 
         CompositeHandler<Query, Object> queryHandler = new CompositeHandler<>();
         queryHandler.register(SearchForAccommodation.class, new SearchForAccommodationQueryHandler(eventStore, clock));
         this.queryHandler = queryHandler;
-
-        reservationsView = new ReservationsView(eventStore);
-        roomsView = new RoomsView(eventStore);
-        capacityView = new CapacityView(eventStore);
     }
 
     @RequestMapping(path = "/api", method = GET)
@@ -86,13 +90,11 @@ public class ApiController {
 
     @RequestMapping(path = "/api/reservations", method = GET)
     public List<ReservationDto> reservations() {
-        reservationsView.update(); // TODO: update asynchronously when events are created
         return reservationsView.findAll();
     }
 
     @RequestMapping(path = "/api/reservations/{reservationId}", method = GET)
     public ReservationDto reservationById(@PathVariable String reservationId) {
-        reservationsView.update(); // TODO: update asynchronously when events are created
         return reservationsView.findById(UUID.fromString(reservationId));
     }
 
@@ -104,20 +106,17 @@ public class ApiController {
 
     @RequestMapping(path = "/api/rooms", method = GET)
     public List<RoomDto> rooms() {
-        roomsView.update(); // TODO: update asynchronously when events are created
         return roomsView.findAll();
     }
 
     @RequestMapping(path = "/api/capacity/{date}", method = GET)
     public CapacityDto capacityByDate(@PathVariable String date) {
-        capacityView.update(); // TODO: update asynchronously when events are created
         return capacityView.getCapacityByDate(LocalDate.parse(date));
     }
 
     @RequestMapping(path = "/api/capacity/{start}/{end}", method = GET)
     public List<CapacityDto> capacityByDateRange(@PathVariable String start,
                                                  @PathVariable String end) {
-        capacityView.update(); // TODO: update asynchronously when events are created
         return capacityView.getCapacityByDateRange(LocalDate.parse(start), LocalDate.parse(end));
     }
 }

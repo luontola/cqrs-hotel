@@ -31,8 +31,11 @@ import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.stub;
@@ -89,13 +92,13 @@ public class ApiControllerTest {
                 new SearchForAccommodation(reservationId, arrival, departure),
                 ReservationOffer.class);
 
-        Boolean result = restTemplate.postForObject("/api/make-reservation",
+        Boolean response = restTemplate.postForObject("/api/make-reservation",
                 new MakeReservation(
                         offer.reservationId, offer.arrival, offer.departure,
                         "John Doe", "john@example.com"),
                 Boolean.class);
 
-        assertThat(result, is(true));
+        assertThat(response, is(true));
         test_reservations();
         test_reservationById();
     }
@@ -104,36 +107,39 @@ public class ApiControllerTest {
 
     public void test_reservations() {
         // TODO: figure out how to parameterize the list element type
-        List<Map<String, Object>> results = restTemplate.getForObject("/api/reservations", List.class);
+        List<Map<String, Object>> reservations = restTemplate.getForObject("/api/reservations", List.class);
 
+        assertThat("reservations", reservations, is(not(empty())));
         String reservationId = this.reservationId.toString();
-        assertThat(results.stream()
+        assertThat("reservation " + reservationId, reservations.stream()
                 .filter(reservation -> reservation.get("reservationId").equals(reservationId))
                 .findFirst(), is(notNullValue()));
     }
 
     public void test_reservationById() {
-        ReservationDto result = restTemplate.getForObject("/api/reservations/{id}", ReservationDto.class, reservationId);
+        ReservationDto reservation = restTemplate.getForObject("/api/reservations/{id}", ReservationDto.class, reservationId);
 
-        assertThat(result.reservationId, is(reservationId));
+        assertThat("reservation", reservation, is(notNullValue()));
+        assertThat("reservationId", reservation.reservationId, is(reservationId));
     }
 
     @Test
     public void create_room() {
-        Boolean result = restTemplate.postForObject("/api/create-room",
+        Boolean response = restTemplate.postForObject("/api/create-room",
                 new CreateRoom(roomId, "123"),
                 Boolean.class);
 
-        assertThat(result, is(true));
+        assertThat(response, is(true));
         test_rooms();
     }
 
     public void test_rooms() {
         // TODO: figure out how to parameterize the list element type
-        List<Map<String, Object>> results = restTemplate.getForObject("/api/rooms", List.class);
+        List<Map<String, Object>> rooms = restTemplate.getForObject("/api/rooms", List.class);
 
+        assertThat("rooms", rooms, is(not(empty())));
         String roomId = this.roomId.toString();
-        assertThat(results.stream()
+        assertThat("room " + roomId, rooms.stream()
                 .filter(room -> room.get("roomId").equals(roomId))
                 .findFirst(), is(notNullValue()));
     }
@@ -142,19 +148,20 @@ public class ApiControllerTest {
     public void test_capacityByDate() {
         LocalDate date = LocalDate.now();
 
-        CapacityDto results = restTemplate.getForObject("/api/capacity/{date}", CapacityDto.class, date);
+        CapacityDto capacity = restTemplate.getForObject("/api/capacity/{date}", CapacityDto.class, date);
 
-        assertThat("date", results.date, is(date));
-        assertThat("capacity", results.capacity, is(notNullValue()));
-        assertThat("reserved", results.reserved, is(notNullValue()));
+        assertThat("date", capacity.date, is(date));
+        assertThat("capacity", capacity.capacity, is(greaterThan(0)));
+        assertThat("reserved", capacity.reserved, is(notNullValue()));
     }
 
     @Test
     public void test_capacityByDateRange() {
-        LocalDate date = LocalDate.now();
+        LocalDate start = LocalDate.now();
+        LocalDate end = start.plusDays(2); // 3 days inclusive
 
-        List<Map<String, Object>> results = restTemplate.getForObject("/api/capacity/{start}/{end}", List.class, date, date);
+        List<Map<String, Object>> capacities = restTemplate.getForObject("/api/capacity/{start}/{end}", List.class, start, end);
 
-        assertThat(results, hasSize(1));
+        assertThat("capacities", capacities, hasSize(3));
     }
 }
