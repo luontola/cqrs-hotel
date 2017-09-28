@@ -11,6 +11,7 @@ import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
 import fi.luontola.cqrshotel.reservation.queries.ReservationDto;
 import fi.luontola.cqrshotel.reservation.queries.ReservationOffer;
 import fi.luontola.cqrshotel.room.commands.CreateRoom;
+import fi.luontola.cqrshotel.room.queries.RoomDto;
 import org.javamoney.moneta.Money;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,16 +25,15 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.arrayWithSize;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.emptyArray;
 import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
@@ -107,13 +107,11 @@ public class ApiControllerTest {
     // XXX: implement the following as dependent tests
 
     public void test_reservations() {
-        // TODO: figure out how to parameterize the list element type
-        List<Map<String, Object>> reservations = restTemplate.getForObject("/api/reservations", List.class);
+        ReservationDto[] reservations = restTemplate.getForObject("/api/reservations", ReservationDto[].class);
 
-        assertThat("reservations", reservations, is(not(empty())));
-        String reservationId = this.reservationId.toString();
-        assertThat("reservation " + reservationId, reservations.stream()
-                .filter(reservation -> reservation.get("reservationId").equals(reservationId))
+        assertThat("reservations", reservations, is(not(emptyArray())));
+        assertThat("reservation " + reservationId, Stream.of(reservations)
+                .filter(reservation -> reservation.reservationId.equals(reservationId))
                 .findFirst(), is(notNullValue()));
     }
 
@@ -137,13 +135,11 @@ public class ApiControllerTest {
     }
 
     public void test_rooms() {
-        // TODO: figure out how to parameterize the list element type
-        List<Map<String, Object>> rooms = restTemplate.getForObject("/api/rooms", List.class);
+        RoomDto[] rooms = restTemplate.getForObject("/api/rooms", RoomDto[].class);
 
-        assertThat("rooms", rooms, is(not(empty())));
-        String roomId = this.roomId.toString();
-        assertThat("room " + roomId, rooms.stream()
-                .filter(room -> room.get("roomId").equals(roomId))
+        assertThat("rooms", rooms, is(not(emptyArray())));
+        assertThat("room " + roomId, Stream.of(rooms)
+                .filter(room -> room.roomId.equals(roomId))
                 .findFirst(), is(notNullValue()));
     }
 
@@ -162,9 +158,9 @@ public class ApiControllerTest {
         LocalDate start = LocalDate.now();
         LocalDate end = start.plusDays(2); // 3 days inclusive
 
-        List<Map<String, Object>> capacities = restTemplate.getForObject("/api/capacity/{start}/{end}", List.class, start, end);
+        CapacityDto[] capacities = restTemplate.getForObject("/api/capacity/{start}/{end}", CapacityDto[].class, start, end);
 
-        assertThat("capacities", capacities, hasSize(3));
+        assertThat("capacities", capacities, arrayWithSize(3));
     }
 
     private static void waitForProjectionsToUpdate() {
