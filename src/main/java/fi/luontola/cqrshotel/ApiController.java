@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.PreDestroy;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
@@ -46,6 +47,8 @@ public class ApiController {
 
     private final Handler<Command, Void> commandHandler;
     private final Handler<Query, Object> queryHandler;
+    private final ProjectionsUpdater projectionsUpdater;
+
     private final ReservationsView reservationsView;
     private final RoomsView roomsView;
     private final CapacityView capacityView;
@@ -54,7 +57,7 @@ public class ApiController {
         ReservationRepo reservationRepo = new ReservationRepo(eventStore);
         RoomRepo roomRepo = new RoomRepo(eventStore);
 
-        ProjectionsUpdater projections = new ProjectionsUpdater(
+        projectionsUpdater = new ProjectionsUpdater(
                 reservationsView = new ReservationsView(eventStore),
                 roomsView = new RoomsView(eventStore),
                 capacityView = new CapacityView(eventStore)
@@ -64,11 +67,16 @@ public class ApiController {
         commandHandler.register(SearchForAccommodation.class, new SearchForAccommodationCommandHandler(reservationRepo, pricing, clock));
         commandHandler.register(MakeReservation.class, new MakeReservationHandler(reservationRepo, clock));
         commandHandler.register(CreateRoom.class, new CreateRoomHandler(roomRepo));
-        this.commandHandler = new UpdateProjectionsAfterHandling<>(projections, commandHandler);
+        this.commandHandler = new UpdateProjectionsAfterHandling<>(projectionsUpdater, commandHandler);
 
         CompositeHandler<Query, Object> queryHandler = new CompositeHandler<>();
         queryHandler.register(SearchForAccommodation.class, new SearchForAccommodationQueryHandler(eventStore, clock));
         this.queryHandler = queryHandler;
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        projectionsUpdater.shutdown();
     }
 
     @RequestMapping(path = "/api", method = GET)

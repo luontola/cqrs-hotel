@@ -99,6 +99,7 @@ public class ApiControllerTest {
                 Boolean.class);
 
         assertThat(response, is(true));
+        waitForProjectionsToUpdate();
         test_reservations();
         test_reservationById();
     }
@@ -130,7 +131,9 @@ public class ApiControllerTest {
                 Boolean.class);
 
         assertThat(response, is(true));
+        waitForProjectionsToUpdate();
         test_rooms();
+        test_capacityByDate();
     }
 
     public void test_rooms() {
@@ -144,7 +147,6 @@ public class ApiControllerTest {
                 .findFirst(), is(notNullValue()));
     }
 
-    @Test
     public void test_capacityByDate() {
         LocalDate date = LocalDate.now();
 
@@ -163,5 +165,14 @@ public class ApiControllerTest {
         List<Map<String, Object>> capacities = restTemplate.getForObject("/api/capacity/{start}/{end}", List.class, start, end);
 
         assertThat("capacities", capacities, hasSize(3));
+    }
+
+    private static void waitForProjectionsToUpdate() {
+        // XXX: use a more reliable mechanism to give the client a consistent view
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }

@@ -4,24 +4,33 @@
 
 package fi.luontola.cqrshotel.framework;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class ProjectionsUpdater {
 
-    private final List<Projection> projections;
+    private final List<SingleThreadedTriggerableWorker> workers = new ArrayList<>();
 
     public ProjectionsUpdater(Projection... projections) {
         this(Arrays.asList(projections));
     }
 
     public ProjectionsUpdater(List<Projection> projections) {
-        this.projections = projections;
+        for (Projection projection : projections) {
+            workers.add(new SingleThreadedTriggerableWorker(projection::update));
+        }
     }
 
     public void updateAll() {
-        for (Projection projection : projections) {
-            projection.update();
+        for (SingleThreadedTriggerableWorker worker : workers) {
+            worker.trigger();
+        }
+    }
+
+    public void shutdown() {
+        for (SingleThreadedTriggerableWorker worker : workers) {
+            worker.shutdown();
         }
     }
 }
