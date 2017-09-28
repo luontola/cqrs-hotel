@@ -14,8 +14,6 @@ import org.junit.rules.Timeout;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -30,12 +28,14 @@ public class SingleThreadedTriggerableWorkerTest {
     @Rule
     public final Timeout timeout = new Timeout(1, TimeUnit.SECONDS);
 
-    private final ExecutorService executor = Executors.newCachedThreadPool();
     private final AtomicInteger taskCount = new AtomicInteger(0);
+    private SingleThreadedTriggerableWorker worker;
 
     @After
     public void tearDown() {
-        executor.shutdownNow();
+        if (worker != null) {
+            worker.shutdown();
+        }
     }
 
     @Test
@@ -45,7 +45,7 @@ public class SingleThreadedTriggerableWorkerTest {
             taskCount.incrementAndGet();
             taskFinished.countDown();
         };
-        SingleThreadedTriggerableWorker worker = new SingleThreadedTriggerableWorker(task, executor);
+        worker = new SingleThreadedTriggerableWorker(task);
 
         worker.trigger();
         taskFinished.await();
@@ -61,7 +61,7 @@ public class SingleThreadedTriggerableWorkerTest {
             taskThread[0] = Thread.currentThread();
             taskFinished.countDown();
         };
-        SingleThreadedTriggerableWorker worker = new SingleThreadedTriggerableWorker(task, executor);
+        worker = new SingleThreadedTriggerableWorker(task);
 
         worker.trigger();
         taskFinished.await();
@@ -79,7 +79,7 @@ public class SingleThreadedTriggerableWorkerTest {
             oneTaskStarted.countDown();
             twoTasksFinished.countDown();
         };
-        SingleThreadedTriggerableWorker worker = new SingleThreadedTriggerableWorker(task, executor);
+        worker = new SingleThreadedTriggerableWorker(task);
 
         worker.trigger();
         oneTaskStarted.await();
@@ -104,7 +104,7 @@ public class SingleThreadedTriggerableWorkerTest {
             }
             twoTasksFinished.countDown();
         };
-        SingleThreadedTriggerableWorker worker = new SingleThreadedTriggerableWorker(task, executor);
+        worker = new SingleThreadedTriggerableWorker(task);
 
         worker.trigger();
         firstTaskStarted.await();
@@ -130,7 +130,7 @@ public class SingleThreadedTriggerableWorkerTest {
                 throw new RuntimeException(e);
             }
         };
-        SingleThreadedTriggerableWorker worker = new SingleThreadedTriggerableWorker(task, executor);
+        worker = new SingleThreadedTriggerableWorker(task);
 
         worker.trigger();
         taskFinished.await();
@@ -140,5 +140,25 @@ public class SingleThreadedTriggerableWorkerTest {
         taskFinished.await();
 
         assertThat("task count", taskCount.get(), is(3));
+    }
+
+    @Test
+    public void runs_only_a_single_task_at_a_time() throws InterruptedException {
+        AtomicInteger concurrentTasks = new AtomicInteger(0);
+        AtomicInteger maxConcurrentTasks = new AtomicInteger(0);
+        Runnable task = () -> {
+            concurrentTasks.incrementAndGet();
+            maxConcurrentTasks.updateAndGet(value -> Math.max(value, concurrentTasks.get()));
+            taskCount.incrementAndGet();
+            Thread.yield();
+            concurrentTasks.decrementAndGet();
+        };
+        worker = new SingleThreadedTriggerableWorker(task);
+
+        while (taskCount.get() < 10 && !Thread.currentThread().isInterrupted()) {
+            worker.trigger();
+        }
+
+        assertThat("max concurrent tasks", maxConcurrentTasks.get(), is(1));
     }
 }

@@ -7,16 +7,17 @@ package fi.luontola.cqrshotel.framework;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class SingleThreadedTriggerableWorker {
 
-    private final BlockingQueue<Runnable> availableTasks;
     private final ExecutorService executor;
+    private final BlockingQueue<Runnable> availableTasks;
 
-    public SingleThreadedTriggerableWorker(Runnable task, ExecutorService executor) {
-        this.availableTasks = new ArrayBlockingQueue<>(1);
-        this.availableTasks.add(task);
-        this.executor = executor;
+    public SingleThreadedTriggerableWorker(Runnable task) {
+        executor = Executors.newFixedThreadPool(1);
+        availableTasks = new ArrayBlockingQueue<>(1);
+        availableTasks.add(task);
     }
 
     public void trigger() {
@@ -27,5 +28,9 @@ public class SingleThreadedTriggerableWorker {
                 task.run();
             });
         }
+    }
+
+    public void shutdown() {
+        executor.shutdown();
     }
 }
