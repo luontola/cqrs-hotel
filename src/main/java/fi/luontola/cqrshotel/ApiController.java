@@ -29,6 +29,7 @@ import fi.luontola.cqrshotel.room.commands.CreateRoom;
 import fi.luontola.cqrshotel.room.commands.CreateRoomHandler;
 import fi.luontola.cqrshotel.room.queries.RoomDto;
 import fi.luontola.cqrshotel.room.queries.RoomsView;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -101,15 +102,15 @@ public class ApiController {
     }
 
     @RequestMapping(path = "/api/reservations", method = GET)
-    public List<ReservationDto> reservations(@RequestHeader(value = OBSERVED_POSITION_HEADER, defaultValue = "0") String observedPosition) {
-        waitForProjectionsToUpdate(Long.parseLong(observedPosition));
+    public List<ReservationDto> reservations(@RequestHeader HttpHeaders headers) {
+        waitForProjectionsToUpdate(getObservedPosition(headers));
         return reservationsView.findAll();
     }
 
     @RequestMapping(path = "/api/reservations/{reservationId}", method = GET)
     public ReservationDto reservationById(@PathVariable String reservationId,
-                                          @RequestHeader(value = OBSERVED_POSITION_HEADER, defaultValue = "0") String observedPosition) {
-        waitForProjectionsToUpdate(Long.parseLong(observedPosition));
+                                          @RequestHeader HttpHeaders headers) {
+        waitForProjectionsToUpdate(getObservedPosition(headers));
         return reservationsView.findById(UUID.fromString(reservationId));
     }
 
@@ -119,24 +120,32 @@ public class ApiController {
     }
 
     @RequestMapping(path = "/api/rooms", method = GET)
-    public List<RoomDto> rooms(@RequestHeader(value = OBSERVED_POSITION_HEADER, defaultValue = "0") String observedPosition) {
-        waitForProjectionsToUpdate(Long.parseLong(observedPosition));
+    public List<RoomDto> rooms(@RequestHeader HttpHeaders headers) {
+        waitForProjectionsToUpdate(getObservedPosition(headers));
         return roomsView.findAll();
     }
 
     @RequestMapping(path = "/api/capacity/{date}", method = GET)
     public CapacityDto capacityByDate(@PathVariable String date,
-                                      @RequestHeader(value = OBSERVED_POSITION_HEADER, defaultValue = "0") String observedPosition) {
-        waitForProjectionsToUpdate(Long.parseLong(observedPosition));
+                                      @RequestHeader HttpHeaders headers) {
+        waitForProjectionsToUpdate(getObservedPosition(headers));
         return capacityView.getCapacityByDate(LocalDate.parse(date));
     }
 
     @RequestMapping(path = "/api/capacity/{start}/{end}", method = GET)
     public List<CapacityDto> capacityByDateRange(@PathVariable String start,
                                                  @PathVariable String end,
-                                                 @RequestHeader(value = OBSERVED_POSITION_HEADER, defaultValue = "0") String observedPosition) {
-        waitForProjectionsToUpdate(Long.parseLong(observedPosition));
+                                                 @RequestHeader HttpHeaders headers) {
+        waitForProjectionsToUpdate(getObservedPosition(headers));
         return capacityView.getCapacityByDateRange(LocalDate.parse(start), LocalDate.parse(end));
+    }
+
+
+    // helpers
+
+    private static long getObservedPosition(HttpHeaders headers) {
+        String value = headers.getFirst(OBSERVED_POSITION_HEADER);
+        return value == null ? 0 : Long.parseLong(value);
     }
 
     private void waitForProjectionsToUpdate(long observedPosition) {
