@@ -4,25 +4,26 @@
 
 package fi.luontola.cqrshotel.framework;
 
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 
 public class SingleThreadedTriggerableWorker {
 
-    private final Runnable task;
+    private final BlockingQueue<Runnable> availableTasks;
     private final ExecutorService executor;
-    private volatile boolean dirty = false;
 
     public SingleThreadedTriggerableWorker(Runnable task, ExecutorService executor) {
-        this.task = task;
+        this.availableTasks = new ArrayBlockingQueue<>(1);
+        this.availableTasks.add(task);
         this.executor = executor;
     }
 
     public void trigger() {
-        if (!dirty) {
-            // XXX: race condition
-            dirty = true;
+        Runnable task = availableTasks.poll();
+        if (task != null) {
             executor.submit(() -> {
-                dirty = false;
+                availableTasks.add(task);
                 task.run();
             });
         }
