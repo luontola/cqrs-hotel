@@ -54,9 +54,11 @@ public class Repository<T extends AggregateRoot> {
         return aggregate;
     }
 
-    public void save(T aggregate, int expectedVersion) {
+    public Commit save(T aggregate, int expectedVersion) {
         List<Event> events = aggregate.getUncommittedChanges();
-        eventStore.saveEvents(aggregate.getId(), events, expectedVersion);
+        Commit commit = new Commit();
+        commit.committedPosition = eventStore.saveEvents(aggregate.getId(), events, expectedVersion);
         aggregate.markChangesAsCommitted();
+        return commit;
     }
 }

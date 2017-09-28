@@ -7,6 +7,7 @@ package fi.luontola.cqrshotel;
 import fi.luontola.cqrshotel.capacity.CapacityDto;
 import fi.luontola.cqrshotel.capacity.CapacityView;
 import fi.luontola.cqrshotel.framework.Command;
+import fi.luontola.cqrshotel.framework.Commit;
 import fi.luontola.cqrshotel.framework.CompositeHandler;
 import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.Handler;
@@ -45,7 +46,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 @RestController
 public class ApiController {
 
-    private final Handler<Command, Void> commandHandler;
+    private final Handler<Command, Commit> commandHandler;
     private final Handler<Query, Object> queryHandler;
     private final ProjectionsUpdater projectionsUpdater;
 
@@ -63,7 +64,7 @@ public class ApiController {
                 capacityView = new CapacityView(eventStore)
         );
 
-        CompositeHandler<Command, Void> commandHandler = new CompositeHandler<>();
+        CompositeHandler<Command, Commit> commandHandler = new CompositeHandler<>();
         commandHandler.register(SearchForAccommodation.class, new SearchForAccommodationCommandHandler(reservationRepo, pricing, clock));
         commandHandler.register(MakeReservation.class, new MakeReservationHandler(reservationRepo, clock));
         commandHandler.register(CreateRoom.class, new CreateRoomHandler(roomRepo));
@@ -86,14 +87,13 @@ public class ApiController {
 
     @RequestMapping(path = "/api/search-for-accommodation", method = POST)
     public ReservationOffer searchForAccommodation(@RequestBody SearchForAccommodation command) {
-        commandHandler.handle(command);
+        Commit commit = commandHandler.handle(command);
         return (ReservationOffer) queryHandler.handle(command);
     }
 
     @RequestMapping(path = "/api/make-reservation", method = POST)
-    public Boolean makeReservation(@RequestBody MakeReservation command) {
-        commandHandler.handle(command);
-        return true;
+    public Commit makeReservation(@RequestBody MakeReservation command) {
+        return commandHandler.handle(command);
     }
 
     @RequestMapping(path = "/api/reservations", method = GET)
@@ -107,9 +107,8 @@ public class ApiController {
     }
 
     @RequestMapping(path = "/api/create-room", method = POST)
-    public Boolean createRoom(@RequestBody CreateRoom command) {
-        commandHandler.handle(command);
-        return true;
+    public Commit createRoom(@RequestBody CreateRoom command) {
+        return commandHandler.handle(command);
     }
 
     @RequestMapping(path = "/api/rooms", method = GET)

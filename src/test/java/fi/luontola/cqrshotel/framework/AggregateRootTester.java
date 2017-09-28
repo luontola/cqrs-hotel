@@ -19,7 +19,7 @@ public abstract class AggregateRootTester {
 
     protected final UUID id = UUID.randomUUID();
     protected final FakeEventStore eventStore = new FakeEventStore();
-    protected Handler<? extends Command, Void> commandHandler;
+    protected Handler<? extends Command, Commit> commandHandler;
 
     public void given(Event... events) {
         eventStore.populateExistingEvents(id, Arrays.asList(events));

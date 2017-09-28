@@ -4,13 +4,14 @@
 
 package fi.luontola.cqrshotel.reservation.commands;
 
+import fi.luontola.cqrshotel.framework.Commit;
 import fi.luontola.cqrshotel.framework.Handler;
 import fi.luontola.cqrshotel.reservation.Reservation;
 import fi.luontola.cqrshotel.reservation.ReservationRepo;
 
 import java.time.Clock;
 
-public class MakeReservationHandler implements Handler<MakeReservation, Void> {
+public class MakeReservationHandler implements Handler<MakeReservation, Commit> {
 
     private final ReservationRepo repo;
     private final Clock clock;
@@ -21,12 +22,11 @@ public class MakeReservationHandler implements Handler<MakeReservation, Void> {
     }
 
     @Override
-    public Void handle(MakeReservation command) {
+    public Commit handle(MakeReservation command) {
         Reservation reservation = repo.getById(command.reservationId);
         int originalVersion = reservation.getVersion();
         reservation.updateContactInformation(command.name, command.email);
         reservation.makeReservation(command.arrival, command.departure, clock);
-        repo.save(reservation, originalVersion);
-        return null;
+        return repo.save(reservation, originalVersion);
     }
 }

@@ -4,11 +4,12 @@
 
 package fi.luontola.cqrshotel.room.commands;
 
+import fi.luontola.cqrshotel.framework.Commit;
 import fi.luontola.cqrshotel.framework.Handler;
 import fi.luontola.cqrshotel.room.Room;
 import fi.luontola.cqrshotel.room.RoomRepo;
 
-public class CreateRoomHandler implements Handler<CreateRoom, Void> {
+public class CreateRoomHandler implements Handler<CreateRoom, Commit> {
 
     private final RoomRepo repo;
 
@@ -17,11 +18,10 @@ public class CreateRoomHandler implements Handler<CreateRoom, Void> {
     }
 
     @Override
-    public Void handle(CreateRoom command) {
+    public Commit handle(CreateRoom command) {
         Room room = repo.create(command.roomId);
         int originalVersion = room.getVersion();
         room.createRoom(command.number);
-        repo.save(room, originalVersion);
-        return null;
+        return repo.save(room, originalVersion);
     }
 }

@@ -5,6 +5,7 @@
 package fi.luontola.cqrshotel;
 
 import fi.luontola.cqrshotel.capacity.CapacityDto;
+import fi.luontola.cqrshotel.framework.Commit;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
@@ -92,13 +93,13 @@ public class ApiControllerTest {
                 new SearchForAccommodation(reservationId, arrival, departure),
                 ReservationOffer.class);
 
-        Boolean response = restTemplate.postForObject("/api/make-reservation",
+        Commit response = restTemplate.postForObject("/api/make-reservation",
                 new MakeReservation(
                         offer.reservationId, offer.arrival, offer.departure,
                         "John Doe", "john@example.com"),
-                Boolean.class);
+                Commit.class);
 
-        assertThat(response, is(true));
+        assertThat(response, is(notNullValue()));
         waitForProjectionsToUpdate();
         test_reservations();
         test_reservationById();
@@ -124,11 +125,11 @@ public class ApiControllerTest {
 
     @Test
     public void create_room() {
-        Boolean response = restTemplate.postForObject("/api/create-room",
+        Commit response = restTemplate.postForObject("/api/create-room",
                 new CreateRoom(roomId, "123"),
-                Boolean.class);
+                Commit.class);
 
-        assertThat(response, is(true));
+        assertThat(response, is(notNullValue()));
         waitForProjectionsToUpdate();
         test_rooms();
         test_capacityByDate();
