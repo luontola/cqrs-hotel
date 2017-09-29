@@ -6,7 +6,25 @@ Example application demonstrating the use of [CQRS](http://martinfowler.com/blik
 This project strives to differ from your typical toy examples in that *the problem domain is complex enough to warrant all the techniques being used.* The solution has been simplified, but the implemented features are production quality.
 
 
+## Project Status
+
+- technical features
+    - [x] event store
+    - [x] aggregate roots (write model)
+    - [x] projections (read model)
+    - [ ] process managers
+- business features
+    - [x] making a reservation
+    - [ ] room allocation
+    - [ ] payment
+    - [ ] check-in, check-out
+    - [ ] changing the departure date
+    - [ ] changing the room
+
+
 ## Running
+
+You must have installed Java 8, Maven 3.2.5, Node.js 6.8.0, Yarn 1.0, Docker 1.12 or higher versions of those. The project can be built with the `./build.sh` script. Below are the commands for developing this project.  
 
 Start the database:
 
@@ -21,14 +39,7 @@ Start the web frontend:
     yarn install
     yarn start
 
-open http://localhost:8080/
-
-
-## Building
-
-You must have installed Java 8, Maven 3.2.5, Node.js 6.8.0, Yarn 1.0, Docker 1.12 or higher versions of those. Then build this project with the command:
-
-    ./build.sh
+The application will run at http://localhost:8080/
 
 
 ## More Resources
