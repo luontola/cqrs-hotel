@@ -36,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -77,6 +78,11 @@ public class ApiController {
         CompositeHandler<Query, Object> queryHandler = new CompositeHandler<>();
         queryHandler.register(SearchForAccommodation.class, new SearchForAccommodationQueryHandler(eventStore, clock));
         this.queryHandler = queryHandler;
+    }
+
+    @PostConstruct
+    public void startup() {
+        projectionsUpdater.updateAll();
     }
 
     @PreDestroy
