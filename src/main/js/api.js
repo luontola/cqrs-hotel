@@ -4,9 +4,26 @@
 
 import axios from "axios";
 
-export default axios.create({
+let observedPosition = 0;
+
+export function updateObservedPosition() {
+  // TODO
+}
+
+export function buildConfig() {
+  return {
+    headers: {'X-Observed-Position': '' + observedPosition}
+  };
+}
+
+const http = axios.create({
   timeout: 15000,
   headers: {
     'Accept': 'application/json',
   },
 });
+
+export default {
+  get: (url) => http.get(url, buildConfig()),
+  post: (url, data) => http.post(url, data, buildConfig())
+}
