@@ -10,6 +10,7 @@ import fi.luontola.cqrshotel.room.events.RoomCreated;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,9 +33,8 @@ public class RoomsViewTest {
         RoomDto expected = new RoomDto();
         expected.roomId = roomId;
         expected.number = "123";
-        List<RoomDto> results = view.findAll();
-        assertThat(results, hasSize(1));
-        assertThat(results.get(0), is(expected));
+
+        assertThat(view.findAll(), is(Collections.singletonList(expected)));
     }
 
     @Test

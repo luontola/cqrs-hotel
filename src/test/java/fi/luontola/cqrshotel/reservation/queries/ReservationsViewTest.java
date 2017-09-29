@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -48,9 +49,8 @@ public class ReservationsViewTest {
         expected.name = "name";
         expected.email = "email";
         expected.status = "initiated";
-        List<ReservationDto> results = view.findAll();
-        assertThat(results, hasSize(1));
-        assertThat(results.get(0), is(expected));
+
+        assertThat(view.findAll(), is(Collections.singletonList(expected)));
     }
 
     @Test
@@ -67,7 +67,7 @@ public class ReservationsViewTest {
         view.apply(new ReservationInitiated(reservationId, arrival, departure, checkInTime, checkOutTime));
         view.apply(new ReservationInitiated(reservationId2, arrival, departure, checkInTime, checkOutTime));
 
-        ReservationDto results = view.findById(reservationId);
-        assertThat(results.reservationId, is(reservationId));
+        ReservationDto result = view.findById(reservationId);
+        assertThat(result.reservationId, is(reservationId));
     }
 }
