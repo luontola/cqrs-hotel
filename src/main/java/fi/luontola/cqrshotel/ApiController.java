@@ -11,6 +11,7 @@ import fi.luontola.cqrshotel.framework.Commit;
 import fi.luontola.cqrshotel.framework.CompositeHandler;
 import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.Handler;
+import fi.luontola.cqrshotel.framework.Projection;
 import fi.luontola.cqrshotel.framework.ProjectionsUpdater;
 import fi.luontola.cqrshotel.framework.Query;
 import fi.luontola.cqrshotel.framework.UpdateProjectionsAfterHandling;
@@ -29,9 +30,12 @@ import fi.luontola.cqrshotel.room.commands.CreateRoom;
 import fi.luontola.cqrshotel.room.commands.CreateRoomHandler;
 import fi.luontola.cqrshotel.room.queries.RoomDto;
 import fi.luontola.cqrshotel.room.queries.RoomsView;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -41,6 +45,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -53,6 +58,8 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 public class ApiController {
 
     public static final String OBSERVED_POSITION_HEADER = "X-Observed-Position";
+
+    private static final Logger log = LoggerFactory.getLogger(ApiController.class);
 
     private final Handler<Command, Commit> commandHandler;
     private final Handler<Query, Object> queryHandler;
@@ -101,7 +108,8 @@ public class ApiController {
     @RequestMapping(path = "/api/search-for-accommodation", method = POST)
     public ReservationOffer searchForAccommodation(@RequestBody SearchForAccommodation command) {
         Commit commit = commandHandler.handle(command);
-        waitForProjectionsToUpdate(commit.committedPosition);
+        // XXX: commented out; relies on the fact that SearchForAccommodationQueryHandler's projection is updated synchronously (projections should be unified to fix this)
+        //waitForProjectionsToUpdate(commit.committedPosition);
         return (ReservationOffer) queryHandler.handle(command);
     }
 
@@ -113,14 +121,14 @@ public class ApiController {
 
     @RequestMapping(path = "/api/reservations", method = GET)
     public List<ReservationDto> reservations(@RequestHeader HttpHeaders headers) {
-        waitForProjectionsToUpdate(getObservedPosition(headers));
+        waitForProjectionToUpdate(reservationsView, getObservedPosition(headers));
         return reservationsView.findAll();
     }
 
     @RequestMapping(path = "/api/reservations/{reservationId}", method = GET)
     public ReservationDto reservationById(@PathVariable String reservationId,
                                           @RequestHeader HttpHeaders headers) {
-        waitForProjectionsToUpdate(getObservedPosition(headers));
+        waitForProjectionToUpdate(reservationsView, getObservedPosition(headers));
         return reservationsView.findById(UUID.fromString(reservationId));
     }
 
@@ -132,14 +140,14 @@ public class ApiController {
 
     @RequestMapping(path = "/api/rooms", method = GET)
     public List<RoomDto> rooms(@RequestHeader HttpHeaders headers) {
-        waitForProjectionsToUpdate(getObservedPosition(headers));
+        waitForProjectionToUpdate(roomsView, getObservedPosition(headers));
         return roomsView.findAll();
     }
 
     @RequestMapping(path = "/api/capacity/{date}", method = GET)
     public CapacityDto capacityByDate(@PathVariable String date,
                                       @RequestHeader HttpHeaders headers) {
-        waitForProjectionsToUpdate(getObservedPosition(headers));
+        waitForProjectionToUpdate(capacityView, getObservedPosition(headers));
         return capacityView.getCapacityByDate(LocalDate.parse(date));
     }
 
@@ -147,7 +155,7 @@ public class ApiController {
     public List<CapacityDto> capacityByDateRange(@PathVariable String start,
                                                  @PathVariable String end,
                                                  @RequestHeader HttpHeaders headers) {
-        waitForProjectionsToUpdate(getObservedPosition(headers));
+        waitForProjectionToUpdate(capacityView, getObservedPosition(headers));
         return capacityView.getCapacityByDateRange(LocalDate.parse(start), LocalDate.parse(end));
     }
 
@@ -167,14 +175,22 @@ public class ApiController {
         return value == null ? 0 : Long.parseLong(value);
     }
 
-    private void waitForProjectionsToUpdate(long observedPosition) {
-        // XXX: use a more reliable mechanism to give the client a consistent view
-        if (observedPosition > 0) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+    private void waitForProjectionToUpdate(Projection projection, long observedPosition) {
+        // TODO: do this in a single place in the handler chain so that it doesn't need to be added individually for each projection
+        try {
+            boolean upToDate = projection.awaitPosition(observedPosition, Duration.ofSeconds(15));
+            if (upToDate) {
+                return;
             }
+            log.warn("Projection not up to date, expected position {} ", observedPosition);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
+        throw new ReadModelNotUpToDateException();
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<?> onReadModelNotUpToDateException(ReadModelNotUpToDateException e) {
+        return new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE);
     }
 }
