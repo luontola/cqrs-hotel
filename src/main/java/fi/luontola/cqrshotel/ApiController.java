@@ -30,6 +30,8 @@ import fi.luontola.cqrshotel.room.commands.CreateRoomHandler;
 import fi.luontola.cqrshotel.room.queries.RoomDto;
 import fi.luontola.cqrshotel.room.queries.RoomsView;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -40,6 +42,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -103,8 +106,9 @@ public class ApiController {
     }
 
     @RequestMapping(path = "/api/make-reservation", method = POST)
-    public Commit makeReservation(@RequestBody MakeReservation command) {
-        return commandHandler.handle(command);
+    public ResponseEntity<?> makeReservation(@RequestBody MakeReservation command) {
+        Commit commit = commandHandler.handle(command);
+        return buildHttpResponse(commit);
     }
 
     @RequestMapping(path = "/api/reservations", method = GET)
@@ -121,8 +125,9 @@ public class ApiController {
     }
 
     @RequestMapping(path = "/api/create-room", method = POST)
-    public Commit createRoom(@RequestBody CreateRoom command) {
-        return commandHandler.handle(command);
+    public ResponseEntity<?> createRoom(@RequestBody CreateRoom command) {
+        Commit commit = commandHandler.handle(command);
+        return buildHttpResponse(commit);
     }
 
     @RequestMapping(path = "/api/rooms", method = GET)
@@ -148,6 +153,14 @@ public class ApiController {
 
 
     // helpers
+
+    private ResponseEntity<?> buildHttpResponse(Commit commit) {
+        HttpHeaders headers = new HttpHeaders();
+        // TODO: also add the header when reading projections?
+        // TODO: do this in a single place; read the position in the handler chain, set the header in a filter
+        headers.add(OBSERVED_POSITION_HEADER, String.valueOf(commit.committedPosition));
+        return new ResponseEntity<>(Collections.emptyMap(), headers, HttpStatus.OK);
+    }
 
     private static long getObservedPosition(HttpHeaders headers) {
         String value = headers.getFirst(OBSERVED_POSITION_HEADER);

@@ -4,22 +4,29 @@
 
 import axios from "axios";
 
-let observedPosition = 0;
+const OBSERVED_POSITION_HEADER = 'x-observed-position';
+let observedPosition = null;
 
-export async function handleResponse(responsePromise) {
-  const response = await responsePromise;
-  //console.log(response);
-  //console.log(response.headers);
-  // TODO: make the server return a X-Observed-Position header instead of detecting commit objects
-  if (response.data.committedPosition) {
-    observedPosition = response.data.committedPosition;
+function rememberObservedPosition(response) {
+  const value = response.headers[OBSERVED_POSITION_HEADER];
+  if (value) {
+    observedPosition = value;
   }
+}
+
+async function handleResponse(responsePromise) {
+  const response = await responsePromise;
+  rememberObservedPosition(response);
   return response;
 }
 
 export function buildConfig() {
+  const headers = {};
+  if (observedPosition) {
+    headers[OBSERVED_POSITION_HEADER] = observedPosition;
+  }
   return {
-    headers: {'X-Observed-Position': '' + observedPosition}
+    headers
   };
 }
 

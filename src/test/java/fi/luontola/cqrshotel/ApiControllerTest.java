@@ -5,7 +5,6 @@
 package fi.luontola.cqrshotel;
 
 import fi.luontola.cqrshotel.capacity.CapacityDto;
-import fi.luontola.cqrshotel.framework.Commit;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
@@ -65,7 +64,7 @@ public class ApiControllerTest {
     private final UUID roomId = UUID.randomUUID();
     private final LocalDate arrival = LocalDate.now();
     private final LocalDate departure = arrival.plusDays(2);
-    private String observedPosition = "0";
+    private String observedPosition = null;
 
     @Before
     public void initMocks() {
@@ -100,13 +99,12 @@ public class ApiControllerTest {
                 new SearchForAccommodation(reservationId, arrival, departure),
                 ReservationOffer.class);
 
-        Commit response = postForObject("/api/make-reservation",
+        postForObject("/api/make-reservation",
                 new MakeReservation(
                         offer.reservationId, offer.arrival, offer.departure,
                         "John Doe", "john@example.com"),
-                Commit.class);
+                Object.class);
 
-        assertThat(response, is(notNullValue()));
         test_reservations();
         test_reservationById();
     }
@@ -131,11 +129,10 @@ public class ApiControllerTest {
 
     @Test
     public void create_room() {
-        Commit response = postForObject("/api/create-room",
+        postForObject("/api/create-room",
                 new CreateRoom(roomId, "123"),
-                Commit.class);
+                Object.class);
 
-        assertThat(response, is(notNullValue()));
         test_rooms();
         test_capacityByDate();
     }
@@ -175,18 +172,21 @@ public class ApiControllerTest {
     private <T> T postForObject(String url, Object request, Class<T> responseType, Object... urlVariables) {
         ResponseEntity<T> response = restTemplate.exchange(url, POST, new HttpEntity<>(request, headers()), responseType, urlVariables);
         assert2xxSuccessful(response);
-        T body = response.getBody();
-        if (body instanceof Commit) {
-            Commit commit = (Commit) body;
-            this.observedPosition = String.valueOf(commit.committedPosition);
-        }
-        return body;
+        rememberObservedPosition(response);
+        return response.getBody();
     }
 
     private <T> T getForObject(String url, Class<T> responseType, Object... urlVariables) {
         ResponseEntity<T> response = restTemplate.exchange(url, GET, new HttpEntity<>(headers()), responseType, urlVariables);
         assert2xxSuccessful(response);
         return response.getBody();
+    }
+
+    private void rememberObservedPosition(ResponseEntity<?> response) {
+        String observedPosition = response.getHeaders().getFirst(ApiController.OBSERVED_POSITION_HEADER);
+        if (observedPosition != null) {
+            this.observedPosition = observedPosition;
+        }
     }
 
     private HttpHeaders headers() {
