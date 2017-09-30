@@ -4,6 +4,7 @@
 
 package fi.luontola.cqrshotel.framework;
 
+import com.google.common.base.Stopwatch;
 import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.util.Struct;
 import org.junit.Rule;
@@ -15,12 +16,15 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.lessThan;
 
 @Category(FastTests.class)
 public class ProjectionTest {
@@ -94,6 +98,31 @@ public class ProjectionTest {
 
         assertThat("when expectation smaller", projection.awaitPosition(1, Duration.ofSeconds(0)), is(true));
         assertThat("when expectation equal", projection.awaitPosition(2, Duration.ofSeconds(0)), is(true));
+    }
+
+    @Test
+    public void awaiting_position_is_not_blocked_by_a_concurrently_running_update() throws InterruptedException {
+        eventStore.saveEvents(UUID.randomUUID(), singletonList(one), EventStore.BEGINNING);
+        CountDownLatch updateStarted = new CountDownLatch(1);
+        Projection projection = new Projection(eventStore) {
+            @EventListener
+            private void apply(DummyEvent event) {
+                updateStarted.countDown();
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        };
+        new Thread(projection::update).start();
+        updateStarted.await();
+
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        boolean result = projection.awaitPosition(1, Duration.ofMillis(0));
+
+        assertThat("elapsed time", stopwatch.elapsed(TimeUnit.MILLISECONDS), is(lessThan(100L)));
+        assertThat("return value", result, is(false));
     }
 
 

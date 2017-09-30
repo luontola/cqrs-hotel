@@ -16,7 +16,7 @@ public abstract class Projection {
 
     private final EventListeners eventListeners;
     private final EventStore eventStore;
-    private long position = EventStore.BEGINNING;
+    private volatile long position = EventStore.BEGINNING;
 
     public Projection(EventStore eventStore) {
         this.eventListeners = EventListeners.of(this);
@@ -42,17 +42,16 @@ public abstract class Projection {
      * @return {@code true} if this projection has reached the expected position
      * and {@code false} if the waiting time elapsed before that
      */
-    public synchronized final boolean awaitPosition(long expectedPosition, Duration timeout) throws InterruptedException {
+    public final boolean awaitPosition(long expectedPosition, Duration timeout) throws InterruptedException {
         long deadline = System.currentTimeMillis() + timeout.toMillis();
         while (true) {
             if (position >= expectedPosition) {
                 return true;
             }
-            long remaining = deadline - System.currentTimeMillis();
-            if (remaining <= 0) {
+            if (deadline - System.currentTimeMillis() <= 0) {
                 return false;
             }
-            wait(remaining);
+            Thread.sleep(1);
         }
     }
 }
