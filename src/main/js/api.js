@@ -6,8 +6,15 @@ import axios from "axios";
 
 let observedPosition = 0;
 
-export function updateObservedPosition() {
-  // TODO
+export async function handleResponse(responsePromise) {
+  const response = await responsePromise;
+  //console.log(response);
+  //console.log(response.headers);
+  // TODO: make the server return a X-Observed-Position header instead of detecting commit objects
+  if (response.data.committedPosition) {
+    observedPosition = response.data.committedPosition;
+  }
+  return response;
 }
 
 export function buildConfig() {
@@ -24,6 +31,6 @@ const http = axios.create({
 });
 
 export default {
-  get: (url) => http.get(url, buildConfig()),
-  post: (url, data) => http.post(url, data, buildConfig())
+  get: (url) => handleResponse(http.get(url, buildConfig())),
+  post: (url, data) => handleResponse(http.post(url, data, buildConfig()))
 }
