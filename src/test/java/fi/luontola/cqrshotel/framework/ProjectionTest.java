@@ -6,9 +6,12 @@ package fi.luontola.cqrshotel.framework;
 
 import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.util.Struct;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.Timeout;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -21,6 +24,9 @@ import static org.hamcrest.Matchers.is;
 
 @Category(FastTests.class)
 public class ProjectionTest {
+
+    @Rule
+    public final Timeout timeout = Timeout.seconds(1);
 
     private static final DummyEvent one = new DummyEvent("one");
     private static final DummyEvent two = new DummyEvent("two");
@@ -56,6 +62,47 @@ public class ProjectionTest {
         projection.update();
 
         assertThat("new events", projection.receivedEvents, is(singletonList(three)));
+    }
+
+    @Test
+    public void awaiting_position_blocks_until_the_projection_has_been_updated() throws InterruptedException {
+        eventStore.saveEvents(UUID.randomUUID(), singletonList(one), EventStore.BEGINNING);
+
+        new Thread(() -> {
+            sleep(5);
+            projection.update();
+        }).start();
+        boolean result = projection.awaitPosition(1, Duration.ofSeconds(1));
+
+        List<DummyEvent> events = new ArrayList<>(projection.receivedEvents); // safe copy to avoid assertion message showing a later value
+        assertThat("events", events, is(singletonList(one)));
+        assertThat("return value", result, is(true));
+    }
+
+    @Test
+    public void awaiting_position_returns_false_if_timeout_is_reached() throws InterruptedException {
+        boolean result = projection.awaitPosition(1, Duration.ofSeconds(0));
+
+        assertThat("return value", result, is(false));
+    }
+
+    @Test
+    public void awaiting_position_returns_immediately_if_the_projection_is_already_up_to_date() throws InterruptedException {
+        eventStore.saveEvents(UUID.randomUUID(), singletonList(one), EventStore.BEGINNING);
+        eventStore.saveEvents(UUID.randomUUID(), singletonList(two), EventStore.BEGINNING);
+        projection.update();
+
+        assertThat("when expectation smaller", projection.awaitPosition(1, Duration.ofSeconds(0)), is(true));
+        assertThat("when expectation equal", projection.awaitPosition(2, Duration.ofSeconds(0)), is(true));
+    }
+
+
+    private static void sleep(int millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            // ignore
+        }
     }
 
     private static class SpyProjection extends Projection {
