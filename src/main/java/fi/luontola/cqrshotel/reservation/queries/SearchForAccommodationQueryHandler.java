@@ -21,9 +21,9 @@ public class SearchForAccommodationQueryHandler implements Handler<SearchForAcco
     }
 
     @Override
-    public ReservationOffer handle(SearchForAccommodation command) {
-        ReservationOfferView view = new ReservationOfferView(command.reservationId, eventStore, clock);
+    public ReservationOffer handle(SearchForAccommodation query) {
+        ReservationOfferView view = new ReservationOfferView(query.reservationId, eventStore, clock);
         view.update();
-        return view.query(command);
+        return view.query(query);
     }
 }

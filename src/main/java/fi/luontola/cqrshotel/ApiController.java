@@ -11,7 +11,6 @@ import fi.luontola.cqrshotel.framework.Commit;
 import fi.luontola.cqrshotel.framework.CompositeHandler;
 import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.Handler;
-import fi.luontola.cqrshotel.framework.Projection;
 import fi.luontola.cqrshotel.framework.ProjectionsUpdater;
 import fi.luontola.cqrshotel.framework.Query;
 import fi.luontola.cqrshotel.framework.UpdateProjectionsAfterHandling;
@@ -21,6 +20,10 @@ import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservationHandler;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodationCommandHandler;
+import fi.luontola.cqrshotel.reservation.queries.FindAllReservations;
+import fi.luontola.cqrshotel.reservation.queries.FindAllReservationsHandler;
+import fi.luontola.cqrshotel.reservation.queries.FindReservationById;
+import fi.luontola.cqrshotel.reservation.queries.FindReservationByIdHandler;
 import fi.luontola.cqrshotel.reservation.queries.ReservationDto;
 import fi.luontola.cqrshotel.reservation.queries.ReservationOffer;
 import fi.luontola.cqrshotel.reservation.queries.ReservationsView;
@@ -45,7 +48,6 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.time.Clock;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -64,6 +66,7 @@ public class ApiController {
     private final Handler<Command, Commit> commandHandler;
     private final Handler<Query, Object> queryHandler;
     private final ProjectionsUpdater projectionsUpdater;
+    private final ObservedPosition observedPosition = new ObservedPosition();
 
     private final ReservationsView reservationsView;
     private final RoomsView roomsView;
@@ -87,6 +90,8 @@ public class ApiController {
 
         CompositeHandler<Query, Object> queryHandler = new CompositeHandler<>();
         queryHandler.register(SearchForAccommodation.class, new SearchForAccommodationQueryHandler(eventStore, clock));
+        queryHandler.register(FindAllReservations.class, new FindAllReservationsHandler(reservationsView, observedPosition));
+        queryHandler.register(FindReservationById.class, new FindReservationByIdHandler(reservationsView, observedPosition));
         this.queryHandler = queryHandler;
     }
 
@@ -121,15 +126,15 @@ public class ApiController {
 
     @RequestMapping(path = "/api/reservations", method = GET)
     public List<ReservationDto> reservations(@RequestHeader HttpHeaders headers) {
-        waitForProjectionToUpdate(reservationsView, getObservedPosition(headers));
-        return reservationsView.findAll();
+        observedPosition.observe(getObservedPosition(headers));
+        return (List<ReservationDto>) queryHandler.handle(new FindAllReservations());
     }
 
     @RequestMapping(path = "/api/reservations/{reservationId}", method = GET)
     public ReservationDto reservationById(@PathVariable String reservationId,
                                           @RequestHeader HttpHeaders headers) {
-        waitForProjectionToUpdate(reservationsView, getObservedPosition(headers));
-        return reservationsView.findById(UUID.fromString(reservationId));
+        observedPosition.observe(getObservedPosition(headers));
+        return (ReservationDto) queryHandler.handle(new FindReservationById(UUID.fromString(reservationId)));
     }
 
     @RequestMapping(path = "/api/create-room", method = POST)
@@ -140,14 +145,16 @@ public class ApiController {
 
     @RequestMapping(path = "/api/rooms", method = GET)
     public List<RoomDto> rooms(@RequestHeader HttpHeaders headers) {
-        waitForProjectionToUpdate(roomsView, getObservedPosition(headers));
+        observedPosition.observe(getObservedPosition(headers));
+        observedPosition.waitForProjectionToUpdate(roomsView);
         return roomsView.findAll();
     }
 
     @RequestMapping(path = "/api/capacity/{date}", method = GET)
     public CapacityDto capacityByDate(@PathVariable String date,
                                       @RequestHeader HttpHeaders headers) {
-        waitForProjectionToUpdate(capacityView, getObservedPosition(headers));
+        observedPosition.observe(getObservedPosition(headers));
+        observedPosition.waitForProjectionToUpdate(capacityView);
         return capacityView.getCapacityByDate(LocalDate.parse(date));
     }
 
@@ -155,7 +162,8 @@ public class ApiController {
     public List<CapacityDto> capacityByDateRange(@PathVariable String start,
                                                  @PathVariable String end,
                                                  @RequestHeader HttpHeaders headers) {
-        waitForProjectionToUpdate(capacityView, getObservedPosition(headers));
+        observedPosition.observe(getObservedPosition(headers));
+        observedPosition.waitForProjectionToUpdate(capacityView);
         return capacityView.getCapacityByDateRange(LocalDate.parse(start), LocalDate.parse(end));
     }
 
@@ -173,20 +181,6 @@ public class ApiController {
     private static long getObservedPosition(HttpHeaders headers) {
         String value = headers.getFirst(OBSERVED_POSITION_HEADER);
         return value == null ? 0 : Long.parseLong(value);
-    }
-
-    private void waitForProjectionToUpdate(Projection projection, long observedPosition) {
-        // TODO: do this in a single place in the handler chain so that it doesn't need to be added individually for each projection
-        try {
-            boolean upToDate = projection.awaitPosition(observedPosition, Duration.ofSeconds(15));
-            if (upToDate) {
-                return;
-            }
-            log.warn("Projection not up to date, expected position {} ", observedPosition);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-        throw new ReadModelNotUpToDateException();
     }
 
     @ExceptionHandler

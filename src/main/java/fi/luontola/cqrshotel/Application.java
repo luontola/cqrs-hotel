@@ -65,6 +65,7 @@ public class Application {
         om.registerModules(new JavaTimeModule(), new MoneyModule());
         om.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         om.configure(SerializationFeature.INDENT_OUTPUT, true);
+        om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         om.configure(DeserializationFeature.FAIL_ON_NUMBERS_FOR_ENUMS, true);
         // preserve time zone information
