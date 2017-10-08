@@ -5,21 +5,17 @@
 package fi.luontola.cqrshotel.reservation.queries;
 
 import fi.luontola.cqrshotel.framework.Handler;
-import fi.luontola.cqrshotel.framework.consistency.ObservedPosition;
 
 public class FindReservationByIdHandler implements Handler<FindReservationById, ReservationDto> {
 
     private final ReservationsView projection;
-    private final ObservedPosition observedPosition;
 
-    public FindReservationByIdHandler(ReservationsView projection, ObservedPosition observedPosition) {
+    public FindReservationByIdHandler(ReservationsView projection) {
         this.projection = projection;
-        this.observedPosition = observedPosition;
     }
 
     @Override
     public ReservationDto handle(FindReservationById query) {
-        observedPosition.waitForProjectionToUpdate(projection);
         return projection.findById(query.reservationId);
     }
 }

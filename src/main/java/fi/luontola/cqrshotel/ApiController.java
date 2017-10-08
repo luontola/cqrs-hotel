@@ -16,6 +16,7 @@ import fi.luontola.cqrshotel.framework.Query;
 import fi.luontola.cqrshotel.framework.UpdateProjectionsAfterHandling;
 import fi.luontola.cqrshotel.framework.consistency.ObservedPosition;
 import fi.luontola.cqrshotel.framework.consistency.UpdateObservedPositionAfterCommit;
+import fi.luontola.cqrshotel.framework.consistency.WaitForProjectionToUpdate;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.reservation.ReservationRepo;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
@@ -87,9 +88,14 @@ public class ApiController {
                 new UpdateProjectionsAfterHandling<>(projectionsUpdater, commandHandler));
 
         CompositeHandler<Query, Object> queryHandler = new CompositeHandler<>();
-        queryHandler.register(SearchForAccommodation.class, new SearchForAccommodationQueryHandler(eventStore, clock));
-        queryHandler.register(FindAllReservations.class, new FindAllReservationsHandler(reservationsView, observedPosition));
-        queryHandler.register(FindReservationById.class, new FindReservationByIdHandler(reservationsView, observedPosition));
+        queryHandler.register(SearchForAccommodation.class,
+                new SearchForAccommodationQueryHandler(eventStore, clock));
+        queryHandler.register(FindAllReservations.class,
+                new WaitForProjectionToUpdate<>(reservationsView, observedPosition,
+                        new FindAllReservationsHandler(reservationsView)));
+        queryHandler.register(FindReservationById.class,
+                new WaitForProjectionToUpdate<>(reservationsView, observedPosition,
+                        new FindReservationByIdHandler(reservationsView)));
         this.queryHandler = queryHandler;
     }
 

@@ -5,23 +5,19 @@
 package fi.luontola.cqrshotel.reservation.queries;
 
 import fi.luontola.cqrshotel.framework.Handler;
-import fi.luontola.cqrshotel.framework.consistency.ObservedPosition;
 
 import java.util.List;
 
 public class FindAllReservationsHandler implements Handler<FindAllReservations, List<ReservationDto>> {
 
     private final ReservationsView projection;
-    private final ObservedPosition observedPosition;
 
-    public FindAllReservationsHandler(ReservationsView projection, ObservedPosition observedPosition) {
+    public FindAllReservationsHandler(ReservationsView projection) {
         this.projection = projection;
-        this.observedPosition = observedPosition;
     }
 
     @Override
     public List<ReservationDto> handle(FindAllReservations query) {
-        observedPosition.waitForProjectionToUpdate(projection);
         return projection.findAll();
     }
 }
