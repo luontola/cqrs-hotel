@@ -4,8 +4,12 @@
 
 package fi.luontola.cqrshotel;
 
-import fi.luontola.cqrshotel.capacity.CapacityDto;
-import fi.luontola.cqrshotel.capacity.CapacityView;
+import fi.luontola.cqrshotel.capacity.queries.CapacityDto;
+import fi.luontola.cqrshotel.capacity.queries.CapacityView;
+import fi.luontola.cqrshotel.capacity.queries.GetCapacityByDate;
+import fi.luontola.cqrshotel.capacity.queries.GetCapacityByDateHandler;
+import fi.luontola.cqrshotel.capacity.queries.GetCapacityByDateRange;
+import fi.luontola.cqrshotel.capacity.queries.GetCapacityByDateRangeHandler;
 import fi.luontola.cqrshotel.framework.Command;
 import fi.luontola.cqrshotel.framework.Commit;
 import fi.luontola.cqrshotel.framework.CompositeHandler;
@@ -34,6 +38,8 @@ import fi.luontola.cqrshotel.reservation.queries.SearchForAccommodationQueryHand
 import fi.luontola.cqrshotel.room.RoomRepo;
 import fi.luontola.cqrshotel.room.commands.CreateRoom;
 import fi.luontola.cqrshotel.room.commands.CreateRoomHandler;
+import fi.luontola.cqrshotel.room.queries.FindAllRooms;
+import fi.luontola.cqrshotel.room.queries.FindAllRoomsHandler;
 import fi.luontola.cqrshotel.room.queries.RoomDto;
 import fi.luontola.cqrshotel.room.queries.RoomsView;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -89,8 +95,15 @@ public class ApiController {
         queryHandler.register(FindReservationById.class,
                 new WaitForProjectionToUpdate<>(reservationsView, observedPosition,
                         new FindReservationByIdHandler(reservationsView)));
-        queryHandler.register(SimpleProjectionQuery.class,
-                new SimpleProjectionQueryHandler(observedPosition));
+        queryHandler.register(FindAllRooms.class,
+                new WaitForProjectionToUpdate<>(roomsView, observedPosition,
+                        new FindAllRoomsHandler(roomsView)));
+        queryHandler.register(GetCapacityByDate.class,
+                new WaitForProjectionToUpdate<>(capacityView, observedPosition,
+                        new GetCapacityByDateHandler(capacityView)));
+        queryHandler.register(GetCapacityByDateRange.class,
+                new WaitForProjectionToUpdate<>(capacityView, observedPosition,
+                        new GetCapacityByDateRangeHandler(capacityView)));
         this.queryHandler = queryHandler;
     }
 
@@ -139,20 +152,17 @@ public class ApiController {
 
     @RequestMapping(path = "/api/rooms", method = GET)
     public RoomDto[] rooms() {
-        return (RoomDto[]) queryHandler.handle(new SimpleProjectionQuery<>(roomsView, view -> view.findAll().toArray(new RoomDto[0])));
+        return (RoomDto[]) queryHandler.handle(new FindAllRooms());
     }
 
     @RequestMapping(path = "/api/capacity/{date}", method = GET)
     public CapacityDto capacityByDate(@PathVariable String date) {
-        LocalDate date_ = LocalDate.parse(date);
-        return (CapacityDto) queryHandler.handle(new SimpleProjectionQuery<>(capacityView, view -> view.getCapacityByDate(date_)));
+        return (CapacityDto) queryHandler.handle(new GetCapacityByDate(LocalDate.parse(date)));
     }
 
     @RequestMapping(path = "/api/capacity/{start}/{end}", method = GET)
     public CapacityDto[] capacityByDateRange(@PathVariable String start,
                                              @PathVariable String end) {
-        LocalDate start_ = LocalDate.parse(start);
-        LocalDate end_ = LocalDate.parse(end);
-        return (CapacityDto[]) queryHandler.handle(new SimpleProjectionQuery<>(capacityView, view -> view.getCapacityByDateRange(start_, end_).toArray(new CapacityDto[0])));
+        return (CapacityDto[]) queryHandler.handle(new GetCapacityByDateRange(LocalDate.parse(start), LocalDate.parse(end)));
     }
 }

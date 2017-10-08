@@ -5,6 +5,8 @@
 package fi.luontola.cqrshotel.capacity;
 
 import fi.luontola.cqrshotel.FastTests;
+import fi.luontola.cqrshotel.capacity.queries.CapacityDto;
+import fi.luontola.cqrshotel.capacity.queries.CapacityView;
 import fi.luontola.cqrshotel.framework.InMemoryEventStore;
 import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
 import fi.luontola.cqrshotel.room.events.RoomCreated;

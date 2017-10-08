@@ -4,7 +4,7 @@
 
 package fi.luontola.cqrshotel;
 
-import fi.luontola.cqrshotel.capacity.CapacityDto;
+import fi.luontola.cqrshotel.capacity.queries.CapacityDto;
 import fi.luontola.cqrshotel.framework.consistency.ObservedPosition;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
