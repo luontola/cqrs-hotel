@@ -23,6 +23,10 @@ public abstract class Projection {
         this.eventStore = eventStore;
     }
 
+    public long getPosition() {
+        return position;
+    }
+
     public synchronized final void update() {
         List<Event> events = eventStore.getAllEvents(position);
         if (!events.isEmpty()) {

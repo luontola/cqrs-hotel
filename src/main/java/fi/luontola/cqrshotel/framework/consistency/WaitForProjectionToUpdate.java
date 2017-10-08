@@ -23,6 +23,8 @@ public class WaitForProjectionToUpdate<M extends Message, R> implements Handler<
     @Override
     public R handle(M message) {
         observedPosition.waitForProjectionToUpdate(projection);
-        return handler.handle(message);
+        R result = handler.handle(message);
+        observedPosition.observe(projection.getPosition());
+        return result;
     }
 }

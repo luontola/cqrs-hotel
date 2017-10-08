@@ -20,6 +20,8 @@ public class SimpleProjectionQueryHandler<P extends Projection> implements Handl
     public Object handle(SimpleProjectionQuery<P> query) {
         P projection = query.projection;
         observedPosition.waitForProjectionToUpdate(projection);
-        return query.method.apply(projection);
+        Object result = query.method.apply(projection);
+        observedPosition.observe(projection.getPosition());
+        return result;
     }
 }
