@@ -5,6 +5,7 @@
 package fi.luontola.cqrshotel;
 
 import fi.luontola.cqrshotel.capacity.CapacityDto;
+import fi.luontola.cqrshotel.framework.consistency.ObservedPosition;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
@@ -183,7 +184,7 @@ public class ApiControllerTest {
     }
 
     private void rememberObservedPosition(ResponseEntity<?> response) {
-        String observedPosition = response.getHeaders().getFirst(ApiController.OBSERVED_POSITION_HEADER);
+        String observedPosition = response.getHeaders().getFirst(ObservedPosition.HTTP_HEADER);
         if (observedPosition != null) {
             this.observedPosition = observedPosition;
         }
@@ -192,7 +193,7 @@ public class ApiControllerTest {
     private HttpHeaders headers() {
         HttpHeaders headers = new HttpHeaders();
         if (observedPosition != null) {
-            headers.set(ApiController.OBSERVED_POSITION_HEADER, observedPosition);
+            headers.set(ObservedPosition.HTTP_HEADER, observedPosition);
         }
         return headers;
     }

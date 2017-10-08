@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.PsqlEventStore;
+import fi.luontola.cqrshotel.framework.consistency.ObservedPosition;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.pricing.RandomPricingEngine;
 import fi.luontola.cqrshotel.room.commands.CreateRoom;
@@ -52,6 +53,11 @@ public class Application {
     @Bean
     public PricingEngine pricingEngine(Clock clock) {
         return new RandomPricingEngine(clock);
+    }
+
+    @Bean
+    public ObservedPosition observedPosition() {
+        return new ObservedPosition();
     }
 
     @Bean

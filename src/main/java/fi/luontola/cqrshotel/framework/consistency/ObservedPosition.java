@@ -2,7 +2,7 @@
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
-package fi.luontola.cqrshotel;
+package fi.luontola.cqrshotel.framework.consistency;
 
 import fi.luontola.cqrshotel.framework.Projection;
 import org.slf4j.Logger;
@@ -13,9 +13,10 @@ import java.time.Duration;
 public class ObservedPosition {
 
     // TODO: tests for this class
-    // TODO: call reset() automatically
-    // TODO: call observe() automatically
+    // TODO: call observe() automatically for commands
+    // TODO: call observe() automatically for projections
 
+    public static final String HTTP_HEADER = "X-Observed-Position";
     public static final Duration QUERY_TIMEOUT = Duration.ofSeconds(15);
     private static final Logger log = LoggerFactory.getLogger(ObservedPosition.class);
 
@@ -43,8 +44,9 @@ public class ObservedPosition {
         throw new ReadModelNotUpToDateException();
     }
 
-    public Long get() {
-        return observedPosition.get();
+    public long get() {
+        Long value = observedPosition.get();
+        return value == null ? 0 : value;
     }
 
     public void reset() {

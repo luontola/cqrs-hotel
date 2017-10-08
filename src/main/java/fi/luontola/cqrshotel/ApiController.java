@@ -14,6 +14,8 @@ import fi.luontola.cqrshotel.framework.Handler;
 import fi.luontola.cqrshotel.framework.ProjectionsUpdater;
 import fi.luontola.cqrshotel.framework.Query;
 import fi.luontola.cqrshotel.framework.UpdateProjectionsAfterHandling;
+import fi.luontola.cqrshotel.framework.consistency.ObservedPosition;
+import fi.luontola.cqrshotel.framework.consistency.ReadModelNotUpToDateException;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.reservation.ReservationRepo;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
@@ -41,7 +43,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -59,20 +60,19 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 @RestController
 public class ApiController {
 
-    public static final String OBSERVED_POSITION_HEADER = "X-Observed-Position";
-
     private static final Logger log = LoggerFactory.getLogger(ApiController.class);
 
     private final Handler<Command, Commit> commandHandler;
     private final Handler<Query, Object> queryHandler;
     private final ProjectionsUpdater projectionsUpdater;
-    private final ObservedPosition observedPosition = new ObservedPosition();
+    private final ObservedPosition observedPosition;
 
     private final ReservationsView reservationsView;
     private final RoomsView roomsView;
     private final CapacityView capacityView;
 
-    public ApiController(EventStore eventStore, PricingEngine pricing, Clock clock) {
+    public ApiController(EventStore eventStore, PricingEngine pricing, Clock clock, ObservedPosition observedPosition) {
+        this.observedPosition = observedPosition;
         ReservationRepo reservationRepo = new ReservationRepo(eventStore);
         RoomRepo roomRepo = new RoomRepo(eventStore);
 
@@ -125,15 +125,12 @@ public class ApiController {
     }
 
     @RequestMapping(path = "/api/reservations", method = GET)
-    public List<ReservationDto> reservations(@RequestHeader HttpHeaders headers) {
-        observedPosition.observe(getObservedPosition(headers));
+    public List<ReservationDto> reservations() {
         return (List<ReservationDto>) queryHandler.handle(new FindAllReservations());
     }
 
     @RequestMapping(path = "/api/reservations/{reservationId}", method = GET)
-    public ReservationDto reservationById(@PathVariable String reservationId,
-                                          @RequestHeader HttpHeaders headers) {
-        observedPosition.observe(getObservedPosition(headers));
+    public ReservationDto reservationById(@PathVariable String reservationId) {
         return (ReservationDto) queryHandler.handle(new FindReservationById(UUID.fromString(reservationId)));
     }
 
@@ -144,25 +141,20 @@ public class ApiController {
     }
 
     @RequestMapping(path = "/api/rooms", method = GET)
-    public List<RoomDto> rooms(@RequestHeader HttpHeaders headers) {
-        observedPosition.observe(getObservedPosition(headers));
+    public List<RoomDto> rooms() {
         observedPosition.waitForProjectionToUpdate(roomsView);
         return roomsView.findAll();
     }
 
     @RequestMapping(path = "/api/capacity/{date}", method = GET)
-    public CapacityDto capacityByDate(@PathVariable String date,
-                                      @RequestHeader HttpHeaders headers) {
-        observedPosition.observe(getObservedPosition(headers));
+    public CapacityDto capacityByDate(@PathVariable String date) {
         observedPosition.waitForProjectionToUpdate(capacityView);
         return capacityView.getCapacityByDate(LocalDate.parse(date));
     }
 
     @RequestMapping(path = "/api/capacity/{start}/{end}", method = GET)
     public List<CapacityDto> capacityByDateRange(@PathVariable String start,
-                                                 @PathVariable String end,
-                                                 @RequestHeader HttpHeaders headers) {
-        observedPosition.observe(getObservedPosition(headers));
+                                                 @PathVariable String end) {
         observedPosition.waitForProjectionToUpdate(capacityView);
         return capacityView.getCapacityByDateRange(LocalDate.parse(start), LocalDate.parse(end));
     }
@@ -174,13 +166,8 @@ public class ApiController {
         HttpHeaders headers = new HttpHeaders();
         // TODO: also add the header when reading projections?
         // TODO: do this in a single place; read the position in the handler chain, set the header in a filter
-        headers.add(OBSERVED_POSITION_HEADER, String.valueOf(commit.committedPosition));
+        observedPosition.observe(commit.committedPosition);
         return new ResponseEntity<>(Collections.emptyMap(), headers, HttpStatus.OK);
-    }
-
-    private static long getObservedPosition(HttpHeaders headers) {
-        String value = headers.getFirst(OBSERVED_POSITION_HEADER);
-        return value == null ? 0 : Long.parseLong(value);
     }
 
     @ExceptionHandler

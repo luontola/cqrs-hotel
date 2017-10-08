@@ -4,8 +4,8 @@
 
 package fi.luontola.cqrshotel.reservation.queries;
 
-import fi.luontola.cqrshotel.ObservedPosition;
 import fi.luontola.cqrshotel.framework.Handler;
+import fi.luontola.cqrshotel.framework.consistency.ObservedPosition;
 
 import java.util.List;
 
