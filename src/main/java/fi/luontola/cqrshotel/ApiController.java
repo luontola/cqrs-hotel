@@ -46,7 +46,6 @@ import javax.annotation.PreDestroy;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -113,8 +112,6 @@ public class ApiController {
     @RequestMapping(path = "/api/search-for-accommodation", method = POST)
     public ReservationOffer searchForAccommodation(@RequestBody SearchForAccommodation command) {
         commandHandler.handle(command);
-        // XXX: commented out; relies on the fact that SearchForAccommodationQueryHandler's projection is updated synchronously (projections should be unified to fix this)
-        //waitForProjectionsToUpdate(commit.committedPosition);
         return (ReservationOffer) queryHandler.handle(command);
     }
 
@@ -125,8 +122,8 @@ public class ApiController {
     }
 
     @RequestMapping(path = "/api/reservations", method = GET)
-    public List<ReservationDto> reservations() {
-        return (List<ReservationDto>) queryHandler.handle(new FindAllReservations());
+    public ReservationDto[] reservations() {
+        return (ReservationDto[]) queryHandler.handle(new FindAllReservations());
     }
 
     @RequestMapping(path = "/api/reservations/{reservationId}", method = GET)
@@ -141,8 +138,8 @@ public class ApiController {
     }
 
     @RequestMapping(path = "/api/rooms", method = GET)
-    public List<RoomDto> rooms() {
-        return (List<RoomDto>) queryHandler.handle(new SimpleProjectionQuery<>(roomsView, RoomsView::findAll));
+    public RoomDto[] rooms() {
+        return (RoomDto[]) queryHandler.handle(new SimpleProjectionQuery<>(roomsView, view -> view.findAll().toArray(new RoomDto[0])));
     }
 
     @RequestMapping(path = "/api/capacity/{date}", method = GET)
@@ -152,10 +149,10 @@ public class ApiController {
     }
 
     @RequestMapping(path = "/api/capacity/{start}/{end}", method = GET)
-    public List<CapacityDto> capacityByDateRange(@PathVariable String start,
-                                                 @PathVariable String end) {
+    public CapacityDto[] capacityByDateRange(@PathVariable String start,
+                                             @PathVariable String end) {
         LocalDate start_ = LocalDate.parse(start);
         LocalDate end_ = LocalDate.parse(end);
-        return (List<CapacityDto>) queryHandler.handle(new SimpleProjectionQuery<>(capacityView, view -> view.getCapacityByDateRange(start_, end_)));
+        return (CapacityDto[]) queryHandler.handle(new SimpleProjectionQuery<>(capacityView, view -> view.getCapacityByDateRange(start_, end_).toArray(new CapacityDto[0])));
     }
 }

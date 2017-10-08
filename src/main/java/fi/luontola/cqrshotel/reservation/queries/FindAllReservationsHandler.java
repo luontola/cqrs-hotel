@@ -6,9 +6,7 @@ package fi.luontola.cqrshotel.reservation.queries;
 
 import fi.luontola.cqrshotel.framework.Handler;
 
-import java.util.List;
-
-public class FindAllReservationsHandler implements Handler<FindAllReservations, List<ReservationDto>> {
+public class FindAllReservationsHandler implements Handler<FindAllReservations, ReservationDto[]> {
 
     private final ReservationsView projection;
 
@@ -17,7 +15,7 @@ public class FindAllReservationsHandler implements Handler<FindAllReservations, 
     }
 
     @Override
-    public List<ReservationDto> handle(FindAllReservations query) {
-        return projection.findAll();
+    public ReservationDto[] handle(FindAllReservations query) {
+        return projection.findAll().toArray(new ReservationDto[0]);
     }
 }
