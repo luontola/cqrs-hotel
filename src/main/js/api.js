@@ -31,7 +31,7 @@ export function buildConfig() {
 }
 
 const http = axios.create({
-  timeout: 15000,
+  timeout: 60000,
   headers: {
     'Accept': 'application/json',
   },
