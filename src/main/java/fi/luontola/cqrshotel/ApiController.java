@@ -15,7 +15,7 @@ import fi.luontola.cqrshotel.framework.ProjectionsUpdater;
 import fi.luontola.cqrshotel.framework.Query;
 import fi.luontola.cqrshotel.framework.UpdateProjectionsAfterHandling;
 import fi.luontola.cqrshotel.framework.consistency.ObservedPosition;
-import fi.luontola.cqrshotel.framework.consistency.ReadModelNotUpToDateException;
+import fi.luontola.cqrshotel.framework.consistency.UpdateObservedPositionAfterCommit;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.reservation.ReservationRepo;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
@@ -37,10 +37,6 @@ import fi.luontola.cqrshotel.room.queries.RoomDto;
 import fi.luontola.cqrshotel.room.queries.RoomsView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -52,6 +48,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
@@ -86,7 +83,8 @@ public class ApiController {
         commandHandler.register(SearchForAccommodation.class, new SearchForAccommodationCommandHandler(reservationRepo, pricing, clock));
         commandHandler.register(MakeReservation.class, new MakeReservationHandler(reservationRepo, clock));
         commandHandler.register(CreateRoom.class, new CreateRoomHandler(roomRepo));
-        this.commandHandler = new UpdateProjectionsAfterHandling<>(projectionsUpdater, commandHandler);
+        this.commandHandler = new UpdateObservedPositionAfterCommit(observedPosition,
+                new UpdateProjectionsAfterHandling<>(projectionsUpdater, commandHandler));
 
         CompositeHandler<Query, Object> queryHandler = new CompositeHandler<>();
         queryHandler.register(SearchForAccommodation.class, new SearchForAccommodationQueryHandler(eventStore, clock));
@@ -112,16 +110,16 @@ public class ApiController {
 
     @RequestMapping(path = "/api/search-for-accommodation", method = POST)
     public ReservationOffer searchForAccommodation(@RequestBody SearchForAccommodation command) {
-        Commit commit = commandHandler.handle(command);
+        commandHandler.handle(command);
         // XXX: commented out; relies on the fact that SearchForAccommodationQueryHandler's projection is updated synchronously (projections should be unified to fix this)
         //waitForProjectionsToUpdate(commit.committedPosition);
         return (ReservationOffer) queryHandler.handle(command);
     }
 
     @RequestMapping(path = "/api/make-reservation", method = POST)
-    public ResponseEntity<?> makeReservation(@RequestBody MakeReservation command) {
-        Commit commit = commandHandler.handle(command);
-        return buildHttpResponse(commit);
+    public Map<Object, Object> makeReservation(@RequestBody MakeReservation command) {
+        commandHandler.handle(command);
+        return Collections.emptyMap(); // XXX: WriteObservedPositionToResponseHeaders works only for non-void controller methods
     }
 
     @RequestMapping(path = "/api/reservations", method = GET)
@@ -135,9 +133,9 @@ public class ApiController {
     }
 
     @RequestMapping(path = "/api/create-room", method = POST)
-    public ResponseEntity<?> createRoom(@RequestBody CreateRoom command) {
-        Commit commit = commandHandler.handle(command);
-        return buildHttpResponse(commit);
+    public Map<Object, Object> createRoom(@RequestBody CreateRoom command) {
+        commandHandler.handle(command);
+        return Collections.emptyMap(); // XXX: WriteObservedPositionToResponseHeaders works only for non-void controller methods
     }
 
     @RequestMapping(path = "/api/rooms", method = GET)
@@ -157,21 +155,5 @@ public class ApiController {
                                                  @PathVariable String end) {
         observedPosition.waitForProjectionToUpdate(capacityView);
         return capacityView.getCapacityByDateRange(LocalDate.parse(start), LocalDate.parse(end));
-    }
-
-
-    // helpers
-
-    private ResponseEntity<?> buildHttpResponse(Commit commit) {
-        HttpHeaders headers = new HttpHeaders();
-        // TODO: also add the header when reading projections?
-        // TODO: do this in a single place; read the position in the handler chain, set the header in a filter
-        observedPosition.observe(commit.committedPosition);
-        return new ResponseEntity<>(Collections.emptyMap(), headers, HttpStatus.OK);
-    }
-
-    @ExceptionHandler
-    public ResponseEntity<?> onReadModelNotUpToDateException(ReadModelNotUpToDateException e) {
-        return new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE);
     }
 }

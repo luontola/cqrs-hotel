@@ -15,6 +15,8 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 @ControllerAdvice
 public class WriteObservedPositionToResponseHeaders implements ResponseBodyAdvice<Object> {
 
+    // XXX: this class works only for non-void controller methods; the method gets called by headers are not changed
+
     private final ObservedPosition observedPosition;
 
     public WriteObservedPositionToResponseHeaders(ObservedPosition observedPosition) {

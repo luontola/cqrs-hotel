@@ -18,8 +18,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.ResponseEntity;
-import org.springframework.util.Assert;
 
 import javax.sql.DataSource;
 import java.time.Clock;
@@ -40,8 +38,7 @@ public class Application {
 
     private static void initializeTestData(ApiController api) {
         for (String roomNumber : Arrays.asList("101", "102", "103", "104", "105")) {
-            ResponseEntity<?> response = api.createRoom(new CreateRoom(UUID.randomUUID(), roomNumber));
-            Assert.isTrue(response.getStatusCode().is2xxSuccessful(), "failed to create room");
+            api.createRoom(new CreateRoom(UUID.randomUUID(), roomNumber));
         }
     }
 
