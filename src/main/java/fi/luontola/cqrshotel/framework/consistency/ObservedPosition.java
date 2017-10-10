@@ -12,8 +12,6 @@ import java.time.Duration;
 
 public class ObservedPosition {
 
-    // TODO: tests for this class
-
     public static final String HTTP_HEADER = "X-Observed-Position";
     private static final Logger log = LoggerFactory.getLogger(ObservedPosition.class);
 
