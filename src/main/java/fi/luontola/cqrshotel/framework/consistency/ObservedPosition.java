@@ -13,8 +13,6 @@ import java.time.Duration;
 public class ObservedPosition {
 
     // TODO: tests for this class
-    // TODO: call observe() automatically for commands
-    // TODO: call observe() automatically for projections
 
     public static final String HTTP_HEADER = "X-Observed-Position";
     public static final Duration QUERY_TIMEOUT = Duration.ofSeconds(15);
@@ -30,7 +28,6 @@ public class ObservedPosition {
     }
 
     public void waitForProjectionToUpdate(Projection projection) {
-        // TODO: do this in a single place in the handler chain so that it doesn't need to be added individually for each projection
         try {
             boolean upToDate = projection.awaitPosition(this.get(), QUERY_TIMEOUT);
             if (upToDate) {

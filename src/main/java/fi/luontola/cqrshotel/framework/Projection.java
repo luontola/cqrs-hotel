@@ -23,7 +23,7 @@ public abstract class Projection {
         this.eventStore = eventStore;
     }
 
-    public long getPosition() {
+    public final long getPosition() {
         return position;
     }
 
@@ -36,7 +36,6 @@ public abstract class Projection {
             eventListeners.send(event);
             position++;
         }
-        notifyAll();
     }
 
     /**
