@@ -15,10 +15,14 @@ public class ObservedPosition {
     // TODO: tests for this class
 
     public static final String HTTP_HEADER = "X-Observed-Position";
-    public static final Duration QUERY_TIMEOUT = Duration.ofSeconds(15);
     private static final Logger log = LoggerFactory.getLogger(ObservedPosition.class);
 
     private final ThreadLocal<Long> observedPosition = new ThreadLocal<>();
+    private final Duration queryTimeout;
+
+    public ObservedPosition(Duration queryTimeout) {
+        this.queryTimeout = queryTimeout;
+    }
 
     public void observe(long position) {
         Long current = observedPosition.get();
@@ -29,12 +33,13 @@ public class ObservedPosition {
 
     public void waitForProjectionToUpdate(Projection projection) {
         try {
-            boolean upToDate = projection.awaitPosition(this.get(), QUERY_TIMEOUT);
+            long expectedPosition = this.get();
+            boolean upToDate = projection.awaitPosition(expectedPosition, queryTimeout);
             if (upToDate) {
                 return;
             }
             log.warn("Projection {} not up to date, expected position {} ",
-                    projection.getClass().getSimpleName(), observedPosition);
+                    projection.getClass().getSimpleName(), expectedPosition);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

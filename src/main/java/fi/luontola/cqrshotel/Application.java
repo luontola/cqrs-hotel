@@ -21,11 +21,14 @@ import org.springframework.context.annotation.Bean;
 
 import javax.sql.DataSource;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.UUID;
 
 @SpringBootApplication
 public class Application {
+
+    private static final Duration QUERY_TIMEOUT = Duration.ofSeconds(15);
 
     public static void main(String[] args) throws Exception {
         ConfigurableApplicationContext app = SpringApplication.run(Application.class, args);
@@ -59,7 +62,7 @@ public class Application {
 
     @Bean
     public ObservedPosition observedPosition() {
-        return new ObservedPosition();
+        return new ObservedPosition(QUERY_TIMEOUT);
     }
 
     @Bean

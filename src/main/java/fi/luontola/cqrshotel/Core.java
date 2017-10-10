@@ -51,9 +51,9 @@ public class Core {
     private final Handler<Query, Object> queryHandler;
     private final ProjectionsUpdater projectionsUpdater;
 
-    private final ReservationsView reservationsView;
-    private final RoomsView roomsView;
-    private final CapacityView capacityView;
+    final ReservationsView reservationsView;
+    final RoomsView roomsView;
+    final CapacityView capacityView;
 
     public Core(EventStore eventStore, PricingEngine pricing, Clock clock, ObservedPosition observedPosition) {
         ReservationRepo reservationRepo = new ReservationRepo(eventStore);
