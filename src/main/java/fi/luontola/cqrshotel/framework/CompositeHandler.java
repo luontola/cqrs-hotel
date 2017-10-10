@@ -11,7 +11,7 @@ public class CompositeHandler<M extends Message, R> implements Handler<M, R> {
 
     private final Map<Class<?>, Handler<M, R>> handlers = new HashMap<>();
 
-    public <U extends M> void register(Class<U> type, Handler<U, ?> handler) {
+    public <U extends M> void register(Class<U> type, Handler<U, ? extends R> handler) {
         if (handlers.containsKey(type)) {
             throw new IllegalStateException("handler for " + type + " already registered");
         }

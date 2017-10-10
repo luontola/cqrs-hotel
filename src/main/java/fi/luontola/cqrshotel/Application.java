@@ -43,6 +43,11 @@ public class Application {
     }
 
     @Bean
+    public Core core(EventStore eventStore, PricingEngine pricing, Clock clock, ObservedPosition observedPosition) {
+        return new Core(eventStore, pricing, clock, observedPosition);
+    }
+
+    @Bean
     public EventStore eventStore(DataSource dataSource, ObjectMapper objectMapper) {
         return new PsqlEventStore(dataSource, objectMapper);
     }
