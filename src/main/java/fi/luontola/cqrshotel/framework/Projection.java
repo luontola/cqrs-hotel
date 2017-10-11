@@ -9,6 +9,9 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public abstract class Projection {
 
@@ -16,6 +19,7 @@ public abstract class Projection {
 
     private final EventListeners eventListeners;
     private final EventStore eventStore;
+    private final PriorityBlockingQueue<Waiter> waiters = new PriorityBlockingQueue<>();
     private volatile long position = EventStore.BEGINNING;
 
     public Projection(EventStore eventStore) {
@@ -35,6 +39,19 @@ public abstract class Projection {
         for (Event event : events) {
             eventListeners.send(event);
             position++;
+            notifyWaiters();
+        }
+    }
+
+    private void notifyWaiters() {
+        while (true) {
+            Waiter head = waiters.peek();
+            if (head == null || head.expectedPosition > position) {
+                return; // no expired waiters
+            }
+            // remove and notify the first waiter
+            head.positionReached.countDown();
+            waiters.remove(head);
         }
     }
 
@@ -46,15 +63,42 @@ public abstract class Projection {
      * and {@code false} if the waiting time elapsed before that
      */
     public final boolean awaitPosition(long expectedPosition, Duration timeout) throws InterruptedException {
-        long deadline = System.currentTimeMillis() + timeout.toMillis();
-        while (true) {
-            if (position >= expectedPosition) {
-                return true;
-            }
-            if (deadline - System.currentTimeMillis() <= 0) {
-                return false;
-            }
-            Thread.sleep(1);
+        // quick path in case no waiting is needed
+        if (position >= expectedPosition) {
+            return true;
+        }
+
+        // slow path, waiting probably needed
+        Waiter waiter = new Waiter(expectedPosition);
+        waiters.put(waiter);
+
+        // double check after registering our waiter, in case the position was updated concurrently
+        // (it's important that we change `waiters` before reading `position`; the updater does it in the opposite order)
+        if (position >= expectedPosition) {
+            waiters.remove(waiter);
+            return true;
+        }
+
+        boolean positionReached = waiter.positionReached.await(timeout.toMillis(), TimeUnit.MILLISECONDS);
+        if (!positionReached) {
+            waiters.remove(waiter); // we timed out; let the waiter object be garbage collected
+        }
+        return positionReached;
+    }
+
+
+    private static class Waiter implements Comparable<Waiter> {
+
+        final CountDownLatch positionReached = new CountDownLatch(1);
+        final long expectedPosition;
+
+        Waiter(long expectedPosition) {
+            this.expectedPosition = expectedPosition;
+        }
+
+        @Override
+        public int compareTo(Waiter that) {
+            return Long.compare(this.expectedPosition, that.expectedPosition);
         }
     }
 }
