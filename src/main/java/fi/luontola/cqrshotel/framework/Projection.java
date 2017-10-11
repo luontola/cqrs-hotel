@@ -79,7 +79,7 @@ public abstract class Projection {
             return true;
         }
 
-        boolean positionReached = waiter.positionReached.await(timeout.toMillis(), TimeUnit.MILLISECONDS);
+        boolean positionReached = waiter.positionReached.await(timeout.toNanos(), TimeUnit.NANOSECONDS);
         if (!positionReached) {
             waiters.remove(waiter); // we timed out; let the waiter object be garbage collected
         }

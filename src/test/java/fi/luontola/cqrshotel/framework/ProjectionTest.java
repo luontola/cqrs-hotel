@@ -108,11 +108,7 @@ public class ProjectionTest {
             @EventListener
             private void apply(DummyEvent event) {
                 updateStarted.countDown();
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
+                sleep(500);
             }
         };
         new Thread(projection::update).start();
