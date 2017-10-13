@@ -13,6 +13,12 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Projections are the way for reading and analyzing event-sourced data.
+ * Their {@link EventListener event listener} methods will be called for every {@link Event event} in the system.
+ * This way projections can construct a read-optimized model from the event data
+ * for the purpose of serving {@link Query queries} efficiently.
+ */
 public abstract class Projection {
 
     private final Logger log = LoggerFactory.getLogger(getClass());

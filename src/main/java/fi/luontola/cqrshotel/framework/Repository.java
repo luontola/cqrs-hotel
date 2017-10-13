@@ -8,6 +8,9 @@ import java.lang.reflect.ParameterizedType;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Repository is the way for creating and modifying aggregate roots.
+ */
 public class Repository<T extends AggregateRoot> {
 
     private final Class<T> aggregateType;
