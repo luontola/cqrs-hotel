@@ -167,6 +167,12 @@ public class ApiControllerTest {
         assertThat("capacities", capacities, arrayWithSize(3));
     }
 
+    @Test
+    public void status_page() {
+        StatusPage status = restTemplate.getForObject("/api/status", StatusPage.class);
+        assertThat(status.eventStore.position, is(notNullValue()));
+    }
+
 
     // helpers
 

@@ -15,6 +15,7 @@ import fi.luontola.cqrshotel.framework.CompositeHandler;
 import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.Handler;
 import fi.luontola.cqrshotel.framework.Message;
+import fi.luontola.cqrshotel.framework.Projection;
 import fi.luontola.cqrshotel.framework.ProjectionsUpdater;
 import fi.luontola.cqrshotel.framework.Query;
 import fi.luontola.cqrshotel.framework.UpdateProjectionsAfterHandling;
@@ -43,27 +44,33 @@ import fi.luontola.cqrshotel.room.queries.RoomsView;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.time.Clock;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 public class Core {
 
+    private final EventStore eventStore;
     private final Handler<Command, Commit> commandHandler;
     private final Handler<Query, Object> queryHandler;
     private final ProjectionsUpdater projectionsUpdater;
 
+    private final List<Projection> projections;
     final ReservationsView reservationsView;
     final RoomsView roomsView;
     final CapacityView capacityView;
 
     public Core(EventStore eventStore, PricingEngine pricing, Clock clock, ObservedPosition observedPosition) {
+        this.eventStore = eventStore;
         ReservationRepo reservationRepo = new ReservationRepo(eventStore);
         RoomRepo roomRepo = new RoomRepo(eventStore);
 
-        projectionsUpdater = new ProjectionsUpdater(
+        projections = Arrays.asList(
                 reservationsView = new ReservationsView(eventStore),
                 roomsView = new RoomsView(eventStore),
                 capacityView = new CapacityView(eventStore)
         );
+        projectionsUpdater = new ProjectionsUpdater(projections);
 
         CompositeHandler<Command, Commit> commandHandler = new CompositeHandler<>();
         commandHandler.register(SearchForAccommodation.class, new SearchForAccommodationCommandHandler(reservationRepo, pricing, clock));
@@ -113,5 +120,9 @@ public class Core {
             result = queryHandler.handle((Query) message);
         }
         return result;
+    }
+
+    public StatusPage getStatus() {
+        return StatusPage.build(eventStore, projections);
     }
 }

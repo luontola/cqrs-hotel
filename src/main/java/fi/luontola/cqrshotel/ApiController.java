@@ -42,6 +42,11 @@ public class ApiController {
         return "CQRS Hotel API";
     }
 
+    @RequestMapping(path = "/api/status", method = GET)
+    public StatusPage status() {
+        return core.getStatus();
+    }
+
     @RequestMapping(path = "/api/search-for-accommodation", method = POST)
     public ReservationOffer searchForAccommodation(@RequestBody SearchForAccommodation command) {
         return (ReservationOffer) core.handle(command);

@@ -4,6 +4,7 @@
 
 package fi.luontola.cqrshotel;
 
+import fi.luontola.cqrshotel.StatusPage.ProjectionStatus;
 import fi.luontola.cqrshotel.framework.InMemoryEventStore;
 import fi.luontola.cqrshotel.framework.consistency.ObservedPosition;
 import fi.luontola.cqrshotel.framework.consistency.ReadModelNotUpToDateException;
@@ -23,6 +24,7 @@ import java.util.UUID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.arrayWithSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 @Category(FastTests.class)
 public class CoreTest {
@@ -79,5 +81,16 @@ public class CoreTest {
             thrown.expect(ReadModelNotUpToDateException.class);
             core.handle(new FindAllRooms());
         }
+    }
+
+    @Test
+    public void status_page() {
+        StatusPage status = core.getStatus();
+
+        assertThat("eventStore.position", status.eventStore.position, is(notNullValue()));
+
+        ProjectionStatus projection = status.projections.get("RoomsView");
+        assertThat("projection", projection, is(notNullValue()));
+        assertThat("projection.position", projection.position, is(notNullValue()));
     }
 }
