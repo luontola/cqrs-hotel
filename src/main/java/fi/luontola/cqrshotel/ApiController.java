@@ -16,17 +16,15 @@ import fi.luontola.cqrshotel.reservation.queries.ReservationOffer;
 import fi.luontola.cqrshotel.room.commands.CreateRoom;
 import fi.luontola.cqrshotel.room.queries.FindAllRooms;
 import fi.luontola.cqrshotel.room.queries.RoomDto;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.UUID;
-
-import static org.springframework.web.bind.annotation.RequestMethod.GET;
-import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 @RestController
 public class ApiController {
@@ -37,52 +35,52 @@ public class ApiController {
         this.core = core;
     }
 
-    @RequestMapping(path = "/api", method = GET)
+    @GetMapping("/api")
     public String home() {
         return "CQRS Hotel API";
     }
 
-    @RequestMapping(path = "/api/status", method = GET)
+    @GetMapping("/api/status")
     public StatusPage status() {
         return core.getStatus();
     }
 
-    @RequestMapping(path = "/api/search-for-accommodation", method = POST)
+    @PostMapping("/api/search-for-accommodation")
     public ReservationOffer searchForAccommodation(@RequestBody SearchForAccommodation command) {
         return (ReservationOffer) core.handle(command);
     }
 
-    @RequestMapping(path = "/api/make-reservation", method = POST)
+    @PostMapping("/api/make-reservation")
     public Map<?, ?> makeReservation(@RequestBody MakeReservation command) {
         return (Map<?, ?>) core.handle(command); // XXX: WriteObservedPositionToResponseHeaders works only for non-void controller methods
     }
 
-    @RequestMapping(path = "/api/reservations", method = GET)
+    @GetMapping("/api/reservations")
     public ReservationDto[] reservations() {
         return (ReservationDto[]) core.handle(new FindAllReservations());
     }
 
-    @RequestMapping(path = "/api/reservations/{reservationId}", method = GET)
+    @GetMapping("/api/reservations/{reservationId}")
     public ReservationDto reservationById(@PathVariable String reservationId) {
         return (ReservationDto) core.handle(new FindReservationById(UUID.fromString(reservationId)));
     }
 
-    @RequestMapping(path = "/api/create-room", method = POST)
+    @PostMapping("/api/create-room")
     public Map<?, ?> createRoom(@RequestBody CreateRoom command) {
         return (Map<?, ?>) core.handle(command); // XXX: WriteObservedPositionToResponseHeaders works only for non-void controller methods
     }
 
-    @RequestMapping(path = "/api/rooms", method = GET)
+    @GetMapping("/api/rooms")
     public RoomDto[] rooms() {
         return (RoomDto[]) core.handle(new FindAllRooms());
     }
 
-    @RequestMapping(path = "/api/capacity/{date}", method = GET)
+    @GetMapping("/api/capacity/{date}")
     public CapacityDto capacityByDate(@PathVariable String date) {
         return (CapacityDto) core.handle(new GetCapacityByDate(LocalDate.parse(date)));
     }
 
-    @RequestMapping(path = "/api/capacity/{start}/{end}", method = GET)
+    @GetMapping("/api/capacity/{start}/{end}")
     public CapacityDto[] capacityByDateRange(@PathVariable String start,
                                              @PathVariable String end) {
         return (CapacityDto[]) core.handle(new GetCapacityByDateRange(LocalDate.parse(start), LocalDate.parse(end)));
