@@ -64,6 +64,7 @@ public class JsonSerializationTest {
             Object deserialized = objectMapper.readValue(json, type);
             assertThat(deserialized, is(original));
         } catch (Exception e) {
+            e.printStackTrace();
             throw new AssertionError("Not serializable: " + type, e);
         }
     }
