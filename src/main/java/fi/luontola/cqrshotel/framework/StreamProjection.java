@@ -21,9 +21,9 @@ public abstract class StreamProjection {
     }
 
     public final void update() {
-        List<Event> events = eventStore.getEventsForStream(streamId, version);
-        for (Event event : events) {
-            eventListeners.send(event);
+        List<Envelope<Event>> events = eventStore.getEventsForStream(streamId, version);
+        for (Envelope<Event> event : events) {
+            eventListeners.send(event.payload);
             version++;
         }
     }

@@ -7,6 +7,7 @@ package fi.luontola.cqrshotel.framework;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Repository is the way for creating and modifying aggregate roots.
@@ -44,8 +45,11 @@ public class Repository<T extends AggregateRoot> {
 
     public T createOrGet(UUID id) {
         T aggregate = create(id);
-        List<Event> events = eventStore.getEventsForStream(id);
-        aggregate.loadFromHistory(events);
+        List<Envelope<Event>> events = eventStore.getEventsForStream(id);
+        aggregate.loadFromHistory(
+                events.stream()
+                        .map(e -> e.payload)
+                        .collect(Collectors.toList()));
         return aggregate;
     }
 
@@ -58,7 +62,9 @@ public class Repository<T extends AggregateRoot> {
     }
 
     public Commit save(T aggregate, int expectedVersion) {
-        List<Event> events = aggregate.getUncommittedChanges();
+        List<Envelope<Event>> events = aggregate.getUncommittedChanges().stream()
+                .map(Envelope::newMessage)
+                .collect(Collectors.toList());
         Commit commit = new Commit();
         commit.committedPosition = eventStore.saveEvents(aggregate.getId(), events, expectedVersion);
         aggregate.markChangesAsCommitted();

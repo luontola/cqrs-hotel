@@ -18,18 +18,18 @@ public class InMemoryEventStore implements EventStore {
 
     private static final Logger log = LoggerFactory.getLogger(InMemoryEventStore.class);
 
-    private final ConcurrentMap<UUID, List<Event>> streamsById = new ConcurrentHashMap<>();
-    private final List<Event> allEvents = new ArrayList<>();
+    private final ConcurrentMap<UUID, List<Envelope<Event>>> streamsById = new ConcurrentHashMap<>();
+    private final List<Envelope<Event>> allEvents = new ArrayList<>();
 
     @Override
-    public long saveEvents(UUID streamId, List<Event> newEvents, int expectedVersion) {
-        List<Event> events = streamsById.computeIfAbsent(streamId, uuid -> new ArrayList<>());
+    public long saveEvents(UUID streamId, List<Envelope<Event>> newEvents, int expectedVersion) {
+        List<Envelope<Event>> events = streamsById.computeIfAbsent(streamId, uuid -> new ArrayList<>());
         synchronized (events) {
             int actualVersion = events.size();
             if (expectedVersion != actualVersion) {
                 throw new OptimisticLockingException("expected version " + expectedVersion + " but was " + actualVersion + " for stream " + streamId);
             }
-            for (Event newEvent : newEvents) {
+            for (Envelope<Event> newEvent : newEvents) {
                 events.add(newEvent);
                 int newVersion = events.size();
                 log.trace("Saved stream {} version {}: {}", streamId, newVersion, newEvent);
@@ -42,27 +42,27 @@ public class InMemoryEventStore implements EventStore {
     }
 
     @Override
-    public List<Event> getEventsForStream(UUID streamId, int sinceVersion) {
-        List<Event> events = streamsById.getOrDefault(streamId, Collections.emptyList());
+    public List<Envelope<Event>> getEventsForStream(UUID streamId, int sinceVersion) {
+        List<Envelope<Event>> events = streamsById.getOrDefault(streamId, Collections.emptyList());
         synchronized (events) {
             return readSince(sinceVersion, events);
         }
     }
 
     @Override
-    public List<Event> getAllEvents(long sincePosition) {
+    public List<Envelope<Event>> getAllEvents(long sincePosition) {
         synchronized (allEvents) {
             return readSince(sincePosition, allEvents);
         }
     }
 
-    private static ArrayList<Event> readSince(long sincePosition, List<Event> events) {
+    private static ArrayList<Envelope<Event>> readSince(long sincePosition, List<Envelope<Event>> events) {
         return new ArrayList<>(events.subList((int) sincePosition, events.size()));
     }
 
     @Override
     public int getCurrentVersion(UUID streamId) {
-        List<Event> events = streamsById.get(streamId);
+        List<Envelope<Event>> events = streamsById.get(streamId);
         if (events == null) {
             return BEGINNING;
         }

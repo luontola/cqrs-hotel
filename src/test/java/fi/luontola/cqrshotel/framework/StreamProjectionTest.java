@@ -22,9 +22,9 @@ import static org.hamcrest.Matchers.is;
 @Category(FastTests.class)
 public class StreamProjectionTest {
 
-    private static final DummyEvent one = new DummyEvent("one");
-    private static final DummyEvent two = new DummyEvent("two");
-    private static final DummyEvent three = new DummyEvent("three");
+    private static final Envelope<Event> one = dummyEvent("one");
+    private static final Envelope<Event> two = dummyEvent("two");
+    private static final Envelope<Event> three = dummyEvent("three");
 
     private final EventStore eventStore = new InMemoryEventStore();
     private final UUID streamId = UUID.randomUUID();
@@ -43,7 +43,7 @@ public class StreamProjectionTest {
         eventStore.saveEvents(UUID.randomUUID(), singletonList(two), EventStore.BEGINNING);
         projection.update();
 
-        assertThat(projection.receivedEvents, is(asList(one)));
+        assertThat(projection.receivedEvents, is(asList(one.payload)));
     }
 
     @Test
@@ -55,7 +55,12 @@ public class StreamProjectionTest {
         eventStore.saveEvents(streamId, singletonList(three), EventStore.BEGINNING + 2);
         projection.update();
 
-        assertThat("new events", projection.receivedEvents, is(singletonList(three)));
+        assertThat("new events", projection.receivedEvents, is(singletonList(three.payload)));
+    }
+
+
+    private static Envelope<Event> dummyEvent(String message) {
+        return Envelope.newMessage(new DummyEvent(message));
     }
 
     private static class SpyProjection extends StreamProjection {

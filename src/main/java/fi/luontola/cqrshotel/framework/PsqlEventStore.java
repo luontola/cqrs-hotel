@@ -44,7 +44,7 @@ public class PsqlEventStore implements EventStore {
     }
 
     @Override
-    public long saveEvents(UUID streamId, List<Event> newEvents, int expectedVersion) {
+    public long saveEvents(UUID streamId, List<Envelope<Event>> newEvents, int expectedVersion) {
         try (Connection connection = DataSourceUtils.getConnection(dataSource)) {
             Array data = connection.createArrayOf("jsonb", serializeData(newEvents));
             Array metadata = connection.createArrayOf("jsonb", serializeMetadata(newEvents));
@@ -61,7 +61,7 @@ public class PsqlEventStore implements EventStore {
             if (log.isTraceEnabled()) {
                 for (int i = 0; i < newEvents.size(); i++) {
                     int newVersion = expectedVersion + 1 + i;
-                    Event newEvent = newEvents.get(i);
+                    Envelope<Event> newEvent = newEvents.get(i);
                     log.trace("Saved stream {} version {}: {}", streamId, newVersion, newEvent);
                 }
             }
@@ -84,7 +84,7 @@ public class PsqlEventStore implements EventStore {
     }
 
     @Override
-    public List<Event> getEventsForStream(UUID streamId, int sinceVersion) {
+    public List<Envelope<Event>> getEventsForStream(UUID streamId, int sinceVersion) {
         return jdbcTemplate.query("SELECT data, metadata " +
                         "FROM event " +
                         "WHERE stream_id = :stream_id " +
@@ -97,7 +97,7 @@ public class PsqlEventStore implements EventStore {
     }
 
     @Override
-    public List<Event> getAllEvents(long sincePosition) {
+    public List<Envelope<Event>> getAllEvents(long sincePosition) {
         return jdbcTemplate.query("SELECT e.data, e.metadata " +
                         "FROM event e " +
                         "JOIN event_sequence s USING (stream_id, version) " +
@@ -125,28 +125,33 @@ public class PsqlEventStore implements EventStore {
         return position.isEmpty() ? BEGINNING : position.get(0);
     }
 
-    private Event eventMapping(ResultSet rs, int rowNum) throws SQLException {
+    private Envelope<Event> eventMapping(ResultSet rs, int rowNum) throws SQLException {
         String data = rs.getString("data");
         String metadata = rs.getString("metadata");
         return deserialize(data, metadata);
     }
 
-    private String[] serializeData(List<Event> events) throws JsonProcessingException {
+    private String[] serializeData(List<Envelope<Event>> events) throws JsonProcessingException {
         return events.stream()
+                .map(event -> event.payload)
                 .map(this::serialize)
                 .toArray(String[]::new);
     }
 
-    private String[] serializeMetadata(List<Event> events) throws JsonProcessingException {
+    private String[] serializeMetadata(List<Envelope<Event>> events) throws JsonProcessingException {
         return events.stream()
                 .map(PsqlEventStore::getMetadata)
                 .map(this::serialize)
                 .toArray(String[]::new);
     }
 
-    private static EventMetadata getMetadata(Event event) {
+    private static EventMetadata getMetadata(Envelope<Event> event) {
         EventMetadata meta = new EventMetadata();
-        meta.type = event.getClass().getName();
+        meta.messageId = event.messageId;
+        meta.correlationId = event.correlationId;
+        meta.causationId = event.causationId;
+        meta.type = event.payload.getClass().getName();
+        meta.version = 1; // TODO: versioning support
         return meta;
     }
 
@@ -158,10 +163,11 @@ public class PsqlEventStore implements EventStore {
         }
     }
 
-    private Event deserialize(String dataJson, String metadataJson) {
+    private Envelope<Event> deserialize(String dataJson, String metadataJson) {
         try {
-            EventMetadata metadata = objectMapper.readValue(metadataJson, EventMetadata.class);
-            return (Event) objectMapper.readValue(dataJson, Class.forName(metadata.type));
+            EventMetadata meta = objectMapper.readValue(metadataJson, EventMetadata.class);
+            Event data = (Event) objectMapper.readValue(dataJson, Class.forName(meta.type));
+            return new Envelope<>(meta.messageId, meta.correlationId, meta.causationId, data);
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }

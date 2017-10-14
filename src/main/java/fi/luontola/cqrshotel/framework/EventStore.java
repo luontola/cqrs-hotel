@@ -1,4 +1,4 @@
-// Copyright © 2016 Esko Luontola
+// Copyright © 2016-2017 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -11,19 +11,19 @@ public interface EventStore {
 
     int BEGINNING = 0;
 
-    long saveEvents(UUID streamId, List<Event> newEvents, int expectedVersion);
+    long saveEvents(UUID streamId, List<Envelope<Event>> newEvents, int expectedVersion);
 
-    default List<Event> getEventsForStream(UUID streamId) {
+    default List<Envelope<Event>> getEventsForStream(UUID streamId) {
         return getEventsForStream(streamId, BEGINNING);
     }
 
-    List<Event> getEventsForStream(UUID streamId, int sinceVersion);
+    List<Envelope<Event>> getEventsForStream(UUID streamId, int sinceVersion);
 
-    default List<Event> getAllEvents() {
+    default List<Envelope<Event>> getAllEvents() {
         return getAllEvents(BEGINNING);
     }
 
-    List<Event> getAllEvents(long sincePosition);
+    List<Envelope<Event>> getAllEvents(long sincePosition);
 
     int getCurrentVersion(UUID streamId);
 

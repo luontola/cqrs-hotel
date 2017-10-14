@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -22,7 +23,10 @@ public abstract class AggregateRootTester {
     protected Handler<? extends Command, Commit> commandHandler;
 
     public void given(Event... events) {
-        eventStore.populateExistingEvents(id, Arrays.asList(events));
+        eventStore.populateExistingEvents(id,
+                Arrays.stream(events)
+                        .map(Envelope::newMessage)
+                        .collect(Collectors.toList()));
     }
 
     public void when(Command command) {
@@ -42,6 +46,8 @@ public abstract class AggregateRootTester {
     }
 
     public List<Event> producedEvents() {
-        return eventStore.produced;
+        return eventStore.produced.stream()
+                .map(e -> e.payload)
+                .collect(toList());
     }
 }

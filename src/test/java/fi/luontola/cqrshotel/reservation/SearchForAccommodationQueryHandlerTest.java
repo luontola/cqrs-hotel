@@ -5,6 +5,8 @@
 package fi.luontola.cqrshotel.reservation;
 
 import fi.luontola.cqrshotel.FastTests;
+import fi.luontola.cqrshotel.framework.Envelope;
+import fi.luontola.cqrshotel.framework.Event;
 import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.InMemoryEventStore;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
@@ -21,6 +23,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -44,10 +47,10 @@ public class SearchForAccommodationQueryHandlerTest {
 
     @Test
     public void calculates_total_price_from_price_offers() {
-        eventStore.saveEvents(id, Arrays.asList(
+        given(
                 new PriceOffered(id, date1, price1, expires),
                 new PriceOffered(id, date2, price2, expires)
-        ), EventStore.BEGINNING);
+        );
 
         ReservationOffer result = queryHandler.handle(new SearchForAccommodation(id, date1, date3));
 
@@ -59,13 +62,14 @@ public class SearchForAccommodationQueryHandlerTest {
         assertThat(result, is(expected));
     }
 
+
     @Test
     public void ignores_price_offers_for_other_days() {
-        eventStore.saveEvents(id, Arrays.asList(
+        given(
                 new PriceOffered(id, date1, price1, expires),
                 new PriceOffered(id, date2, price2, expires),
                 new PriceOffered(id, date3, price3, expires)
-        ), EventStore.BEGINNING);
+        );
 
         ReservationOffer result = queryHandler.handle(new SearchForAccommodation(id, date2, date3));
 
@@ -74,9 +78,9 @@ public class SearchForAccommodationQueryHandlerTest {
 
     @Test
     public void is_unavailable_if_a_price_offer_is_missing() {
-        eventStore.saveEvents(id, Arrays.asList(
+        given(
                 new PriceOffered(id, date2, price2, expires)
-        ), EventStore.BEGINNING);
+        );
 
         ReservationOffer result = queryHandler.handle(new SearchForAccommodation(id, date1, date3));
 
@@ -85,13 +89,21 @@ public class SearchForAccommodationQueryHandlerTest {
 
     @Test
     public void is_unavailable_if_a_price_offer_has_expired() {
-        eventStore.saveEvents(id, Arrays.asList(
+        given(
                 new PriceOffered(id, date1, price1, expires),
                 new PriceOffered(id, date2, price2, now.minusSeconds(1))
-        ), EventStore.BEGINNING);
+        );
 
         ReservationOffer result = queryHandler.handle(new SearchForAccommodation(id, date1, date3));
 
         assertThat("totalPrice", result.totalPrice, is(nullValue()));
+    }
+
+    private void given(Event... events) {
+        eventStore.saveEvents(id,
+                Arrays.stream(events)
+                        .map(Envelope::newMessage)
+                        .collect(Collectors.toList()),
+                EventStore.BEGINNING);
     }
 }

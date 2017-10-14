@@ -38,12 +38,12 @@ public abstract class Projection {
     }
 
     public synchronized final void update() {
-        List<Event> events = eventStore.getAllEvents(position);
+        List<Envelope<Event>> events = eventStore.getAllEvents(position);
         if (!events.isEmpty()) {
             log.debug("Updating projection with {} events since position {}", events.size(), position);
         }
-        for (Event event : events) {
-            eventListeners.send(event);
+        for (Envelope<Event> event : events) {
+            eventListeners.send(event.payload);
             position++;
             notifyWaiters();
         }

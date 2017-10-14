@@ -32,9 +32,9 @@ public class ProjectionTest {
     @Rule
     public final Timeout timeout = Timeout.seconds(1);
 
-    private static final DummyEvent one = new DummyEvent("one");
-    private static final DummyEvent two = new DummyEvent("two");
-    private static final DummyEvent three = new DummyEvent("three");
+    private static final Envelope<Event> one = dummyEvent("one");
+    private static final Envelope<Event> two = dummyEvent("two");
+    private static final Envelope<Event> three = dummyEvent("three");
 
     private final EventStore eventStore = new InMemoryEventStore();
     private final SpyProjection projection = new SpyProjection(eventStore);
@@ -52,7 +52,7 @@ public class ProjectionTest {
         eventStore.saveEvents(UUID.randomUUID(), singletonList(two), EventStore.BEGINNING);
         projection.update();
 
-        assertThat(projection.receivedEvents, is(asList(one, two)));
+        assertThat(projection.receivedEvents, is(asList(one.payload, two.payload)));
     }
 
     @Test
@@ -65,7 +65,7 @@ public class ProjectionTest {
         eventStore.saveEvents(UUID.randomUUID(), singletonList(three), EventStore.BEGINNING);
         projection.update();
 
-        assertThat("new events", projection.receivedEvents, is(singletonList(three)));
+        assertThat("new events", projection.receivedEvents, is(singletonList(three.payload)));
     }
 
     @Test
@@ -79,7 +79,7 @@ public class ProjectionTest {
         boolean result = projection.awaitPosition(1, Duration.ofSeconds(1));
 
         List<DummyEvent> events = new ArrayList<>(projection.receivedEvents); // safe copy to avoid assertion message showing a later value
-        assertThat("events", events, is(singletonList(one)));
+        assertThat("events", events, is(singletonList(one.payload)));
         assertThat("return value", result, is(true));
     }
 
@@ -128,6 +128,11 @@ public class ProjectionTest {
         } catch (InterruptedException e) {
             // ignore
         }
+    }
+
+
+    private static Envelope<Event> dummyEvent(String message) {
+        return Envelope.newMessage(new DummyEvent(message));
     }
 
     private static class SpyProjection extends Projection {

@@ -15,16 +15,16 @@ import static org.hamcrest.Matchers.notNullValue;
 public class FakeEventStore implements EventStore {
 
     private final InMemoryEventStore eventStore = new InMemoryEventStore();
-    public final List<Event> produced = new ArrayList<>();
+    public final List<Envelope<Event>> produced = new ArrayList<>();
     private UUID expectedStreamId;
 
-    public void populateExistingEvents(UUID streamId, List<Event> events) {
+    public void populateExistingEvents(UUID streamId, List<Envelope<Event>> events) {
         assertNewOrSame(streamId);
         eventStore.saveEvents(streamId, events, BEGINNING);
     }
 
     @Override
-    public long saveEvents(UUID streamId, List<Event> newEvents, int expectedVersion) {
+    public long saveEvents(UUID streamId, List<Envelope<Event>> newEvents, int expectedVersion) {
         assertNewOrSame(streamId);
         produced.addAll(newEvents);
         return eventStore.saveEvents(streamId, newEvents, expectedVersion);
@@ -42,12 +42,12 @@ public class FakeEventStore implements EventStore {
     // generated delegate methods
 
     @Override
-    public List<Event> getEventsForStream(UUID streamId, int sinceVersion) {
+    public List<Envelope<Event>> getEventsForStream(UUID streamId, int sinceVersion) {
         return eventStore.getEventsForStream(streamId, sinceVersion);
     }
 
     @Override
-    public List<Event> getAllEvents(long sincePosition) {
+    public List<Envelope<Event>> getAllEvents(long sincePosition) {
         return eventStore.getAllEvents(sincePosition);
     }
 

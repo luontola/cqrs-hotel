@@ -1,11 +1,15 @@
-// Copyright © 2016 Esko Luontola
+// Copyright © 2016-2017 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
 package fi.luontola.cqrshotel.framework;
 
 import fi.luontola.cqrshotel.framework.EventStoreContract.DummyEvent;
-import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.Param;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
@@ -33,8 +37,8 @@ public class InMemoryEventStore_ReadRecentEventsBenchmark {
 
     @Setup
     public void prepare() {
-        DummyEvent event = new DummyEvent("");
-        List<Event> events = Stream.generate(() -> event)
+        Envelope<Event> event = Envelope.newMessage(new DummyEvent(""));
+        List<Envelope<Event>> events = Stream.generate(() -> event)
                 .limit(eventCount)
                 .collect(Collectors.toList());
         long endPosition = eventStore.saveEvents(streamId, events, EventStore.BEGINNING);
@@ -42,12 +46,12 @@ public class InMemoryEventStore_ReadRecentEventsBenchmark {
     }
 
     @Benchmark
-    public List<Event> getEventsForStream() {
+    public List<Envelope<Event>> getEventsForStream() {
         return eventStore.getEventsForStream(streamId, readPosition);
     }
 
     @Benchmark
-    public List<Event> getAllEvents() {
+    public List<Envelope<Event>> getAllEvents() {
         return eventStore.getAllEvents(readPosition);
     }
 
