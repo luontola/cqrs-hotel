@@ -3,6 +3,8 @@
 
 Example application demonstrating the use of [CQRS](http://martinfowler.com/bliki/CQRS.html) and [Event Sourcing](http://martinfowler.com/eaaDev/EventSourcing.html) within the domain of hotel reservations. #NoFrameworks
 
+This project is a sandbox for exploring how CQRS+ES affects the design of a system. The hypothesis is that it will lead to a better design than a typical database-centric approach; a design that is easily testable and does not detiorate as features are added. To answer that question, the problem being solved needs to be complex enough.
+
 This project strives to differ from your typical toy examples in that *the problem domain is complex enough to warrant all the techniques being used.* The solution has been simplified, but the implemented features are production quality.
 
 
