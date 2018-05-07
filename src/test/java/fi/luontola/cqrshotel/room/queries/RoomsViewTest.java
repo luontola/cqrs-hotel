@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -32,7 +32,7 @@ public class RoomsViewTest {
 
         RoomDto expected = new RoomDto();
         expected.roomId = roomId;
-        expected.number = "123";
+        expected.roomNumber = "123";
 
         assertThat(view.findAll(), is(Collections.singletonList(expected)));
     }

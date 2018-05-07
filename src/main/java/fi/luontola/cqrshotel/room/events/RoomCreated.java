@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -14,12 +14,12 @@ import java.util.UUID;
 public class RoomCreated extends Struct implements Event {
 
     public final UUID roomId;
-    public final String number;
+    public final String roomNumber;
 
     @JsonCreator
     public RoomCreated(@JsonProperty("roomId") UUID roomId,
-                       @JsonProperty("number") String number) {
+                       @JsonProperty("roomNumber") String roomNumber) {
         this.roomId = roomId;
-        this.number = number;
+        this.roomNumber = roomNumber;
     }
 }

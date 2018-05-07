@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -67,7 +67,7 @@ public class CoreTest {
         RoomDto[] rooms = (RoomDto[]) core.handle(new FindAllRooms());
 
         assertThat(rooms, is(arrayWithSize(1)));
-        assertThat(rooms[0].number, is("123"));
+        assertThat(rooms[0].roomNumber, is("123"));
     }
 
     @Test
