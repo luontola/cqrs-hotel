@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -6,7 +6,7 @@ import toRegex from "path-to-regexp";
 
 export function matchURI(path, uri) {
   const keys = [];
-  const pattern = toRegex(path, keys); // TODO: Use caching
+  const pattern = toRegex(path, keys); // TODO: Use caching, for example lodash.memoize
   const match = pattern.exec(uri);
   if (!match) {
     return null;
