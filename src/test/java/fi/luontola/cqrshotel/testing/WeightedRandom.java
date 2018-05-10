@@ -14,7 +14,7 @@ public class WeightedRandom<T> {
     private final List<WeightedItem<T>> items = new ArrayList<>();
 
     public void add(double weight, T item) {
-        items.add(new WeightedItem<>(weight, getSumOfWeights() + weight, item));
+        items.add(new WeightedItem<>(weight, sumOfWeights() + weight, item));
     }
 
     public T next() {
@@ -25,8 +25,8 @@ public class WeightedRandom<T> {
         if (random < 0 || random > 1) {
             throw new IllegalArgumentException("expected random number between 0 and 1, but was " + random);
         }
-        double cursor = random * getSumOfWeights();
-        for (WeightedItem<T> item : items) {
+        double cursor = random * sumOfWeights();
+        for (WeightedItem<T> item : items) { // we assume a low number of items, so use linear instead of binary search
             if (cursor <= item.cumulativeWeight) {
                 return item.value;
             }
@@ -34,12 +34,16 @@ public class WeightedRandom<T> {
         throw new IllegalStateException("no items");
     }
 
-    private double getSumOfWeights() {
-        int lastIndex = items.size() - 1;
-        if (lastIndex < 0) {
-            return 0;
+    private double sumOfWeights() {
+        return lastItem().cumulativeWeight;
+    }
+
+    private WeightedItem<T> lastItem() {
+        int size = items.size();
+        if (size == 0) {
+            return new WeightedItem<>(0, 0, null);
         } else {
-            return items.get(lastIndex).cumulativeWeight;
+            return items.get(size - 1);
         }
     }
 
