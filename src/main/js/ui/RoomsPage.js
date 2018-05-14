@@ -13,12 +13,14 @@ const RoomsPage = ({rooms}) => (
       <thead>
       <tr>
         <th>Number</th>
+        <th>Availability</th>
       </tr>
       </thead>
       <tbody>
       {sortBy(rooms, ['roomNumber', 'roomId']).map(room =>
         <tr key={room.roomId}>
           <td>{room.roomNumber}</td>
+          <td>{JSON.stringify(room.availability)}</td>
         </tr>
       )}
       </tbody>
