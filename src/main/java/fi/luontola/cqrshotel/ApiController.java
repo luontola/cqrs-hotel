@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -15,6 +15,8 @@ import fi.luontola.cqrshotel.reservation.queries.ReservationDto;
 import fi.luontola.cqrshotel.reservation.queries.ReservationOffer;
 import fi.luontola.cqrshotel.room.commands.CreateRoom;
 import fi.luontola.cqrshotel.room.queries.FindAllRooms;
+import fi.luontola.cqrshotel.room.queries.GetAvailabilityByDateRange;
+import fi.luontola.cqrshotel.room.queries.RoomAvailabilityDto;
 import fi.luontola.cqrshotel.room.queries.RoomDto;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -84,5 +86,11 @@ public class ApiController {
     public CapacityDto[] capacityByDateRange(@PathVariable String start,
                                              @PathVariable String end) {
         return (CapacityDto[]) core.handle(new GetCapacityByDateRange(LocalDate.parse(start), LocalDate.parse(end)));
+    }
+
+    @GetMapping("/api/availability/{start}/{end}")
+    public RoomAvailabilityDto[] availabilityByDateRange(@PathVariable String start,
+                                                         @PathVariable String end) {
+        return (RoomAvailabilityDto[]) core.handle(new GetAvailabilityByDateRange(LocalDate.parse(start), LocalDate.parse(end)));
     }
 }

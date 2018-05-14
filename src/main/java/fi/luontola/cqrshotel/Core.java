@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -39,6 +39,9 @@ import fi.luontola.cqrshotel.room.commands.CreateRoom;
 import fi.luontola.cqrshotel.room.commands.CreateRoomHandler;
 import fi.luontola.cqrshotel.room.queries.FindAllRooms;
 import fi.luontola.cqrshotel.room.queries.FindAllRoomsHandler;
+import fi.luontola.cqrshotel.room.queries.GetAvailabilityByDateRange;
+import fi.luontola.cqrshotel.room.queries.GetAvailabilityByDateRangeHandler;
+import fi.luontola.cqrshotel.room.queries.RoomAvailabilityView;
 import fi.luontola.cqrshotel.room.queries.RoomsView;
 
 import javax.annotation.PostConstruct;
@@ -58,6 +61,7 @@ public class Core {
     private final List<Projection> projections;
     final ReservationsView reservationsView;
     final RoomsView roomsView;
+    final RoomAvailabilityView roomAvailabilityView;
     final CapacityView capacityView;
 
     public Core(EventStore eventStore, PricingEngine pricing, Clock clock, ObservedPosition observedPosition) {
@@ -68,6 +72,7 @@ public class Core {
         projections = Arrays.asList(
                 reservationsView = new ReservationsView(eventStore),
                 roomsView = new RoomsView(eventStore),
+                roomAvailabilityView = new RoomAvailabilityView(eventStore),
                 capacityView = new CapacityView(eventStore)
         );
         projectionsUpdater = new ProjectionsUpdater(projections);
@@ -91,6 +96,9 @@ public class Core {
         queryHandler.register(FindAllRooms.class,
                 new WaitForProjectionToUpdate<>(roomsView, observedPosition,
                         new FindAllRoomsHandler(roomsView)));
+        queryHandler.register(GetAvailabilityByDateRange.class,
+                new WaitForProjectionToUpdate<>(roomAvailabilityView, observedPosition,
+                        new GetAvailabilityByDateRangeHandler(roomAvailabilityView)));
         queryHandler.register(GetCapacityByDate.class,
                 new WaitForProjectionToUpdate<>(capacityView, observedPosition,
                         new GetCapacityByDateHandler(capacityView)));

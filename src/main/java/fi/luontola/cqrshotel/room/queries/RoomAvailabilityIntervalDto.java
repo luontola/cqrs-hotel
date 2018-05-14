@@ -4,6 +4,8 @@
 
 package fi.luontola.cqrshotel.room.queries;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import fi.luontola.cqrshotel.util.Struct;
 
 import java.time.Instant;
@@ -14,7 +16,10 @@ public class RoomAvailabilityIntervalDto extends Struct {
     public final Instant end;
     public final boolean occupied;
 
-    public RoomAvailabilityIntervalDto(Instant start, Instant end, boolean occupied) {
+    @JsonCreator
+    public RoomAvailabilityIntervalDto(@JsonProperty("start") Instant start,
+                                       @JsonProperty("end") Instant end,
+                                       @JsonProperty("occupied") boolean occupied) {
         this.start = start;
         this.end = end;
         this.occupied = occupied;

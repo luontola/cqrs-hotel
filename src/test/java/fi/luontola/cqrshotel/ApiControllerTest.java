@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -12,6 +12,8 @@ import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
 import fi.luontola.cqrshotel.reservation.queries.ReservationDto;
 import fi.luontola.cqrshotel.reservation.queries.ReservationOffer;
 import fi.luontola.cqrshotel.room.commands.CreateRoom;
+import fi.luontola.cqrshotel.room.queries.RoomAvailabilityDto;
+import fi.luontola.cqrshotel.room.queries.RoomAvailabilityIntervalDto;
 import fi.luontola.cqrshotel.room.queries.RoomDto;
 import org.javamoney.moneta.Money;
 import org.junit.Before;
@@ -30,13 +32,16 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import static java.time.temporal.ChronoUnit.DAYS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.arrayWithSize;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.emptyArray;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
@@ -165,6 +170,21 @@ public class ApiControllerTest {
         CapacityDto[] capacities = getForObject("/api/capacity/{start}/{end}", CapacityDto[].class, start, end);
 
         assertThat("capacities", capacities, arrayWithSize(3));
+    }
+
+    @Test
+    public void test_availabilityByDateRange() {
+        LocalDate start = LocalDate.now();
+        LocalDate end = start.plusDays(2); // 3 days inclusive
+
+        RoomAvailabilityDto[] rooms = getForObject("/api/availability/{start}/{end}", RoomAvailabilityDto[].class, start, end);
+
+        assertThat("rooms", rooms, is(not(emptyArray())));
+        List<RoomAvailabilityIntervalDto> intervals = rooms[0].availability;
+        assertThat("availability intervals", intervals, is(not(empty())));
+        RoomAvailabilityIntervalDto first = intervals.get(0);
+        RoomAvailabilityIntervalDto last = intervals.get(intervals.size() - 1);
+        assertThat("availability interval in days", first.start.until(last.end, DAYS), is(3L));
     }
 
     @Test
