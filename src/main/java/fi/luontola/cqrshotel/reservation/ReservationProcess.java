@@ -8,7 +8,7 @@ import fi.luontola.cqrshotel.framework.Event;
 import fi.luontola.cqrshotel.framework.EventListener;
 import fi.luontola.cqrshotel.framework.EventListeners;
 import fi.luontola.cqrshotel.framework.Publisher;
-import fi.luontola.cqrshotel.reservation.commands.UseRoomForReservation;
+import fi.luontola.cqrshotel.reservation.commands.AssignRoom;
 import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
 import fi.luontola.cqrshotel.room.commands.OccupyAnyAvailableRoom;
 import fi.luontola.cqrshotel.room.events.RoomOccupied;
@@ -34,6 +34,6 @@ public class ReservationProcess {
 
     @EventListener
     public void handle(RoomOccupied event) {
-        publisher.publish(new UseRoomForReservation(event.occupant, event.roomId));
+        publisher.publish(new AssignRoom(event.occupant, event.roomId));
     }
 }

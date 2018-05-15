@@ -7,10 +7,11 @@ package fi.luontola.cqrshotel.room.queries;
 import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.framework.InMemoryEventStore;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,6 +21,9 @@ import static org.hamcrest.Matchers.is;
 
 @Category(FastTests.class)
 public class RoomsViewTest {
+
+    @Rule
+    public final ExpectedException thrown = ExpectedException.none();
 
     private static final UUID roomId = UUID.randomUUID();
     private static final UUID roomId2 = UUID.randomUUID();
@@ -34,7 +38,8 @@ public class RoomsViewTest {
         expected.roomId = roomId;
         expected.roomNumber = "123";
 
-        assertThat(view.findAll(), is(Collections.singletonList(expected)));
+        RoomDto actual = view.getById(roomId);
+        assertThat(actual, is(expected));
     }
 
     @Test
@@ -44,5 +49,12 @@ public class RoomsViewTest {
 
         List<RoomDto> results = view.findAll();
         assertThat(results, hasSize(2));
+    }
+
+    @Test
+    public void cannot_find_rooms_which_do_not_exist() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("room not found: " + roomId);
+        view.getById(roomId);
     }
 }

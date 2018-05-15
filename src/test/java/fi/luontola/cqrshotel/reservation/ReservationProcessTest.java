@@ -8,7 +8,7 @@ import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.framework.Event;
 import fi.luontola.cqrshotel.framework.Message;
 import fi.luontola.cqrshotel.framework.SpyPublisher;
-import fi.luontola.cqrshotel.reservation.commands.UseRoomForReservation;
+import fi.luontola.cqrshotel.reservation.commands.AssignRoom;
 import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
 import fi.luontola.cqrshotel.room.commands.OccupyAnyAvailableRoom;
 import fi.luontola.cqrshotel.room.events.RoomOccupied;
@@ -48,12 +48,12 @@ public class ReservationProcessTest {
     // TODO: if no room is available then retry
 
     @Test
-    public void when_an_available_room_is_found_then_the_reservation_will_use_that_room() {
+    public void when_an_available_room_is_found_then_that_is_assigned_to_the_reservation() {
         given(new ReservationInitiated(reservationId, arrival, departure, checkInTime, checkOutTime));
 
         when(new RoomOccupied(roomId, checkInTime.toInstant(), checkOutTime.toInstant(), reservationId));
 
-        then(new UseRoomForReservation(reservationId, roomId));
+        then(new AssignRoom(reservationId, roomId));
     }
 
     // TODO: if using the room fails then retry

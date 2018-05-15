@@ -23,6 +23,14 @@ public class RoomsView extends Projection {
         super(eventStore);
     }
 
+    public RoomDto getById(UUID roomId) {
+        RoomDto room = roomsById.get(roomId);
+        if (room == null) {
+            throw new IllegalArgumentException("room not found: " + roomId);
+        }
+        return room;
+    }
+
     public List<RoomDto> findAll() {
         return new ArrayList<>(roomsById.values());
     }

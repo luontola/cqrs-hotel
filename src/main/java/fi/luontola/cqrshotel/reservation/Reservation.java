@@ -14,6 +14,7 @@ import fi.luontola.cqrshotel.reservation.events.CustomerDiscovered;
 import fi.luontola.cqrshotel.reservation.events.LineItemCreated;
 import fi.luontola.cqrshotel.reservation.events.PriceOffered;
 import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
+import fi.luontola.cqrshotel.reservation.events.RoomAssigned;
 import fi.luontola.cqrshotel.reservation.events.SearchedForAccommodation;
 
 import java.time.Clock;
@@ -22,6 +23,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import static fi.luontola.cqrshotel.reservation.Reservation.State.INITIATED;
 import static fi.luontola.cqrshotel.reservation.Reservation.State.PROSPECT;
@@ -89,9 +91,7 @@ public class Reservation extends AggregateRoot {
     }
 
     public void makeReservation(LocalDate arrival, LocalDate departure, Clock clock) {
-        if (state != PROSPECT) {
-            throw new IllegalStateException("unexpected state: " + state);
-        }
+        checkStateIs(PROSPECT);
         publish(new ReservationInitiated(getId(), arrival, departure, Hotel.checkInTime(arrival), Hotel.checkOutTime(departure)));
 
         for (LocalDate date = arrival; date.isBefore(departure); date = date.plusDays(1)) {
@@ -109,5 +109,16 @@ public class Reservation extends AggregateRoot {
             throw new IllegalStateException("price offer for date " + date + " has expired");
         }
         return offer;
+    }
+
+    public void assignRoom(UUID roomId, String roomNumber) {
+        checkStateIs(INITIATED);
+        publish(new RoomAssigned(getId(), roomId, roomNumber));
+    }
+
+    private void checkStateIs(State expected) {
+        if (state != expected) {
+            throw new IllegalStateException("unexpected state: " + state);
+        }
     }
 }
