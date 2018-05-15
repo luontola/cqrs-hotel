@@ -1,10 +1,11 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
 package fi.luontola.cqrshotel.framework;
 
 import fi.luontola.cqrshotel.FastTests;
+import fi.luontola.cqrshotel.framework.SingleThreadedTriggerableWorker.UncaughtExceptionHandler;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -21,6 +22,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.sameInstance;
 
 @Category(FastTests.class)
 public class SingleThreadedTriggerableWorkerTest {
@@ -160,5 +162,25 @@ public class SingleThreadedTriggerableWorkerTest {
         }
 
         assertThat("max concurrent tasks", maxConcurrentTasks.get(), is(1));
+    }
+
+    @Test
+    public void logs_uncaught_exceptions() throws InterruptedException {
+        CountDownLatch handlerCalled = new CountDownLatch(1);
+        Throwable[] actualException = new Throwable[1];
+        UncaughtExceptionHandler exceptionHandler = (e) -> {
+            actualException[0] = e;
+            handlerCalled.countDown();
+        };
+        RuntimeException expectedException = new RuntimeException("dummy");
+        Runnable task = () -> {
+            throw expectedException;
+        };
+        worker = new SingleThreadedTriggerableWorker(task, exceptionHandler);
+
+        worker.trigger();
+        handlerCalled.await();
+
+        assertThat(actualException[0], is(sameInstance(expectedException)));
     }
 }
