@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -11,6 +11,7 @@ import fi.luontola.cqrshotel.room.events.RoomOccupied;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class Room extends AggregateRoot {
 
@@ -25,11 +26,11 @@ public class Room extends AggregateRoot {
         publish(new RoomCreated(getId(), number));
     }
 
-    public void occupy(Range range) {
+    public void occupy(Range range, UUID occupant) {
         if (isOccupiedAt(range)) {
             throw new RoomAlreadyOccupiedException();
         }
-        publish(new RoomOccupied(getId(), range.start, range.end));
+        publish(new RoomOccupied(getId(), range.start, range.end, occupant));
     }
 
     private boolean isOccupiedAt(Range range) {

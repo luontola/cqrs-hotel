@@ -25,6 +25,9 @@ public class RoomAvailabilityViewTest {
 
     private static final UUID roomId = UUID.randomUUID();
     private static final UUID roomId2 = UUID.randomUUID();
+    private static final UUID occupant = UUID.randomUUID();
+    private static final UUID occupant2 = UUID.randomUUID();
+    private static final UUID occupant3 = UUID.randomUUID();
     private static final Instant t1 = Instant.parse("2018-01-01T12:00:00.000Z");
     private static final Instant t2 = Instant.parse("2018-01-02T12:00:00.000Z");
     private static final Instant t3 = Instant.parse("2018-01-03T12:00:00.000Z");
@@ -61,7 +64,7 @@ public class RoomAvailabilityViewTest {
     @Test
     public void when_room_is_occupied_exactly_the_queried_interval() {
         view.apply(new RoomCreated(roomId, "101"));
-        view.apply(new RoomOccupied(roomId, t1, t2));
+        view.apply(new RoomOccupied(roomId, t1, t2, occupant));
 
         assertThat(availabilityBetween(t1, t2), is(Arrays.asList(
                 new RoomAvailabilityIntervalDto(t1, t2, true))));
@@ -70,7 +73,7 @@ public class RoomAvailabilityViewTest {
     @Test
     public void when_room_is_occupied_longer_than_the_queried_interval() {
         view.apply(new RoomCreated(roomId, "101"));
-        view.apply(new RoomOccupied(roomId, t1, t4));
+        view.apply(new RoomOccupied(roomId, t1, t4, occupant));
 
         assertThat(availabilityBetween(t2, t3), is(Arrays.asList(
                 new RoomAvailabilityIntervalDto(t1, t4, true))));
@@ -79,7 +82,7 @@ public class RoomAvailabilityViewTest {
     @Test
     public void when_room_is_occupied_shorter_than_the_queried_interval() {
         view.apply(new RoomCreated(roomId, "101"));
-        view.apply(new RoomOccupied(roomId, t2, t3));
+        view.apply(new RoomOccupied(roomId, t2, t3, occupant));
 
         assertThat(availabilityBetween(t1, t4), is(Arrays.asList(
                 new RoomAvailabilityIntervalDto(t1, t2, false),
@@ -90,9 +93,9 @@ public class RoomAvailabilityViewTest {
     @Test
     public void occupied_intervals_are_listed_in_chronological_order() {
         view.apply(new RoomCreated(roomId, "101"));
-        view.apply(new RoomOccupied(roomId, t1, t2));
-        view.apply(new RoomOccupied(roomId, t3, t4)); // NOT in chronological order
-        view.apply(new RoomOccupied(roomId, t2, t3));
+        view.apply(new RoomOccupied(roomId, t1, t2, occupant));
+        view.apply(new RoomOccupied(roomId, t3, t4, occupant2)); // NOT in chronological order
+        view.apply(new RoomOccupied(roomId, t2, t3, occupant3));
 
         assertThat(availabilityBetween(t1, t4), is(Arrays.asList(
                 new RoomAvailabilityIntervalDto(t1, t2, true),
@@ -103,9 +106,9 @@ public class RoomAvailabilityViewTest {
     @Test
     public void excludes_occupied_intervals_outside_the_queried_interval() {
         view.apply(new RoomCreated(roomId, "101"));
-        view.apply(new RoomOccupied(roomId, t1, t2));
-        view.apply(new RoomOccupied(roomId, t2, t3));
-        view.apply(new RoomOccupied(roomId, t3, t4));
+        view.apply(new RoomOccupied(roomId, t1, t2, occupant));
+        view.apply(new RoomOccupied(roomId, t2, t3, occupant2));
+        view.apply(new RoomOccupied(roomId, t3, t4, occupant3));
 
         assertThat(availabilityBetween(t2, t3), is(Arrays.asList(
                 new RoomAvailabilityIntervalDto(t2, t3, true))));
@@ -114,8 +117,8 @@ public class RoomAvailabilityViewTest {
     @Test
     public void fills_unoccupied_intervals_between_occupied_intervals() {
         view.apply(new RoomCreated(roomId, "101"));
-        view.apply(new RoomOccupied(roomId, t1, t2));
-        view.apply(new RoomOccupied(roomId, t3, t4));
+        view.apply(new RoomOccupied(roomId, t1, t2, occupant));
+        view.apply(new RoomOccupied(roomId, t3, t4, occupant2));
 
         assertThat(availabilityBetween(t1, t4), is(Arrays.asList(
                 new RoomAvailabilityIntervalDto(t1, t2, true),

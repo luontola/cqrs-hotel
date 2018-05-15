@@ -43,7 +43,7 @@ public class ProcessManagersSpike extends Projection {
         Instant end = event.checkOutTime.toInstant();
         RoomAvailabilityDto room = findAvailableRoom(start, end);
         if (room != null) {
-            dispatch(new OccupyRoom(room.roomId, start, end));
+            dispatch(new OccupyRoom(room.roomId, start, end, event.reservationId));
         } else {
             log.info("no rooms available for " + event);
         }
