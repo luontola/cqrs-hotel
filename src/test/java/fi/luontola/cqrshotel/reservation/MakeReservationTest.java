@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -25,7 +25,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 
 @Category(FastTests.class)
 public class MakeReservationTest extends AggregateRootTester {
@@ -55,18 +54,14 @@ public class MakeReservationTest extends AggregateRootTester {
         when(new MakeReservation(id, date1, date2, "John Doe", "john@example.com"));
 
         then(new ContactInformationUpdated(id, "John Doe", "john@example.com"),
-                new ReservationInitiated(id, date1, date2,
-                        ZonedDateTime.of(date1, Hotel.CHECK_IN_TIME, Hotel.TIMEZONE),
-                        ZonedDateTime.of(date2, Hotel.CHECK_OUT_TIME, Hotel.TIMEZONE)),
+                new ReservationInitiated(id, date1, date2, Hotel.checkInTime(date1), Hotel.checkOutTime(date2)),
                 new LineItemCreated(id, 1, date1, price1));
     }
 
     @Test
     public void cannot_make_reservation_twice() {
         given(new CustomerDiscovered(id),
-                new ReservationInitiated(id, date1, date2,
-                        ZonedDateTime.of(date1, Hotel.CHECK_IN_TIME, Hotel.TIMEZONE),
-                        ZonedDateTime.of(date2, Hotel.CHECK_OUT_TIME, Hotel.TIMEZONE)));
+                new ReservationInitiated(id, date1, date2, Hotel.checkInTime(date1), Hotel.checkOutTime(date2)));
 
         thrown.expect(IllegalStateException.class);
         thrown.expectMessage("unexpected state: INITIATED");

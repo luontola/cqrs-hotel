@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -20,7 +20,6 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -93,13 +92,7 @@ public class Reservation extends AggregateRoot {
         if (state != PROSPECT) {
             throw new IllegalStateException("unexpected state: " + state);
         }
-        ZonedDateTime checkInTime = arrival
-                .atTime(Hotel.CHECK_IN_TIME)
-                .atZone(Hotel.TIMEZONE);
-        ZonedDateTime checkOutTime = departure
-                .atTime(Hotel.CHECK_OUT_TIME)
-                .atZone(Hotel.TIMEZONE);
-        publish(new ReservationInitiated(getId(), arrival, departure, checkInTime, checkOutTime));
+        publish(new ReservationInitiated(getId(), arrival, departure, Hotel.checkInTime(arrival), Hotel.checkOutTime(departure)));
 
         for (LocalDate date = arrival; date.isBefore(departure); date = date.plusDays(1)) {
             PriceOffered offer = getValidPriceOffer(date, clock);
