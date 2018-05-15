@@ -12,6 +12,7 @@ import fi.luontola.cqrshotel.capacity.queries.GetCapacityByDateRangeHandler;
 import fi.luontola.cqrshotel.framework.Command;
 import fi.luontola.cqrshotel.framework.Commit;
 import fi.luontola.cqrshotel.framework.CompositeHandler;
+import fi.luontola.cqrshotel.framework.Dispatcher;
 import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.Handler;
 import fi.luontola.cqrshotel.framework.Message;
@@ -37,6 +38,8 @@ import fi.luontola.cqrshotel.reservation.queries.SearchForAccommodationQueryHand
 import fi.luontola.cqrshotel.room.RoomRepo;
 import fi.luontola.cqrshotel.room.commands.CreateRoom;
 import fi.luontola.cqrshotel.room.commands.CreateRoomHandler;
+import fi.luontola.cqrshotel.room.commands.OccupyRoom;
+import fi.luontola.cqrshotel.room.commands.OccupyRoomHandler;
 import fi.luontola.cqrshotel.room.queries.FindAllRooms;
 import fi.luontola.cqrshotel.room.queries.FindAllRoomsHandler;
 import fi.luontola.cqrshotel.room.queries.GetAvailabilityByDateRange;
@@ -63,17 +66,20 @@ public class Core {
     final RoomsView roomsView;
     final RoomAvailabilityView roomAvailabilityView;
     final CapacityView capacityView;
+    final ProcessManagersSpike processManagers;
 
     public Core(EventStore eventStore, PricingEngine pricing, Clock clock, ObservedPosition observedPosition) {
         this.eventStore = eventStore;
         ReservationRepo reservationRepo = new ReservationRepo(eventStore);
         RoomRepo roomRepo = new RoomRepo(eventStore);
+        Dispatcher dispatcher = this::handle;
 
         projections = Arrays.asList(
                 reservationsView = new ReservationsView(eventStore),
                 roomsView = new RoomsView(eventStore),
                 roomAvailabilityView = new RoomAvailabilityView(eventStore),
-                capacityView = new CapacityView(eventStore)
+                capacityView = new CapacityView(eventStore),
+                processManagers = new ProcessManagersSpike(eventStore, roomAvailabilityView, dispatcher)
         );
         projectionsUpdater = new ProjectionsUpdater(projections);
 
@@ -81,6 +87,7 @@ public class Core {
         commandHandler.register(SearchForAccommodation.class, new SearchForAccommodationCommandHandler(reservationRepo, pricing, clock));
         commandHandler.register(MakeReservation.class, new MakeReservationHandler(reservationRepo, clock));
         commandHandler.register(CreateRoom.class, new CreateRoomHandler(roomRepo));
+        commandHandler.register(OccupyRoom.class, new OccupyRoomHandler(roomRepo));
         this.commandHandler = new UpdateObservedPositionAfterCommit(observedPosition,
                 new UpdateProjectionsAfterHandling<>(projectionsUpdater, commandHandler));
 
