@@ -1,12 +1,11 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
 package fi.luontola.cqrshotel.reservation.queries;
 
+import fi.luontola.cqrshotel.framework.AnnotatedProjection;
 import fi.luontola.cqrshotel.framework.EventListener;
-import fi.luontola.cqrshotel.framework.EventStore;
-import fi.luontola.cqrshotel.framework.StreamProjection;
 import fi.luontola.cqrshotel.hotel.Hotel;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
 import fi.luontola.cqrshotel.reservation.events.PriceOffered;
@@ -18,22 +17,25 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ReservationOfferView extends StreamProjection {
+public class ReservationOfferView extends AnnotatedProjection {
 
     private final Map<LocalDate, PriceOffered> offersByDate = new ConcurrentHashMap<>();
+    private final UUID reservationId;
     private final Clock clock;
 
-    public ReservationOfferView(UUID streamId, EventStore eventStore, Clock clock) {
-        super(streamId, eventStore);
+    public ReservationOfferView(UUID reservationId, Clock clock) {
+        this.reservationId = reservationId;
         this.clock = clock;
     }
 
     @EventListener
     public void apply(PriceOffered offer) {
+        checkReservationId(offer.reservationId);
         offersByDate.put(offer.date, offer);
     }
 
     public ReservationOffer query(SearchForAccommodation query) {
+        checkReservationId(query.reservationId);
         ReservationOffer result = new ReservationOffer();
         result.reservationId = query.reservationId;
         result.arrival = query.arrival;
@@ -52,5 +54,11 @@ public class ReservationOfferView extends StreamProjection {
 
         result.totalPrice = totalPrice;
         return result;
+    }
+
+    private void checkReservationId(UUID reservationId) {
+        if (!this.reservationId.equals(reservationId)) {
+            throw new IllegalArgumentException("this projection instance works only for a single reservation");
+        }
     }
 }
