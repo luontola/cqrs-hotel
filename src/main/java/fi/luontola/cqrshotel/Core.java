@@ -4,6 +4,7 @@
 
 package fi.luontola.cqrshotel;
 
+import fi.luontola.cqrshotel.capacity.queries.CapacityDto;
 import fi.luontola.cqrshotel.capacity.queries.CapacityView;
 import fi.luontola.cqrshotel.capacity.queries.GetCapacityByDate;
 import fi.luontola.cqrshotel.capacity.queries.GetCapacityByDateHandler;
@@ -17,6 +18,7 @@ import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.Handler;
 import fi.luontola.cqrshotel.framework.InMemoryProjectionUpdater;
 import fi.luontola.cqrshotel.framework.Message;
+import fi.luontola.cqrshotel.framework.Projection;
 import fi.luontola.cqrshotel.framework.Query;
 import fi.luontola.cqrshotel.framework.UpdateProjectionsAfterHandling;
 import fi.luontola.cqrshotel.framework.WorkersPool;
@@ -33,6 +35,7 @@ import fi.luontola.cqrshotel.reservation.queries.FindAllReservations;
 import fi.luontola.cqrshotel.reservation.queries.FindAllReservationsHandler;
 import fi.luontola.cqrshotel.reservation.queries.FindReservationById;
 import fi.luontola.cqrshotel.reservation.queries.FindReservationByIdHandler;
+import fi.luontola.cqrshotel.reservation.queries.ReservationDto;
 import fi.luontola.cqrshotel.reservation.queries.ReservationsView;
 import fi.luontola.cqrshotel.reservation.queries.SearchForAccommodationQueryHandler;
 import fi.luontola.cqrshotel.room.RoomRepo;
@@ -44,7 +47,9 @@ import fi.luontola.cqrshotel.room.queries.FindAllRooms;
 import fi.luontola.cqrshotel.room.queries.FindAllRoomsHandler;
 import fi.luontola.cqrshotel.room.queries.GetAvailabilityByDateRange;
 import fi.luontola.cqrshotel.room.queries.GetAvailabilityByDateRangeHandler;
+import fi.luontola.cqrshotel.room.queries.RoomAvailabilityDto;
 import fi.luontola.cqrshotel.room.queries.RoomAvailabilityView;
+import fi.luontola.cqrshotel.room.queries.RoomDto;
 import fi.luontola.cqrshotel.room.queries.RoomsView;
 
 import javax.annotation.PostConstruct;
@@ -53,83 +58,76 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Core {
 
     private final EventStore eventStore;
-    private final Handler<Command, Commit> commandHandler;
-    private final Handler<Query, Object> queryHandler;
+    private final ObservedPosition observedPosition;
+
+    private final List<ProjectionConfig<?>> projections = new ArrayList<>();
     private final WorkersPool projectionsUpdater;
 
-    private final List<InMemoryProjectionUpdater> projectionUpdaters = new ArrayList<>();
-    final ReservationsView reservationsView;
-    final RoomsView roomsView;
-    final InMemoryProjectionUpdater roomsViewUpdater;
-    final RoomAvailabilityView roomAvailabilityView;
-    final CapacityView capacityView;
-    final ProcessManagersSpike processManagers;
+    private final Handler<Command, Commit> commandDispatcher;
+    private final Handler<Query, Object> queryDispatcher;
 
     public Core(EventStore eventStore, PricingEngine pricing, Clock clock, ObservedPosition observedPosition) {
         this.eventStore = eventStore;
-        ReservationRepo reservationRepo = new ReservationRepo(eventStore);
-        RoomRepo roomRepo = new RoomRepo(eventStore);
+        this.observedPosition = observedPosition;
         Dispatcher dispatcher = this::handle;
 
-        reservationsView = new ReservationsView();
-        InMemoryProjectionUpdater reservationsViewUpdater = new InMemoryProjectionUpdater(reservationsView, eventStore);
-        projectionUpdaters.add(reservationsViewUpdater);
+        // projections
 
-        roomsView = new RoomsView();
-        roomsViewUpdater = new InMemoryProjectionUpdater(roomsView, eventStore);
-        projectionUpdaters.add(roomsViewUpdater);
+        addInMemoryProjection(new ReservationsView())
+                .addQueryHandler(FindAllReservationsHandler::new, FindAllReservations.class, ReservationDto[].class)
+                .addQueryHandler(FindReservationByIdHandler::new, FindReservationById.class, ReservationDto.class);
 
-        roomAvailabilityView = new RoomAvailabilityView();
-        InMemoryProjectionUpdater roomAvailabilityViewUpdater = new InMemoryProjectionUpdater(roomAvailabilityView, eventStore);
-        projectionUpdaters.add(roomAvailabilityViewUpdater);
+        addInMemoryProjection(new RoomsView())
+                .addQueryHandler(FindAllRoomsHandler::new, FindAllRooms.class, RoomDto[].class);
 
-        capacityView = new CapacityView();
-        InMemoryProjectionUpdater capacityViewUpdater = new InMemoryProjectionUpdater(capacityView, eventStore);
-        projectionUpdaters.add(capacityViewUpdater);
+        addInMemoryProjection(new RoomAvailabilityView())
+                .addQueryHandler(GetAvailabilityByDateRangeHandler::new, GetAvailabilityByDateRange.class, RoomAvailabilityDto[].class);
 
-        processManagers = new ProcessManagersSpike(roomAvailabilityView, dispatcher);
-        InMemoryProjectionUpdater processManagersUpdater = new InMemoryProjectionUpdater(processManagers, eventStore);
-        projectionUpdaters.add(processManagersUpdater);
+        addInMemoryProjection(new CapacityView())
+                .addQueryHandler(GetCapacityByDateHandler::new, GetCapacityByDate.class, CapacityDto.class)
+                .addQueryHandler(GetCapacityByDateRangeHandler::new, GetCapacityByDateRange.class, CapacityDto[].class);
 
-        projectionsUpdater = new WorkersPool(projectionUpdaters.stream()
-                .map(updater -> (Runnable) updater::update)
+        addInMemoryProjection(new ProcessManagersSpike(getProjection(RoomAvailabilityView.class).projection, dispatcher));
+
+        this.projectionsUpdater = new WorkersPool(projections.stream()
+                .map(p -> (Runnable) p.updater::update)
                 .collect(Collectors.toList()));
 
-        CompositeHandler<Command, Commit> commandHandler = new CompositeHandler<>();
-        commandHandler.register(SearchForAccommodation.class, new SearchForAccommodationCommandHandler(reservationRepo, pricing, clock));
-        commandHandler.register(MakeReservation.class, new MakeReservationHandler(reservationRepo, clock));
-        commandHandler.register(CreateRoom.class, new CreateRoomHandler(roomRepo));
-        commandHandler.register(OccupyRoom.class, new OccupyRoomHandler(roomRepo));
-        this.commandHandler = new UpdateObservedPositionAfterCommit(observedPosition,
-                new UpdateProjectionsAfterHandling<>(projectionsUpdater, commandHandler));
+        // queries
 
-        CompositeHandler<Query, Object> queryHandler = new CompositeHandler<>();
-        queryHandler.register(SearchForAccommodation.class,
-                new SearchForAccommodationQueryHandler(eventStore, clock));
-        queryHandler.register(FindAllReservations.class,
-                new WaitForProjectionToUpdate<>(reservationsViewUpdater, observedPosition,
-                        new FindAllReservationsHandler(reservationsView)));
-        queryHandler.register(FindReservationById.class,
-                new WaitForProjectionToUpdate<>(reservationsViewUpdater, observedPosition,
-                        new FindReservationByIdHandler(reservationsView)));
-        queryHandler.register(FindAllRooms.class,
-                new WaitForProjectionToUpdate<>(roomsViewUpdater, observedPosition,
-                        new FindAllRoomsHandler(roomsView)));
-        queryHandler.register(GetAvailabilityByDateRange.class,
-                new WaitForProjectionToUpdate<>(roomAvailabilityViewUpdater, observedPosition,
-                        new GetAvailabilityByDateRangeHandler(roomAvailabilityView)));
-        queryHandler.register(GetCapacityByDate.class,
-                new WaitForProjectionToUpdate<>(capacityViewUpdater, observedPosition,
-                        new GetCapacityByDateHandler(capacityView)));
-        queryHandler.register(GetCapacityByDateRange.class,
-                new WaitForProjectionToUpdate<>(capacityViewUpdater, observedPosition,
-                        new GetCapacityByDateRangeHandler(capacityView)));
-        this.queryHandler = queryHandler;
+        CompositeHandler<Query, Object> queries = new CompositeHandler<>();
+        for (ProjectionConfig<?> projection : projections) {
+            projection.registerQueryHandlers(queries);
+        }
+        queries.register(SearchForAccommodation.class, new SearchForAccommodationQueryHandler(eventStore, clock));
+        this.queryDispatcher = queries;
+
+        // commands
+
+        CompositeHandler<Command, Commit> commands = new CompositeHandler<>();
+
+        ReservationRepo reservationRepo = new ReservationRepo(eventStore);
+        commands.register(SearchForAccommodation.class, new SearchForAccommodationCommandHandler(reservationRepo, pricing, clock));
+        commands.register(MakeReservation.class, new MakeReservationHandler(reservationRepo, clock));
+
+        RoomRepo roomRepo = new RoomRepo(eventStore);
+        commands.register(CreateRoom.class, new CreateRoomHandler(roomRepo));
+        commands.register(OccupyRoom.class, new OccupyRoomHandler(roomRepo));
+
+        this.commandDispatcher = new UpdateObservedPositionAfterCommit(observedPosition,
+                new UpdateProjectionsAfterHandling<>(projectionsUpdater, commands));
+    }
+
+    private <T extends Projection> ProjectionConfig<T> addInMemoryProjection(T projection) {
+        ProjectionConfig<T> config = new ProjectionConfig<>(projection, new InMemoryProjectionUpdater(projection, eventStore));
+        projections.add(config);
+        return config;
     }
 
     @PostConstruct
@@ -143,18 +141,69 @@ public class Core {
     }
 
     public Object handle(Message message) {
+        // XXX: It's possible for a message to implement both Command and Query,
+        // in which case the command will first execute and then the query
+        // will observe the data produced by the command.
         Object result = null;
         if (message instanceof Command) {
-            commandHandler.handle((Command) message);
+            commandDispatcher.handle((Command) message);
             result = Collections.emptyMap();
         }
         if (message instanceof Query) {
-            result = queryHandler.handle((Query) message);
+            result = queryDispatcher.handle((Query) message);
         }
         return result;
     }
 
     public StatusPage getStatus() {
-        return StatusPage.build(eventStore, projectionUpdaters);
+        return StatusPage.build(eventStore, projections);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <P extends Projection> ProjectionConfig<P> getProjection(Class<P> projectionType) {
+        for (ProjectionConfig projection : projections) {
+            if (projectionType.isInstance(projection.projection)) {
+                return projection;
+            }
+        }
+        throw new IllegalArgumentException("not found: " + projectionType);
+    }
+
+    public class ProjectionConfig<P extends Projection> {
+        public final P projection;
+        public final InMemoryProjectionUpdater updater;
+        public final List<QueryHandlerConfig<?, ?>> queryHandlers = new ArrayList<>();
+
+        public ProjectionConfig(P projection, InMemoryProjectionUpdater updater) {
+            this.projection = projection;
+            this.updater = updater;
+        }
+
+        public <Q extends Query, R> ProjectionConfig<P> addQueryHandler(Function<P, Handler<Q, R>> handlerFactory, Class<Q> query, Class<R> response) {
+            queryHandlers.add(new QueryHandlerConfig<>(query, response, handlerFactory.apply(projection)));
+            return this;
+        }
+
+        public void registerQueryHandlers(CompositeHandler<Query, Object> registry) {
+            for (QueryHandlerConfig<?, ?> queryHandler : queryHandlers) {
+                queryHandler.register(registry, updater);
+            }
+        }
+    }
+
+    public class QueryHandlerConfig<Q extends Query, R> {
+        public final Class<Q> queryType;
+        public final Class<R> responseType;
+        public final Handler<Q, R> handler;
+
+        public QueryHandlerConfig(Class<Q> queryType, Class<R> responseType, Handler<Q, R> handler) {
+            this.queryType = queryType;
+            this.responseType = responseType;
+            this.handler = handler;
+        }
+
+        public void register(CompositeHandler<Query, Object> registry, InMemoryProjectionUpdater updater) {
+            registry.register(queryType, new WaitForProjectionToUpdate<>(updater, observedPosition, handler));
+        }
     }
 }

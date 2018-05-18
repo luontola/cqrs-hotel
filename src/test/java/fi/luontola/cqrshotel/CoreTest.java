@@ -12,6 +12,7 @@ import fi.luontola.cqrshotel.pricing.InMemoryPricingEngine;
 import fi.luontola.cqrshotel.room.commands.CreateRoom;
 import fi.luontola.cqrshotel.room.queries.FindAllRooms;
 import fi.luontola.cqrshotel.room.queries.RoomDto;
+import fi.luontola.cqrshotel.room.queries.RoomsView;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -74,7 +75,7 @@ public class CoreTest {
     public void throws_exception_if_projection_is_not_up_to_date_query_after_timeout() {
         ObservedPosition observedPosition = new ObservedPosition(Duration.ofSeconds(0));
         Core core = new Core(eventStore, pricing, clock, observedPosition);
-        synchronized (core.roomsViewUpdater) { // grab a lock on the projection to prevent it being updated asynchronously
+        synchronized (core.getProjection(RoomsView.class).updater) { // grab a lock on the projection to prevent it being updated asynchronously
 
             core.handle(new CreateRoom(UUID.randomUUID(), "123"));
 

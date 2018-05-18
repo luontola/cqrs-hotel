@@ -5,7 +5,6 @@
 package fi.luontola.cqrshotel;
 
 import fi.luontola.cqrshotel.framework.EventStore;
-import fi.luontola.cqrshotel.framework.InMemoryProjectionUpdater;
 
 import java.util.List;
 import java.util.Map;
@@ -17,11 +16,11 @@ public class StatusPage {
     public EventStoreStatus eventStore;
     public Map<String, ProjectionStatus> projections;
 
-    public static StatusPage build(EventStore eventStore, List<InMemoryProjectionUpdater> projections) {
+    public static StatusPage build(EventStore eventStore, List<Core.ProjectionConfig<?>> projections) {
         StatusPage status = new StatusPage();
         status.projections = projections.stream()
                 .collect(Collectors.toMap(
-                        InMemoryProjectionUpdater::getProjectionName,
+                        p -> p.projection.getProjectionName(),
                         ProjectionStatus::build,
                         (a, b) -> null,
                         TreeMap::new));
@@ -44,9 +43,9 @@ public class StatusPage {
     public static class ProjectionStatus {
         public Long position;
 
-        private static ProjectionStatus build(InMemoryProjectionUpdater projection) {
+        private static ProjectionStatus build(Core.ProjectionConfig<?> projection) {
             ProjectionStatus status = new ProjectionStatus();
-            status.position = projection.getPosition();
+            status.position = projection.updater.getPosition();
             return status;
         }
     }

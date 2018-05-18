@@ -33,10 +33,6 @@ public class InMemoryProjectionUpdater {
         this.eventStore = eventStore;
     }
 
-    public String getProjectionName() {
-        return projection.getProjectionName();
-    }
-
     public final long getPosition() {
         return position;
     }
