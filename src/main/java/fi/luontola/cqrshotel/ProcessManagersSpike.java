@@ -12,13 +12,11 @@ import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
 import fi.luontola.cqrshotel.room.commands.OccupyRoom;
 import fi.luontola.cqrshotel.room.events.RoomOccupied;
 import fi.luontola.cqrshotel.room.queries.RoomAvailabilityDto;
-import fi.luontola.cqrshotel.room.queries.RoomAvailabilityIntervalDto;
 import fi.luontola.cqrshotel.room.queries.RoomAvailabilityView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
-import java.util.List;
 
 public class ProcessManagersSpike extends AnnotatedProjection {
 
@@ -48,16 +46,10 @@ public class ProcessManagersSpike extends AnnotatedProjection {
     }
 
     private RoomAvailabilityDto findAvailableRoom(Instant start, Instant end) {
-        for (RoomAvailabilityDto room : roomAvailabilityView.getAvailabilityForAllRooms(start, end)) {
-            if (isFullyAvailable(room.availability)) {
-                return room;
-            }
-        }
-        return null;
-    }
-
-    private static boolean isFullyAvailable(List<RoomAvailabilityIntervalDto> intervals) {
-        return intervals.size() == 1 && !intervals.get(0).occupied;
+        return roomAvailabilityView.getAvailabilityForAllRooms(start, end).stream()
+                .filter(room -> room.available)
+                .findAny()
+                .orElse(null);
     }
 
     @EventListener

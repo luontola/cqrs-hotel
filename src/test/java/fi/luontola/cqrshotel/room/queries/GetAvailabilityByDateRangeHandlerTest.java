@@ -28,7 +28,7 @@ public class GetAvailabilityByDateRangeHandlerTest {
 
         RoomAvailabilityDto[] result = handler.handle(new GetAvailabilityByDateRange(LocalDate.parse("2000-01-01"), LocalDate.parse("2000-01-05")));
 
-        RoomAvailabilityIntervalDto interval = result[0].availability.get(0);
+        RoomAvailabilityIntervalDto interval = result[0].details.get(0);
         assertThat("start", interval.start, is(Instant.parse("1999-12-31T22:00:00Z")));
         assertThat("end", interval.end, is(Instant.parse("2000-01-05T22:00:00Z")));
     }

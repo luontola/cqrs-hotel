@@ -39,25 +39,27 @@ public class RoomAvailabilityViewTest {
         view.apply(new RoomCreated(roomId, "101"));
         view.apply(new RoomCreated(roomId2, "102"));
 
-        List<RoomAvailabilityDto> results = view.getAvailabilityForAllRooms(t1, t2);
-        assertThat(results, hasSize(2));
+        List<RoomAvailabilityDto> rooms = view.getAvailabilityForAllRooms(t1, t2);
+        assertThat(rooms, hasSize(2));
     }
 
     @Test
     public void lists_room_basic_information() {
         view.apply(new RoomCreated(roomId, "101"));
 
-        RoomAvailabilityDto dto = view.getAvailabilityForAllRooms(t1, t2).get(0);
-        assertThat("roomId", dto.roomId, is(roomId));
-        assertThat("roomNumber", dto.roomNumber, is("101"));
+        RoomAvailabilityDto availability = availabilityBetween(t1, t2);
+        assertThat("roomId", availability.roomId, is(roomId));
+        assertThat("roomNumber", availability.roomNumber, is("101"));
     }
 
     @Test
     public void when_room_is_not_occupied() {
         view.apply(new RoomCreated(roomId, "101"));
 
-        assertThat(availabilityBetween(t1, t2), is(Arrays.asList(
+        RoomAvailabilityDto availability = availabilityBetween(t1, t2);
+        assertThat(availability.details, is(Arrays.asList(
                 new RoomAvailabilityIntervalDto(t1, t2, false))));
+        assertThat("available?", availability.available, is(true));
     }
 
     @Test
@@ -65,8 +67,10 @@ public class RoomAvailabilityViewTest {
         view.apply(new RoomCreated(roomId, "101"));
         view.apply(new RoomOccupied(roomId, t1, t2, occupant));
 
-        assertThat(availabilityBetween(t1, t2), is(Arrays.asList(
+        RoomAvailabilityDto availability = availabilityBetween(t1, t2);
+        assertThat(availability.details, is(Arrays.asList(
                 new RoomAvailabilityIntervalDto(t1, t2, true))));
+        assertThat("available?", availability.available, is(false));
     }
 
     @Test
@@ -74,8 +78,10 @@ public class RoomAvailabilityViewTest {
         view.apply(new RoomCreated(roomId, "101"));
         view.apply(new RoomOccupied(roomId, t1, t4, occupant));
 
-        assertThat(availabilityBetween(t2, t3), is(Arrays.asList(
+        RoomAvailabilityDto availability = availabilityBetween(t2, t3);
+        assertThat(availability.details, is(Arrays.asList(
                 new RoomAvailabilityIntervalDto(t1, t4, true))));
+        assertThat("available?", availability.available, is(false));
     }
 
     @Test
@@ -83,10 +89,12 @@ public class RoomAvailabilityViewTest {
         view.apply(new RoomCreated(roomId, "101"));
         view.apply(new RoomOccupied(roomId, t2, t3, occupant));
 
-        assertThat(availabilityBetween(t1, t4), is(Arrays.asList(
+        RoomAvailabilityDto availability = availabilityBetween(t1, t4);
+        assertThat(availability.details, is(Arrays.asList(
                 new RoomAvailabilityIntervalDto(t1, t2, false),
                 new RoomAvailabilityIntervalDto(t2, t3, true),
                 new RoomAvailabilityIntervalDto(t3, t4, false))));
+        assertThat("available?", availability.available, is(false));
     }
 
     @Test
@@ -96,10 +104,12 @@ public class RoomAvailabilityViewTest {
         view.apply(new RoomOccupied(roomId, t3, t4, occupant2)); // NOT in chronological order
         view.apply(new RoomOccupied(roomId, t2, t3, occupant3));
 
-        assertThat(availabilityBetween(t1, t4), is(Arrays.asList(
+        RoomAvailabilityDto availability = availabilityBetween(t1, t4);
+        assertThat(availability.details, is(Arrays.asList(
                 new RoomAvailabilityIntervalDto(t1, t2, true),
                 new RoomAvailabilityIntervalDto(t2, t3, true),
                 new RoomAvailabilityIntervalDto(t3, t4, true))));
+        assertThat("available?", availability.available, is(false));
     }
 
     @Test
@@ -109,8 +119,10 @@ public class RoomAvailabilityViewTest {
         view.apply(new RoomOccupied(roomId, t2, t3, occupant2));
         view.apply(new RoomOccupied(roomId, t3, t4, occupant3));
 
-        assertThat(availabilityBetween(t2, t3), is(Arrays.asList(
+        RoomAvailabilityDto availability = availabilityBetween(t2, t3);
+        assertThat(availability.details, is(Arrays.asList(
                 new RoomAvailabilityIntervalDto(t2, t3, true))));
+        assertThat("available?", availability.available, is(false));
     }
 
     @Test
@@ -119,13 +131,15 @@ public class RoomAvailabilityViewTest {
         view.apply(new RoomOccupied(roomId, t1, t2, occupant));
         view.apply(new RoomOccupied(roomId, t3, t4, occupant2));
 
-        assertThat(availabilityBetween(t1, t4), is(Arrays.asList(
+        RoomAvailabilityDto availability = availabilityBetween(t1, t4);
+        assertThat(availability.details, is(Arrays.asList(
                 new RoomAvailabilityIntervalDto(t1, t2, true),
                 new RoomAvailabilityIntervalDto(t2, t3, false),
                 new RoomAvailabilityIntervalDto(t3, t4, true))));
+        assertThat("available?", availability.available, is(false));
     }
 
-    private List<RoomAvailabilityIntervalDto> availabilityBetween(Instant start, Instant end) {
-        return view.getAvailabilityForAllRooms(start, end).get(0).availability;
+    private RoomAvailabilityDto availabilityBetween(Instant start, Instant end) {
+        return view.getAvailabilityForAllRooms(start, end).get(0);
     }
 }

@@ -33,12 +33,13 @@ public class RoomAvailabilityView extends AnnotatedProjection {
         RoomAvailabilityDto response = new RoomAvailabilityDto();
         response.roomId = src.roomId;
         response.roomNumber = src.roomNumber;
-        response.availability = availabilityForResponse(src, start, end);
+        response.details = availabilityForResponse(src, start, end);
+        response.available = isFullyAvailable(response.details);
         return response;
     }
 
     private static LinkedList<RoomAvailabilityIntervalDto> availabilityForResponse(RoomAvailabilityDto src, Instant queryStart, Instant queryEnd) {
-        LinkedList<RoomAvailabilityIntervalDto> availability = src.availability.stream()
+        LinkedList<RoomAvailabilityIntervalDto> availability = src.details.stream()
                 // TODO: avoid linear search; use an O(log n) instead of O(n) algorithm
                 .filter(interval -> interval.overlapsWith(queryStart, queryEnd))
                 .collect(Collectors.toCollection(LinkedList::new));
@@ -63,12 +64,16 @@ public class RoomAvailabilityView extends AnnotatedProjection {
         }
     }
 
+    private static boolean isFullyAvailable(List<RoomAvailabilityIntervalDto> intervals) {
+        return intervals.size() == 1 && !intervals.get(0).occupied;
+    }
+
     @EventListener
     public void apply(RoomCreated event) {
         RoomAvailabilityDto room = new RoomAvailabilityDto();
         room.roomId = event.roomId;
         room.roomNumber = event.roomNumber;
-        room.availability = new LinkedList<>();
+        room.details = new LinkedList<>();
         roomsById.put(event.roomId, room);
     }
 
@@ -76,7 +81,7 @@ public class RoomAvailabilityView extends AnnotatedProjection {
     public void apply(RoomOccupied event) {
         RoomAvailabilityDto room = roomsById.get(event.roomId);
         // TODO: insert more efficiently; use an O(log n) instead of O(n * log n) algorithm
-        room.availability.add(new RoomAvailabilityIntervalDto(event.start, event.end, true));
-        room.availability.sort(Comparator.comparing(o -> o.start));
+        room.details.add(new RoomAvailabilityIntervalDto(event.start, event.end, true));
+        room.details.sort(Comparator.comparing(o -> o.start));
     }
 }

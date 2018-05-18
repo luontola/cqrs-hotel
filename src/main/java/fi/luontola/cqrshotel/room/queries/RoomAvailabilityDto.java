@@ -13,5 +13,6 @@ public class RoomAvailabilityDto extends Struct {
 
     public UUID roomId;
     public String roomNumber;
-    public List<RoomAvailabilityIntervalDto> availability;
+    public Boolean available;
+    public List<RoomAvailabilityIntervalDto> details;
 }

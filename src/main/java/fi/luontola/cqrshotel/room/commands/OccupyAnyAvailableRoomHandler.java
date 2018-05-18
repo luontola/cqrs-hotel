@@ -9,11 +9,9 @@ import fi.luontola.cqrshotel.framework.Handler;
 import fi.luontola.cqrshotel.framework.Publisher;
 import fi.luontola.cqrshotel.room.NoRoomsAvailableException;
 import fi.luontola.cqrshotel.room.queries.RoomAvailabilityDto;
-import fi.luontola.cqrshotel.room.queries.RoomAvailabilityIntervalDto;
 import fi.luontola.cqrshotel.room.queries.RoomAvailabilityView;
 
 import java.time.Instant;
-import java.util.List;
 
 public class OccupyAnyAvailableRoomHandler implements Handler<OccupyAnyAvailableRoom, Object> {
 
@@ -33,15 +31,9 @@ public class OccupyAnyAvailableRoomHandler implements Handler<OccupyAnyAvailable
     }
 
     private RoomAvailabilityDto getAnyAvailableRoom(Instant start, Instant end) {
-        for (RoomAvailabilityDto room : roomAvailabilityView.getAvailabilityForAllRooms(start, end)) {
-            if (isFullyAvailable(room.availability)) {
-                return room;
-            }
-        }
-        throw new NoRoomsAvailableException();
-    }
-
-    private static boolean isFullyAvailable(List<RoomAvailabilityIntervalDto> intervals) {
-        return intervals.size() == 1 && !intervals.get(0).occupied;
+        return roomAvailabilityView.getAvailabilityForAllRooms(start, end).stream()
+                .filter(room -> room.available)
+                .findAny()
+                .orElseThrow(NoRoomsAvailableException::new);
     }
 }

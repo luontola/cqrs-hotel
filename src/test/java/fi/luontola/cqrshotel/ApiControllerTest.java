@@ -180,7 +180,7 @@ public class ApiControllerTest {
         RoomAvailabilityDto[] rooms = getForObject("/api/availability/{start}/{end}", RoomAvailabilityDto[].class, start, end);
 
         assertThat("rooms", rooms, is(not(emptyArray())));
-        List<RoomAvailabilityIntervalDto> intervals = rooms[0].availability;
+        List<RoomAvailabilityIntervalDto> intervals = rooms[0].details;
         assertThat("availability intervals", intervals, is(not(empty())));
         RoomAvailabilityIntervalDto first = intervals.get(0);
         RoomAvailabilityIntervalDto last = intervals.get(intervals.size() - 1);
