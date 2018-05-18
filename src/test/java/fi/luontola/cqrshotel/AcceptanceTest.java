@@ -7,6 +7,7 @@ package fi.luontola.cqrshotel;
 import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.InMemoryEventStore;
 import fi.luontola.cqrshotel.framework.consistency.ObservedPosition;
+import fi.luontola.cqrshotel.framework.consistency.ReadModelNotUpToDateException;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.pricing.RandomPricingEngine;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
@@ -15,6 +16,7 @@ import fi.luontola.cqrshotel.reservation.queries.ReservationOffer;
 import fi.luontola.cqrshotel.room.commands.CreateRoom;
 import fi.luontola.cqrshotel.room.queries.GetAvailabilityByDateRange;
 import fi.luontola.cqrshotel.room.queries.RoomAvailabilityDto;
+import org.hamcrest.Matcher;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -35,6 +37,12 @@ import static org.hamcrest.Matchers.notNullValue;
 @Category(FastTests.class)
 public class AcceptanceTest {
 
+    @Rule
+    public final Timeout timeout = Timeout.seconds(2);
+    public static final Duration assertionTimeout = Duration.ofSeconds(1);
+    @Rule
+    public final ExpectedException thrown = ExpectedException.none();
+
     private static final UUID reservationId = UUID.randomUUID();
     private static final LocalDate arrival = LocalDate.now();
     private static final LocalDate departure = arrival.plusDays(1);
@@ -42,34 +50,28 @@ public class AcceptanceTest {
     private final Clock clock = Clock.systemDefaultZone();
     private final EventStore eventStore = new InMemoryEventStore();
     private final PricingEngine pricing = new RandomPricingEngine(clock);
-    private final ObservedPosition observedPosition = new ObservedPosition(Duration.ofSeconds(5));
+    private final ObservedPosition observedPosition = new ObservedPosition(assertionTimeout);
     private final Core core = new Core(eventStore, pricing, clock, observedPosition);
-
-    @Rule
-    public final Timeout timeout = Timeout.seconds(2);
-    public static final Duration assertionTimeout = Duration.ofSeconds(1);
-    @Rule
-    public final ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void making_a_reservation() {
         core.handle(new CreateRoom(UUID.randomUUID(), "101"));
-        assertRoomAvailable(true);
+        assertRoomAvailable("before reservation", is(true));
 
         ReservationOffer offer = (ReservationOffer) core.handle(new SearchForAccommodation(reservationId, arrival, departure));
         assertThat("total price", offer.totalPrice, is(notNullValue()));
 
         core.handle(new MakeReservation(reservationId, arrival, departure, "John Doe", "john@example.com"));
-        eventually(() -> assertRoomAvailable(false));
+        eventually(() -> assertRoomAvailable("after reservation", is(false)));
     }
 
 
     // helpers
 
-    private void assertRoomAvailable(boolean expected) {
+    private void assertRoomAvailable(String message, Matcher<Boolean> matcher) {
         RoomAvailabilityDto[] rooms = (RoomAvailabilityDto[]) core.handle(new GetAvailabilityByDateRange(arrival, departure));
         assertThat(rooms, is(arrayWithSize(1)));
-        assertThat("room available", rooms[0].available, is(expected));
+        assertThat("room available " + message + "?", rooms[0].available, matcher);
     }
 
     /**
@@ -77,6 +79,7 @@ public class AcceptanceTest {
      */
     private void eventually(Runnable assertion) {
         Instant timeout = Instant.now().plus(assertionTimeout);
+        AssertionError assertionError = null;
         do {
             try {
                 assertion.run();
@@ -84,6 +87,15 @@ public class AcceptanceTest {
             } catch (AssertionError e) {
                 // make the next query wait for the projection to be updated with new events
                 observedPosition.observe(observedPosition.get() + 1);
+                assertionError = e;
+            } catch (ReadModelNotUpToDateException e) {
+                // assertion timed out while waiting for new events
+                if (assertionError != null) {
+                    assertionError.addSuppressed(e);
+                    throw assertionError;
+                } else {
+                    throw e;
+                }
             }
         } while (Instant.now().isBefore(timeout));
     }
