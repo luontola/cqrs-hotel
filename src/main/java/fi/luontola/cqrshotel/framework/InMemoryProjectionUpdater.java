@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class InMemoryProjectionUpdater {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log;
 
     private final Projection projection;
     private final EventStore eventStore;
@@ -29,6 +29,7 @@ public class InMemoryProjectionUpdater {
     private volatile long position = EventStore.BEGINNING;
 
     public InMemoryProjectionUpdater(Projection projection, EventStore eventStore) {
+        this.log = LoggerFactory.getLogger(projection.getClass());
         this.projection = projection;
         this.eventStore = eventStore;
     }
