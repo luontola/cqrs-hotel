@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -11,6 +11,7 @@ const ReservationPage = ({reservation}) => (
     <p><b>Status:</b> {reservation.status}</p>
     <p><b>Check-In:</b> {reservation.checkInTime}</p>
     <p><b>Check-Out:</b> {reservation.checkOutTime}</p>
+    <p><b>Room Number:</b> {reservation.roomNumber}</p>
 
     <h3>Guest Details</h3>
     <p><b>Name:</b> {reservation.name}</p>

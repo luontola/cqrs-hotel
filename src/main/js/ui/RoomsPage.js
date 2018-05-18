@@ -20,7 +20,7 @@ const RoomsPage = ({rooms}) => (
       {sortBy(rooms, ['roomNumber', 'roomId']).map(room =>
         <tr key={room.roomId}>
           <td>{room.roomNumber}</td>
-          <td>{JSON.stringify(room.availability)}</td>
+          <td>{JSON.stringify(room.details)}</td>
         </tr>
       )}
       </tbody>

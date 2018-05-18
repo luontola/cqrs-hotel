@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -18,6 +18,7 @@ const ReservationsPage = ({reservations}) => (
         <th>Check-Out</th>
         <th>Guest</th>
         <th>E-mail</th>
+        <th>Room</th>
       </tr>
       </thead>
       <tbody>
@@ -28,6 +29,7 @@ const ReservationsPage = ({reservations}) => (
           <td>{reservation.checkOutTime}</td>
           <td>{reservation.name}</td>
           <td><a href={`mailto:${reservation.email}`}>{reservation.email}</a></td>
+          <td>{reservation.roomNumber}</td>
         </tr>
       )}
       </tbody>
