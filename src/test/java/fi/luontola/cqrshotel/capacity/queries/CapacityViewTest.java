@@ -5,7 +5,6 @@
 package fi.luontola.cqrshotel.capacity.queries;
 
 import fi.luontola.cqrshotel.FastTests;
-import fi.luontola.cqrshotel.framework.InMemoryEventStore;
 import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
 import org.junit.Test;
@@ -29,7 +28,7 @@ public class CapacityViewTest {
     private static final LocalDate date4 = LocalDate.of(2000, 1, 4);
     private static final LocalDate date5 = LocalDate.of(2000, 1, 5);
 
-    private final CapacityView view = new CapacityView(new InMemoryEventStore());
+    private final CapacityView view = new CapacityView();
 
     @Test
     public void default_values() {

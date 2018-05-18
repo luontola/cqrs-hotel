@@ -74,7 +74,7 @@ public class CoreTest {
     public void throws_exception_if_projection_is_not_up_to_date_query_after_timeout() {
         ObservedPosition observedPosition = new ObservedPosition(Duration.ofSeconds(0));
         Core core = new Core(eventStore, pricing, clock, observedPosition);
-        synchronized (core.roomsView) { // grab a lock on the projection to prevent it being updated asynchronously
+        synchronized (core.roomsViewUpdater) { // grab a lock on the projection to prevent it being updated asynchronously
 
             core.handle(new CreateRoom(UUID.randomUUID(), "123"));
 

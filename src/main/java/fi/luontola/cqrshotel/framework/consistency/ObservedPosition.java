@@ -1,10 +1,10 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
 package fi.luontola.cqrshotel.framework.consistency;
 
-import fi.luontola.cqrshotel.framework.Projection;
+import fi.luontola.cqrshotel.framework.InMemoryProjectionUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +29,7 @@ public class ObservedPosition {
         }
     }
 
-    public void waitForProjectionToUpdate(Projection projection) {
+    public void waitForProjectionToUpdate(InMemoryProjectionUpdater projection) {
         try {
             long expectedPosition = this.get();
             boolean upToDate = projection.awaitPosition(expectedPosition, queryTimeout);

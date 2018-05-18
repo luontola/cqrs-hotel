@@ -5,7 +5,6 @@
 package fi.luontola.cqrshotel.room.queries;
 
 import fi.luontola.cqrshotel.FastTests;
-import fi.luontola.cqrshotel.framework.InMemoryEventStore;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
 import fi.luontola.cqrshotel.room.events.RoomOccupied;
 import org.junit.Test;
@@ -33,7 +32,7 @@ public class RoomAvailabilityViewTest {
     private static final Instant t3 = Instant.parse("2018-01-03T12:00:00.000Z");
     private static final Instant t4 = Instant.parse("2018-01-04T12:00:00.000Z");
 
-    private final RoomAvailabilityView view = new RoomAvailabilityView(new InMemoryEventStore());
+    private final RoomAvailabilityView view = new RoomAvailabilityView();
 
     @Test
     public void lists_all_rooms() {

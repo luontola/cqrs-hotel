@@ -5,7 +5,6 @@
 package fi.luontola.cqrshotel.room.queries;
 
 import fi.luontola.cqrshotel.framework.EventListener;
-import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.Projection;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
 import fi.luontola.cqrshotel.room.events.RoomOccupied;
@@ -20,13 +19,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class RoomAvailabilityView extends Projection {
+public class RoomAvailabilityView implements Projection {
 
     private final Map<UUID, RoomAvailabilityDto> roomsById = new HashMap<>();
-
-    public RoomAvailabilityView(EventStore eventStore) {
-        super(eventStore);
-    }
 
     public List<RoomAvailabilityDto> getAvailabilityForAllRooms(Instant start, Instant end) {
         return roomsById.values().stream()

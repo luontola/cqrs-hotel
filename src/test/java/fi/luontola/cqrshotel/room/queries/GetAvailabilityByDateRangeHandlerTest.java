@@ -5,7 +5,6 @@
 package fi.luontola.cqrshotel.room.queries;
 
 import fi.luontola.cqrshotel.FastTests;
-import fi.luontola.cqrshotel.framework.InMemoryEventStore;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -20,7 +19,7 @@ import static org.hamcrest.Matchers.is;
 @Category(FastTests.class)
 public class GetAvailabilityByDateRangeHandlerTest {
 
-    private final RoomAvailabilityView view = new RoomAvailabilityView(new InMemoryEventStore());
+    private final RoomAvailabilityView view = new RoomAvailabilityView();
     private final GetAvailabilityByDateRangeHandler handler = new GetAvailabilityByDateRangeHandler(view);
 
     @Test

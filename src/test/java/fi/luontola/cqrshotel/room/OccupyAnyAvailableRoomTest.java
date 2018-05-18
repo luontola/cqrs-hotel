@@ -6,9 +6,8 @@ package fi.luontola.cqrshotel.room;
 
 import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.framework.Command;
-import fi.luontola.cqrshotel.framework.Envelope;
 import fi.luontola.cqrshotel.framework.Event;
-import fi.luontola.cqrshotel.framework.FakeEventStore;
+import fi.luontola.cqrshotel.framework.EventListeners;
 import fi.luontola.cqrshotel.framework.Message;
 import fi.luontola.cqrshotel.framework.SpyPublisher;
 import fi.luontola.cqrshotel.room.commands.OccupyAnyAvailableRoom;
@@ -27,7 +26,6 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
@@ -47,8 +45,7 @@ public class OccupyAnyAvailableRoomTest {
     private static final Instant t4 = Instant.ofEpochSecond(4);
     private static final UUID occupant = UUID.randomUUID();
 
-    private final FakeEventStore eventStore = new FakeEventStore();
-    private final RoomAvailabilityView roomAvailabilityView = new RoomAvailabilityView(eventStore);
+    private final RoomAvailabilityView roomAvailabilityView = new RoomAvailabilityView();
     private final SpyPublisher publisher = new SpyPublisher();
 
     private final OccupyAnyAvailableRoomHandler commandHandler = new OccupyAnyAvailableRoomHandler(roomAvailabilityView, publisher);
@@ -94,12 +91,10 @@ public class OccupyAnyAvailableRoomTest {
     // helpers
 
     private void given(Event... events) {
-        // TODO: remove the dependency to an event store by exposing a lightweight projection instance with a handle(Event) method
-        eventStore.populateExistingEvents(UUID.randomUUID(),
-                Arrays.stream(events)
-                        .map(Envelope::newMessage)
-                        .collect(Collectors.toList()));
-        roomAvailabilityView.update();
+        EventListeners eventListeners = EventListeners.of(roomAvailabilityView);
+        for (Event event : events) {
+            eventListeners.send(event);
+        }
     }
 
     private void when(Command command) {

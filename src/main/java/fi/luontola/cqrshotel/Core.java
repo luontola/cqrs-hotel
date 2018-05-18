@@ -15,11 +15,11 @@ import fi.luontola.cqrshotel.framework.CompositeHandler;
 import fi.luontola.cqrshotel.framework.Dispatcher;
 import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.Handler;
+import fi.luontola.cqrshotel.framework.InMemoryProjectionUpdater;
 import fi.luontola.cqrshotel.framework.Message;
-import fi.luontola.cqrshotel.framework.Projection;
-import fi.luontola.cqrshotel.framework.ProjectionsUpdater;
 import fi.luontola.cqrshotel.framework.Query;
 import fi.luontola.cqrshotel.framework.UpdateProjectionsAfterHandling;
+import fi.luontola.cqrshotel.framework.WorkersPool;
 import fi.luontola.cqrshotel.framework.consistency.ObservedPosition;
 import fi.luontola.cqrshotel.framework.consistency.UpdateObservedPositionAfterCommit;
 import fi.luontola.cqrshotel.framework.consistency.WaitForProjectionToUpdate;
@@ -50,20 +50,22 @@ import fi.luontola.cqrshotel.room.queries.RoomsView;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.time.Clock;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Core {
 
     private final EventStore eventStore;
     private final Handler<Command, Commit> commandHandler;
     private final Handler<Query, Object> queryHandler;
-    private final ProjectionsUpdater projectionsUpdater;
+    private final WorkersPool projectionsUpdater;
 
-    private final List<Projection> projections;
+    private final List<InMemoryProjectionUpdater> projectionUpdaters = new ArrayList<>();
     final ReservationsView reservationsView;
     final RoomsView roomsView;
+    final InMemoryProjectionUpdater roomsViewUpdater;
     final RoomAvailabilityView roomAvailabilityView;
     final CapacityView capacityView;
     final ProcessManagersSpike processManagers;
@@ -74,14 +76,29 @@ public class Core {
         RoomRepo roomRepo = new RoomRepo(eventStore);
         Dispatcher dispatcher = this::handle;
 
-        projections = Arrays.asList(
-                reservationsView = new ReservationsView(eventStore),
-                roomsView = new RoomsView(eventStore),
-                roomAvailabilityView = new RoomAvailabilityView(eventStore),
-                capacityView = new CapacityView(eventStore),
-                processManagers = new ProcessManagersSpike(eventStore, roomAvailabilityView, dispatcher)
-        );
-        projectionsUpdater = new ProjectionsUpdater(projections);
+        reservationsView = new ReservationsView();
+        InMemoryProjectionUpdater reservationsViewUpdater = new InMemoryProjectionUpdater(reservationsView, eventStore);
+        projectionUpdaters.add(reservationsViewUpdater);
+
+        roomsView = new RoomsView();
+        roomsViewUpdater = new InMemoryProjectionUpdater(roomsView, eventStore);
+        projectionUpdaters.add(roomsViewUpdater);
+
+        roomAvailabilityView = new RoomAvailabilityView();
+        InMemoryProjectionUpdater roomAvailabilityViewUpdater = new InMemoryProjectionUpdater(roomAvailabilityView, eventStore);
+        projectionUpdaters.add(roomAvailabilityViewUpdater);
+
+        capacityView = new CapacityView();
+        InMemoryProjectionUpdater capacityViewUpdater = new InMemoryProjectionUpdater(capacityView, eventStore);
+        projectionUpdaters.add(capacityViewUpdater);
+
+        processManagers = new ProcessManagersSpike(roomAvailabilityView, dispatcher);
+        InMemoryProjectionUpdater processManagersUpdater = new InMemoryProjectionUpdater(processManagers, eventStore);
+        projectionUpdaters.add(processManagersUpdater);
+
+        projectionsUpdater = new WorkersPool(projectionUpdaters.stream()
+                .map(updater -> (Runnable) updater::update)
+                .collect(Collectors.toList()));
 
         CompositeHandler<Command, Commit> commandHandler = new CompositeHandler<>();
         commandHandler.register(SearchForAccommodation.class, new SearchForAccommodationCommandHandler(reservationRepo, pricing, clock));
@@ -95,22 +112,22 @@ public class Core {
         queryHandler.register(SearchForAccommodation.class,
                 new SearchForAccommodationQueryHandler(eventStore, clock));
         queryHandler.register(FindAllReservations.class,
-                new WaitForProjectionToUpdate<>(reservationsView, observedPosition,
+                new WaitForProjectionToUpdate<>(reservationsViewUpdater, observedPosition,
                         new FindAllReservationsHandler(reservationsView)));
         queryHandler.register(FindReservationById.class,
-                new WaitForProjectionToUpdate<>(reservationsView, observedPosition,
+                new WaitForProjectionToUpdate<>(reservationsViewUpdater, observedPosition,
                         new FindReservationByIdHandler(reservationsView)));
         queryHandler.register(FindAllRooms.class,
-                new WaitForProjectionToUpdate<>(roomsView, observedPosition,
+                new WaitForProjectionToUpdate<>(roomsViewUpdater, observedPosition,
                         new FindAllRoomsHandler(roomsView)));
         queryHandler.register(GetAvailabilityByDateRange.class,
-                new WaitForProjectionToUpdate<>(roomAvailabilityView, observedPosition,
+                new WaitForProjectionToUpdate<>(roomAvailabilityViewUpdater, observedPosition,
                         new GetAvailabilityByDateRangeHandler(roomAvailabilityView)));
         queryHandler.register(GetCapacityByDate.class,
-                new WaitForProjectionToUpdate<>(capacityView, observedPosition,
+                new WaitForProjectionToUpdate<>(capacityViewUpdater, observedPosition,
                         new GetCapacityByDateHandler(capacityView)));
         queryHandler.register(GetCapacityByDateRange.class,
-                new WaitForProjectionToUpdate<>(capacityView, observedPosition,
+                new WaitForProjectionToUpdate<>(capacityViewUpdater, observedPosition,
                         new GetCapacityByDateRangeHandler(capacityView)));
         this.queryHandler = queryHandler;
     }
@@ -138,6 +155,6 @@ public class Core {
     }
 
     public StatusPage getStatus() {
-        return StatusPage.build(eventStore, projections);
+        return StatusPage.build(eventStore, projectionUpdaters);
     }
 }

@@ -5,7 +5,6 @@
 package fi.luontola.cqrshotel.room.queries;
 
 import fi.luontola.cqrshotel.FastTests;
-import fi.luontola.cqrshotel.framework.InMemoryEventStore;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
 import org.junit.Rule;
 import org.junit.Test;
@@ -28,7 +27,7 @@ public class RoomsViewTest {
     private static final UUID roomId = UUID.randomUUID();
     private static final UUID roomId2 = UUID.randomUUID();
 
-    private final RoomsView view = new RoomsView(new InMemoryEventStore());
+    private final RoomsView view = new RoomsView();
 
     @Test
     public void fills_in_all_fields() {

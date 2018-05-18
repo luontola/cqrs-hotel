@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -27,7 +27,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
 
 @Category(FastTests.class)
-public class ProjectionTest {
+public class InMemoryProjectionUpdaterTest {
 
     @Rule
     public final Timeout timeout = Timeout.seconds(1);
@@ -37,11 +37,12 @@ public class ProjectionTest {
     private static final Envelope<Event> three = dummyEvent("three");
 
     private final EventStore eventStore = new InMemoryEventStore();
-    private final SpyProjection projection = new SpyProjection(eventStore);
+    private final SpyProjection projection = new SpyProjection();
+    private final InMemoryProjectionUpdater updater = new InMemoryProjectionUpdater(projection, eventStore);
 
     @Test
     public void does_nothing_if_no_events() {
-        projection.update();
+        updater.update();
 
         assertThat(projection.receivedEvents, is(empty()));
     }
@@ -50,7 +51,7 @@ public class ProjectionTest {
     public void updates_events_for_all_aggregates() {
         eventStore.saveEvents(UUID.randomUUID(), singletonList(one), EventStore.BEGINNING);
         eventStore.saveEvents(UUID.randomUUID(), singletonList(two), EventStore.BEGINNING);
-        projection.update();
+        updater.update();
 
         assertThat(projection.receivedEvents, is(asList(one.payload, two.payload)));
     }
@@ -59,11 +60,11 @@ public class ProjectionTest {
     public void updates_only_new_events_since_last_update() {
         eventStore.saveEvents(UUID.randomUUID(), singletonList(one), EventStore.BEGINNING);
         eventStore.saveEvents(UUID.randomUUID(), singletonList(two), EventStore.BEGINNING);
-        projection.update();
+        updater.update();
         projection.receivedEvents.clear();
 
         eventStore.saveEvents(UUID.randomUUID(), singletonList(three), EventStore.BEGINNING);
-        projection.update();
+        updater.update();
 
         assertThat("new events", projection.receivedEvents, is(singletonList(three.payload)));
     }
@@ -74,9 +75,9 @@ public class ProjectionTest {
 
         new Thread(() -> {
             sleep(5);
-            projection.update();
+            updater.update();
         }).start();
-        boolean result = projection.awaitPosition(1, Duration.ofSeconds(1));
+        boolean result = updater.awaitPosition(1, Duration.ofSeconds(1));
 
         List<DummyEvent> events = new ArrayList<>(projection.receivedEvents); // safe copy to avoid assertion message showing a later value
         assertThat("events", events, is(singletonList(one.payload)));
@@ -85,7 +86,7 @@ public class ProjectionTest {
 
     @Test
     public void awaiting_position_returns_false_if_timeout_is_reached() throws InterruptedException {
-        boolean result = projection.awaitPosition(1, Duration.ofSeconds(0));
+        boolean result = updater.awaitPosition(1, Duration.ofSeconds(0));
 
         assertThat("return value", result, is(false));
     }
@@ -94,23 +95,23 @@ public class ProjectionTest {
     public void awaiting_position_returns_immediately_if_the_projection_is_already_up_to_date() throws InterruptedException {
         eventStore.saveEvents(UUID.randomUUID(), singletonList(one), EventStore.BEGINNING);
         eventStore.saveEvents(UUID.randomUUID(), singletonList(two), EventStore.BEGINNING);
-        projection.update();
+        updater.update();
 
-        assertThat("when expectation smaller", projection.awaitPosition(1, Duration.ofSeconds(0)), is(true));
-        assertThat("when expectation equal", projection.awaitPosition(2, Duration.ofSeconds(0)), is(true));
+        assertThat("when expectation smaller", updater.awaitPosition(1, Duration.ofSeconds(0)), is(true));
+        assertThat("when expectation equal", updater.awaitPosition(2, Duration.ofSeconds(0)), is(true));
     }
 
     @Test
     public void awaiting_position_is_not_blocked_by_a_concurrently_running_update() throws InterruptedException {
         eventStore.saveEvents(UUID.randomUUID(), singletonList(one), EventStore.BEGINNING);
         CountDownLatch updateStarted = new CountDownLatch(1);
-        Projection projection = new Projection(eventStore) {
+        InMemoryProjectionUpdater projection = new InMemoryProjectionUpdater(new Projection() {
             @EventListener
             private void apply(DummyEvent event) {
                 updateStarted.countDown();
                 sleep(500);
             }
-        };
+        }, eventStore);
         new Thread(projection::update).start();
         updateStarted.await();
 
@@ -126,7 +127,7 @@ public class ProjectionTest {
         try {
             Thread.sleep(millis);
         } catch (InterruptedException e) {
-            // ignore
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -135,13 +136,9 @@ public class ProjectionTest {
         return Envelope.newMessage(new DummyEvent(message));
     }
 
-    private static class SpyProjection extends Projection {
+    private static class SpyProjection implements Projection {
 
         public final List<DummyEvent> receivedEvents = new ArrayList<>();
-
-        public SpyProjection(EventStore eventStore) {
-            super(eventStore);
-        }
 
         @EventListener
         private void apply(DummyEvent event) {

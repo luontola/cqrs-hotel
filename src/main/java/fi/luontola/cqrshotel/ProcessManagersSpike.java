@@ -7,7 +7,6 @@ package fi.luontola.cqrshotel;
 import fi.luontola.cqrshotel.framework.Command;
 import fi.luontola.cqrshotel.framework.Dispatcher;
 import fi.luontola.cqrshotel.framework.EventListener;
-import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.Projection;
 import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
 import fi.luontola.cqrshotel.room.commands.OccupyRoom;
@@ -21,7 +20,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Instant;
 import java.util.List;
 
-public class ProcessManagersSpike extends Projection {
+public class ProcessManagersSpike implements Projection {
 
     // TODO: spike code
 
@@ -30,8 +29,7 @@ public class ProcessManagersSpike extends Projection {
     private final RoomAvailabilityView roomAvailabilityView;
     private final Dispatcher dispatcher;
 
-    public ProcessManagersSpike(EventStore eventStore, RoomAvailabilityView roomAvailabilityView, Dispatcher dispatcher) {
-        super(eventStore);
+    public ProcessManagersSpike(RoomAvailabilityView roomAvailabilityView, Dispatcher dispatcher) {
         this.roomAvailabilityView = roomAvailabilityView;
         this.dispatcher = dispatcher;
     }

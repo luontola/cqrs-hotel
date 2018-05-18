@@ -1,11 +1,10 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
 package fi.luontola.cqrshotel.reservation.queries;
 
 import fi.luontola.cqrshotel.framework.EventListener;
-import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.Projection;
 import fi.luontola.cqrshotel.reservation.events.ContactInformationUpdated;
 import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
@@ -17,15 +16,11 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-public class ReservationsView extends Projection {
+public class ReservationsView implements Projection {
 
     public static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("d.M.yyyy HH:mm");
 
     private final ConcurrentMap<UUID, ReservationDto> reservationsById = new ConcurrentHashMap<>();
-
-    public ReservationsView(EventStore eventStore) {
-        super(eventStore);
-    }
 
     public List<ReservationDto> findAll() {
         return new ArrayList<>(reservationsById.values());

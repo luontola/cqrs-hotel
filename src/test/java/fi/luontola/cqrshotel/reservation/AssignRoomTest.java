@@ -35,7 +35,7 @@ public class AssignRoomTest extends AggregateRootTester {
     private static final String roomNumber = "101";
     private static final String roomNumber2 = "102";
 
-    private final RoomsView roomsView = new RoomsView(null);
+    private final RoomsView roomsView = new RoomsView();
 
     {
         roomsView.apply(new RoomCreated(roomId, roomNumber));

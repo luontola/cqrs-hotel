@@ -1,11 +1,10 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
 package fi.luontola.cqrshotel.capacity.queries;
 
 import fi.luontola.cqrshotel.framework.EventListener;
-import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.Projection;
 import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
@@ -17,14 +16,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class CapacityView extends Projection {
+public class CapacityView implements Projection {
 
     private final AtomicInteger numberOfRooms = new AtomicInteger(0);
     private final ConcurrentMap<LocalDate, AtomicInteger> reservationsByDate = new ConcurrentHashMap<>();
-
-    public CapacityView(EventStore eventStore) {
-        super(eventStore);
-    }
 
     public CapacityDto getCapacityByDate(LocalDate date) {
         CapacityDto capacity = new CapacityDto();

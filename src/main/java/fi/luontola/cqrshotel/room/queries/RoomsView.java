@@ -5,7 +5,6 @@
 package fi.luontola.cqrshotel.room.queries;
 
 import fi.luontola.cqrshotel.framework.EventListener;
-import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.Projection;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
 
@@ -15,13 +14,9 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-public class RoomsView extends Projection {
+public class RoomsView implements Projection {
 
     private final ConcurrentMap<UUID, RoomDto> roomsById = new ConcurrentHashMap<>();
-
-    public RoomsView(EventStore eventStore) {
-        super(eventStore);
-    }
 
     public RoomDto getById(UUID roomId) {
         RoomDto room = roomsById.get(roomId);

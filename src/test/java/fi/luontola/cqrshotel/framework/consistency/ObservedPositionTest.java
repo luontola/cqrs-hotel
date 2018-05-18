@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -6,6 +6,7 @@ package fi.luontola.cqrshotel.framework.consistency;
 
 import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.framework.InMemoryEventStore;
+import fi.luontola.cqrshotel.framework.InMemoryProjectionUpdater;
 import fi.luontola.cqrshotel.room.queries.RoomsView;
 import org.junit.Rule;
 import org.junit.Test;
@@ -101,7 +102,7 @@ public class ObservedPositionTest {
     @Test
     public void waiting_returns_silently_if_projection_is_up_to_date() {
         ObservedPosition observedPosition = new ObservedPosition(Duration.ZERO);
-        RoomsView projection = new RoomsView(new InMemoryEventStore());
+        InMemoryProjectionUpdater projection = new InMemoryProjectionUpdater(new RoomsView(), new InMemoryEventStore());
         assertThat(observedPosition.get(), is(projection.getPosition()));
 
         observedPosition.waitForProjectionToUpdate(projection);
@@ -110,7 +111,7 @@ public class ObservedPositionTest {
     @Test
     public void waiting_throws_exception_if_projection_update_times_out() {
         ObservedPosition observedPosition = new ObservedPosition(Duration.ZERO);
-        RoomsView projection = new RoomsView(new InMemoryEventStore());
+        InMemoryProjectionUpdater projection = new InMemoryProjectionUpdater(new RoomsView(), new InMemoryEventStore());
         observedPosition.observe(1);
         assertThat(observedPosition.get(), is(greaterThan(projection.getPosition())));
 

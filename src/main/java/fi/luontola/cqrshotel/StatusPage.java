@@ -1,11 +1,11 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
 package fi.luontola.cqrshotel;
 
 import fi.luontola.cqrshotel.framework.EventStore;
-import fi.luontola.cqrshotel.framework.Projection;
+import fi.luontola.cqrshotel.framework.InMemoryProjectionUpdater;
 
 import java.util.List;
 import java.util.Map;
@@ -17,11 +17,11 @@ public class StatusPage {
     public EventStoreStatus eventStore;
     public Map<String, ProjectionStatus> projections;
 
-    public static StatusPage build(EventStore eventStore, List<Projection> projections) {
+    public static StatusPage build(EventStore eventStore, List<InMemoryProjectionUpdater> projections) {
         StatusPage status = new StatusPage();
         status.projections = projections.stream()
                 .collect(Collectors.toMap(
-                        ProjectionStatus::getName,
+                        InMemoryProjectionUpdater::getProjectionName,
                         ProjectionStatus::build,
                         (a, b) -> null,
                         TreeMap::new));
@@ -44,14 +44,10 @@ public class StatusPage {
     public static class ProjectionStatus {
         public Long position;
 
-        private static ProjectionStatus build(Projection projection) {
+        private static ProjectionStatus build(InMemoryProjectionUpdater projection) {
             ProjectionStatus status = new ProjectionStatus();
             status.position = projection.getPosition();
             return status;
-        }
-
-        private static String getName(Projection projection) {
-            return projection.getClass().getSimpleName();
         }
     }
 }

@@ -1,11 +1,10 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
 package fi.luontola.cqrshotel.reservation.queries;
 
 import fi.luontola.cqrshotel.FastTests;
-import fi.luontola.cqrshotel.framework.InMemoryEventStore;
 import fi.luontola.cqrshotel.reservation.events.ContactInformationUpdated;
 import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
 import org.junit.Test;
@@ -33,7 +32,7 @@ public class ReservationsViewTest {
     private static final ZonedDateTime checkInTime = ZonedDateTime.of(arrival, LocalTime.of(14, 30), ZoneId.of("Europe/Helsinki"));
     private static final ZonedDateTime checkOutTime = ZonedDateTime.of(departure, LocalTime.of(10, 30), ZoneId.of("Europe/Helsinki"));
 
-    private final ReservationsView view = new ReservationsView(new InMemoryEventStore());
+    private final ReservationsView view = new ReservationsView();
 
     @Test
     public void fills_in_all_fields() {
