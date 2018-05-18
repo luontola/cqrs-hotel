@@ -4,11 +4,11 @@
 
 package fi.luontola.cqrshotel.framework;
 
-public interface Projection {
+public abstract class AnnotatedProjection implements Projection {
 
-    void apply(Event event);
+    private final EventListeners eventListeners = EventListeners.of(this);
 
-    default String getProjectionName() {
-        return getClass().getSimpleName();
+    public void apply(Event event) {
+        eventListeners.send(event);
     }
 }

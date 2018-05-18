@@ -4,8 +4,8 @@
 
 package fi.luontola.cqrshotel.capacity.queries;
 
+import fi.luontola.cqrshotel.framework.AnnotatedProjection;
 import fi.luontola.cqrshotel.framework.EventListener;
-import fi.luontola.cqrshotel.framework.Projection;
 import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
 
@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class CapacityView implements Projection {
+public class CapacityView extends AnnotatedProjection {
 
     private final AtomicInteger numberOfRooms = new AtomicInteger(0);
     private final ConcurrentMap<LocalDate, AtomicInteger> reservationsByDate = new ConcurrentHashMap<>();

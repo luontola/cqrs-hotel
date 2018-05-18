@@ -23,20 +23,18 @@ public class InMemoryProjectionUpdater {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final String projectionName;
-    private final EventListeners eventListeners;
+    private final Projection projection;
     private final EventStore eventStore;
     private final PriorityBlockingQueue<Waiter> waiters = new PriorityBlockingQueue<>();
     private volatile long position = EventStore.BEGINNING;
 
     public InMemoryProjectionUpdater(Projection projection, EventStore eventStore) {
-        this.projectionName = projection.getProjectionName();
-        this.eventListeners = EventListeners.of(projection);
+        this.projection = projection;
         this.eventStore = eventStore;
     }
 
     public String getProjectionName() {
-        return projectionName;
+        return projection.getProjectionName();
     }
 
     public final long getPosition() {
@@ -49,7 +47,7 @@ public class InMemoryProjectionUpdater {
             log.debug("Updating projection with {} events since position {}", events.size(), position);
         }
         for (Envelope<Event> event : events) {
-            eventListeners.send(event.payload);
+            projection.apply(event.payload);
             position++;
             notifyWaiters();
         }

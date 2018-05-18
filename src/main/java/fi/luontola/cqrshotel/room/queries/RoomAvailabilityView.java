@@ -4,8 +4,8 @@
 
 package fi.luontola.cqrshotel.room.queries;
 
+import fi.luontola.cqrshotel.framework.AnnotatedProjection;
 import fi.luontola.cqrshotel.framework.EventListener;
-import fi.luontola.cqrshotel.framework.Projection;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
 import fi.luontola.cqrshotel.room.events.RoomOccupied;
 
@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class RoomAvailabilityView implements Projection {
+public class RoomAvailabilityView extends AnnotatedProjection {
 
     private final Map<UUID, RoomAvailabilityDto> roomsById = new HashMap<>();
 

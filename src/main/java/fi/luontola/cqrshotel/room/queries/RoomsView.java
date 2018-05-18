@@ -4,8 +4,8 @@
 
 package fi.luontola.cqrshotel.room.queries;
 
+import fi.luontola.cqrshotel.framework.AnnotatedProjection;
 import fi.luontola.cqrshotel.framework.EventListener;
-import fi.luontola.cqrshotel.framework.Projection;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
 
 import java.util.ArrayList;
@@ -14,7 +14,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-public class RoomsView implements Projection {
+public class RoomsView extends AnnotatedProjection {
 
     private final ConcurrentMap<UUID, RoomDto> roomsById = new ConcurrentHashMap<>();
 

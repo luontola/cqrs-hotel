@@ -79,7 +79,7 @@ public class InMemoryProjectionUpdaterTest {
         }).start();
         boolean result = updater.awaitPosition(1, Duration.ofSeconds(1));
 
-        List<DummyEvent> events = new ArrayList<>(projection.receivedEvents); // safe copy to avoid assertion message showing a later value
+        List<Event> events = new ArrayList<>(projection.receivedEvents); // safe copy to avoid assertion message showing a later value
         assertThat("events", events, is(singletonList(one.payload)));
         assertThat("return value", result, is(true));
     }
@@ -106,8 +106,7 @@ public class InMemoryProjectionUpdaterTest {
         eventStore.saveEvents(UUID.randomUUID(), singletonList(one), EventStore.BEGINNING);
         CountDownLatch updateStarted = new CountDownLatch(1);
         InMemoryProjectionUpdater projection = new InMemoryProjectionUpdater(new Projection() {
-            @EventListener
-            private void apply(DummyEvent event) {
+            public void apply(Event event) {
                 updateStarted.countDown();
                 sleep(500);
             }
@@ -138,10 +137,9 @@ public class InMemoryProjectionUpdaterTest {
 
     private static class SpyProjection implements Projection {
 
-        public final List<DummyEvent> receivedEvents = new ArrayList<>();
+        public final List<Event> receivedEvents = new ArrayList<>();
 
-        @EventListener
-        private void apply(DummyEvent event) {
+        public void apply(Event event) {
             receivedEvents.add(event);
         }
     }

@@ -63,13 +63,13 @@ public class ReservationProcessTest {
 
     private void given(Event... events) {
         for (Event event : events) {
-            process.handle(event);
+            process.apply(event);
         }
     }
 
     private void when(Event event) {
         publisher.publishedMessages.clear();
-        process.handle(event);
+        process.apply(event);
     }
 
     private void then(Message... expected) {
