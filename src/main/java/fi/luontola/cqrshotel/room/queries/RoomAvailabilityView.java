@@ -23,11 +23,32 @@ public class RoomAvailabilityView extends AnnotatedProjection {
 
     private final Map<UUID, RoomAvailabilityDto> roomsById = new HashMap<>();
 
+    @EventListener
+    public void apply(RoomCreated event) {
+        RoomAvailabilityDto room = new RoomAvailabilityDto();
+        room.roomId = event.roomId;
+        room.roomNumber = event.roomNumber;
+        room.details = new LinkedList<>();
+        roomsById.put(event.roomId, room);
+    }
+
+    @EventListener
+    public void apply(RoomOccupied event) {
+        RoomAvailabilityDto room = roomsById.get(event.roomId);
+        // TODO: insert more efficiently; use an O(log n) instead of O(n * log n) algorithm
+        room.details.add(new RoomAvailabilityIntervalDto(event.start, event.end, true));
+        room.details.sort(Comparator.comparing(o -> o.start));
+    }
+
+    // queries
+
     public List<RoomAvailabilityDto> getAvailabilityForAllRooms(Instant start, Instant end) {
         return roomsById.values().stream()
                 .map(src -> copyForResponse(src, start, end))
                 .collect(Collectors.toList());
     }
+
+    // helpers
 
     private static RoomAvailabilityDto copyForResponse(RoomAvailabilityDto src, Instant start, Instant end) {
         RoomAvailabilityDto response = new RoomAvailabilityDto();
@@ -66,22 +87,5 @@ public class RoomAvailabilityView extends AnnotatedProjection {
 
     private static boolean isFullyAvailable(List<RoomAvailabilityIntervalDto> intervals) {
         return intervals.size() == 1 && !intervals.get(0).occupied;
-    }
-
-    @EventListener
-    public void apply(RoomCreated event) {
-        RoomAvailabilityDto room = new RoomAvailabilityDto();
-        room.roomId = event.roomId;
-        room.roomNumber = event.roomNumber;
-        room.details = new LinkedList<>();
-        roomsById.put(event.roomId, room);
-    }
-
-    @EventListener
-    public void apply(RoomOccupied event) {
-        RoomAvailabilityDto room = roomsById.get(event.roomId);
-        // TODO: insert more efficiently; use an O(log n) instead of O(n * log n) algorithm
-        room.details.add(new RoomAvailabilityIntervalDto(event.start, event.end, true));
-        room.details.sort(Comparator.comparing(o -> o.start));
     }
 }

@@ -45,16 +45,18 @@ public class ProcessManagersSpike extends AnnotatedProjection {
         }
     }
 
+    @EventListener
+    public void apply(RoomOccupied event) {
+        log.info("received " + event);
+    }
+
+    // helpers
+
     private RoomAvailabilityDto findAvailableRoom(Instant start, Instant end) {
         return roomAvailabilityView.getAvailabilityForAllRooms(start, end).stream()
                 .filter(room -> room.available)
                 .findAny()
                 .orElse(null);
-    }
-
-    @EventListener
-    public void apply(RoomOccupied event) {
-        log.info("received " + event);
     }
 
     private void dispatch(Command message) {

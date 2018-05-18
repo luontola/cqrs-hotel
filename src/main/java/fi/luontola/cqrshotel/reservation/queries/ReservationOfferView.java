@@ -34,6 +34,8 @@ public class ReservationOfferView extends AnnotatedProjection {
         offersByDate.put(offer.date, offer);
     }
 
+    // queries
+
     public ReservationOffer query(SearchForAccommodation query) {
         checkReservationId(query.reservationId);
         ReservationOffer result = new ReservationOffer();
@@ -55,6 +57,8 @@ public class ReservationOfferView extends AnnotatedProjection {
         result.totalPrice = totalPrice;
         return result;
     }
+
+    // helpers
 
     private void checkReservationId(UUID reservationId) {
         if (!this.reservationId.equals(reservationId)) {

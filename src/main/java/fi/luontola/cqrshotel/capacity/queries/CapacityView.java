@@ -21,6 +21,21 @@ public class CapacityView extends AnnotatedProjection {
     private final AtomicInteger numberOfRooms = new AtomicInteger(0);
     private final ConcurrentMap<LocalDate, AtomicInteger> reservationsByDate = new ConcurrentHashMap<>();
 
+    @EventListener
+    public void apply(RoomCreated event) {
+        numberOfRooms.incrementAndGet();
+    }
+
+    @EventListener
+    public void apply(ReservationInitiated event) {
+        for (LocalDate date = event.arrival; date.isBefore(event.departure); date = date.plusDays(1)) {
+            reservationsByDate.computeIfAbsent(date, _date -> new AtomicInteger(0))
+                    .incrementAndGet();
+        }
+    }
+
+    // queries
+
     public CapacityDto getCapacityByDate(LocalDate date) {
         CapacityDto capacity = new CapacityDto();
         capacity.date = date;
@@ -36,18 +51,5 @@ public class CapacityView extends AnnotatedProjection {
             results.add(getCapacityByDate(date));
         }
         return results;
-    }
-
-    @EventListener
-    public void apply(RoomCreated event) {
-        numberOfRooms.incrementAndGet();
-    }
-
-    @EventListener
-    public void apply(ReservationInitiated event) {
-        for (LocalDate date = event.arrival; date.isBefore(event.departure); date = date.plusDays(1)) {
-            reservationsByDate.computeIfAbsent(date, _date -> new AtomicInteger(0))
-                    .incrementAndGet();
-        }
     }
 }

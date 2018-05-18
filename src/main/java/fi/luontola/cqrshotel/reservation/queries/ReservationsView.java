@@ -22,14 +22,6 @@ public class ReservationsView extends AnnotatedProjection {
 
     private final ConcurrentMap<UUID, ReservationDto> reservationsById = new ConcurrentHashMap<>();
 
-    public List<ReservationDto> findAll() {
-        return new ArrayList<>(reservationsById.values());
-    }
-
-    public ReservationDto findById(UUID reservationId) {
-        return reservationsById.get(reservationId);
-    }
-
     @EventListener
     public void apply(ReservationInitiated event) {
         ReservationDto reservation = getReservation(event.reservationId);
@@ -46,6 +38,18 @@ public class ReservationsView extends AnnotatedProjection {
         reservation.name = event.name;
         reservation.email = event.email;
     }
+
+    // queries
+
+    public List<ReservationDto> findAll() {
+        return new ArrayList<>(reservationsById.values());
+    }
+
+    public ReservationDto findById(UUID reservationId) {
+        return reservationsById.get(reservationId);
+    }
+
+    // helpers
 
     private ReservationDto getReservation(UUID reservationId) {
         return reservationsById.computeIfAbsent(reservationId, id -> {

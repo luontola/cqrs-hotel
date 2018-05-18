@@ -18,6 +18,16 @@ public class RoomsView extends AnnotatedProjection {
 
     private final ConcurrentMap<UUID, RoomDto> roomsById = new ConcurrentHashMap<>();
 
+    @EventListener
+    public void apply(RoomCreated event) {
+        RoomDto room = new RoomDto();
+        room.roomId = event.roomId;
+        room.roomNumber = event.roomNumber;
+        roomsById.put(room.roomId, room);
+    }
+
+    // queries
+
     public RoomDto getById(UUID roomId) {
         RoomDto room = roomsById.get(roomId);
         if (room == null) {
@@ -28,13 +38,5 @@ public class RoomsView extends AnnotatedProjection {
 
     public List<RoomDto> findAll() {
         return new ArrayList<>(roomsById.values());
-    }
-
-    @EventListener
-    public void apply(RoomCreated event) {
-        RoomDto room = new RoomDto();
-        room.roomId = event.roomId;
-        room.roomNumber = event.roomNumber;
-        roomsById.put(room.roomId, room);
     }
 }
