@@ -12,6 +12,8 @@ import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.pricing.RandomPricingEngine;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
+import fi.luontola.cqrshotel.reservation.queries.FindReservationById;
+import fi.luontola.cqrshotel.reservation.queries.ReservationDto;
 import fi.luontola.cqrshotel.reservation.queries.ReservationOffer;
 import fi.luontola.cqrshotel.room.commands.CreateRoom;
 import fi.luontola.cqrshotel.room.queries.GetAvailabilityByDateRange;
@@ -63,6 +65,11 @@ public class AcceptanceTest {
 
         core.handle(new MakeReservation(reservationId, arrival, departure, "John Doe", "john@example.com"));
         eventually(() -> assertRoomAvailable("after reservation", is(false)));
+        eventually(() -> assertThat("room is assigned to reservation", reservation().roomNumber, is("101")));
+    }
+
+    private ReservationDto reservation() {
+        return (ReservationDto) core.handle(new FindReservationById(reservationId));
     }
 
 

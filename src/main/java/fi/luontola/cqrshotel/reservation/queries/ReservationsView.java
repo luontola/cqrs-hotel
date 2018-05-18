@@ -8,6 +8,7 @@ import fi.luontola.cqrshotel.framework.AnnotatedProjection;
 import fi.luontola.cqrshotel.framework.EventListener;
 import fi.luontola.cqrshotel.reservation.events.ContactInformationUpdated;
 import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
+import fi.luontola.cqrshotel.reservation.events.RoomAssigned;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -37,6 +38,13 @@ public class ReservationsView extends AnnotatedProjection {
         ReservationDto reservation = getReservation(event.reservationId);
         reservation.name = event.name;
         reservation.email = event.email;
+    }
+
+    @EventListener
+    public void apply(RoomAssigned event) {
+        ReservationDto reservation = getReservation(event.reservationId);
+        reservation.roomId = event.roomId;
+        reservation.roomNumber = event.roomNumber;
     }
 
     // queries

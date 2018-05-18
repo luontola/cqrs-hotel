@@ -7,6 +7,7 @@ package fi.luontola.cqrshotel.reservation.queries;
 import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.reservation.events.ContactInformationUpdated;
 import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
+import fi.luontola.cqrshotel.reservation.events.RoomAssigned;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -31,6 +32,7 @@ public class ReservationsViewTest {
     private static final LocalDate departure = LocalDate.of(2000, 2, 4);
     private static final ZonedDateTime checkInTime = ZonedDateTime.of(arrival, LocalTime.of(14, 30), ZoneId.of("Europe/Helsinki"));
     private static final ZonedDateTime checkOutTime = ZonedDateTime.of(departure, LocalTime.of(10, 30), ZoneId.of("Europe/Helsinki"));
+    private static final UUID roomId = UUID.randomUUID();
 
     private final ReservationsView view = new ReservationsView();
 
@@ -38,6 +40,7 @@ public class ReservationsViewTest {
     public void fills_in_all_fields() {
         view.apply(new ReservationInitiated(reservationId, arrival, departure, checkInTime, checkOutTime));
         view.apply(new ContactInformationUpdated(reservationId, "name", "email"));
+        view.apply(new RoomAssigned(reservationId, roomId, "123"));
 
         ReservationDto expected = new ReservationDto();
         expected.reservationId = reservationId;
@@ -48,6 +51,8 @@ public class ReservationsViewTest {
         expected.name = "name";
         expected.email = "email";
         expected.status = "initiated";
+        expected.roomId = roomId;
+        expected.roomNumber = "123";
 
         assertThat(view.findAll(), is(Collections.singletonList(expected)));
     }

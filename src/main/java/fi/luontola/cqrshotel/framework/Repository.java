@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -65,9 +65,8 @@ public class Repository<T extends AggregateRoot> {
         List<Envelope<Event>> events = aggregate.getUncommittedChanges().stream()
                 .map(Envelope::newMessage)
                 .collect(Collectors.toList());
-        Commit commit = new Commit();
-        commit.committedPosition = eventStore.saveEvents(aggregate.getId(), events, expectedVersion);
+        long committedPosition = eventStore.saveEvents(aggregate.getId(), events, expectedVersion);
         aggregate.markChangesAsCommitted();
-        return commit;
+        return new Commit(committedPosition);
     }
 }

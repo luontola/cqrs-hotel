@@ -13,7 +13,7 @@ import fi.luontola.cqrshotel.room.queries.RoomAvailabilityView;
 
 import java.time.Instant;
 
-public class OccupyAnyAvailableRoomHandler implements Handler<OccupyAnyAvailableRoom, Object> {
+public class OccupyAnyAvailableRoomHandler implements Handler<OccupyAnyAvailableRoom, Commit> {
 
     private final RoomAvailabilityView roomAvailabilityView;
     private final Publisher publisher;

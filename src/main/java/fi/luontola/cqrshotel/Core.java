@@ -13,12 +13,12 @@ import fi.luontola.cqrshotel.capacity.queries.GetCapacityByDateRangeHandler;
 import fi.luontola.cqrshotel.framework.Command;
 import fi.luontola.cqrshotel.framework.Commit;
 import fi.luontola.cqrshotel.framework.CompositeHandler;
-import fi.luontola.cqrshotel.framework.Dispatcher;
 import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.Handler;
 import fi.luontola.cqrshotel.framework.InMemoryProjectionUpdater;
 import fi.luontola.cqrshotel.framework.Message;
 import fi.luontola.cqrshotel.framework.Projection;
+import fi.luontola.cqrshotel.framework.Publisher;
 import fi.luontola.cqrshotel.framework.Query;
 import fi.luontola.cqrshotel.framework.UpdateProjectionsAfterHandling;
 import fi.luontola.cqrshotel.framework.WorkersPool;
@@ -26,7 +26,10 @@ import fi.luontola.cqrshotel.framework.consistency.ObservedPosition;
 import fi.luontola.cqrshotel.framework.consistency.UpdateObservedPositionAfterCommit;
 import fi.luontola.cqrshotel.framework.consistency.WaitForProjectionToUpdate;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
+import fi.luontola.cqrshotel.reservation.ReservationProcess;
 import fi.luontola.cqrshotel.reservation.ReservationRepo;
+import fi.luontola.cqrshotel.reservation.commands.AssignRoom;
+import fi.luontola.cqrshotel.reservation.commands.AssignRoomHandler;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservationHandler;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
@@ -41,6 +44,8 @@ import fi.luontola.cqrshotel.reservation.queries.SearchForAccommodationQueryHand
 import fi.luontola.cqrshotel.room.RoomRepo;
 import fi.luontola.cqrshotel.room.commands.CreateRoom;
 import fi.luontola.cqrshotel.room.commands.CreateRoomHandler;
+import fi.luontola.cqrshotel.room.commands.OccupyAnyAvailableRoom;
+import fi.luontola.cqrshotel.room.commands.OccupyAnyAvailableRoomHandler;
 import fi.luontola.cqrshotel.room.commands.OccupyRoom;
 import fi.luontola.cqrshotel.room.commands.OccupyRoomHandler;
 import fi.luontola.cqrshotel.room.queries.FindAllRooms;
@@ -75,7 +80,7 @@ public class Core {
     public Core(EventStore eventStore, PricingEngine pricing, Clock clock, ObservedPosition observedPosition) {
         this.eventStore = eventStore;
         this.observedPosition = observedPosition;
-        Dispatcher dispatcher = this::handle;
+        Publisher publisher = this::handle;
 
         // projections
 
@@ -93,7 +98,7 @@ public class Core {
                 .addQueryHandler(GetCapacityByDateHandler::new, GetCapacityByDate.class, CapacityDto.class)
                 .addQueryHandler(GetCapacityByDateRangeHandler::new, GetCapacityByDateRange.class, CapacityDto[].class);
 
-        addInMemoryProjection(new ProcessManagersSpike(getProjection(RoomAvailabilityView.class).projection, dispatcher));
+        addInMemoryProjection(new ReservationProcess(publisher)); // TODO: spike code, need support for multiple process instances
 
         this.projectionsUpdater = new WorkersPool(projections.stream()
                 .map(p -> (Runnable) p.updater::update)
@@ -115,10 +120,12 @@ public class Core {
         ReservationRepo reservationRepo = new ReservationRepo(eventStore);
         commands.register(SearchForAccommodation.class, new SearchForAccommodationCommandHandler(reservationRepo, pricing, clock));
         commands.register(MakeReservation.class, new MakeReservationHandler(reservationRepo, clock));
+        commands.register(AssignRoom.class, new AssignRoomHandler(reservationRepo, getProjection(RoomsView.class).projection));
 
         RoomRepo roomRepo = new RoomRepo(eventStore);
         commands.register(CreateRoom.class, new CreateRoomHandler(roomRepo));
         commands.register(OccupyRoom.class, new OccupyRoomHandler(roomRepo));
+        commands.register(OccupyAnyAvailableRoom.class, new OccupyAnyAvailableRoomHandler(getProjection(RoomAvailabilityView.class).projection, publisher));
 
         this.commandDispatcher = new UpdateObservedPositionAfterCommit(observedPosition,
                 new UpdateProjectionsAfterHandling<>(projectionsUpdater, commands));
