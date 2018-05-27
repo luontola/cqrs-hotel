@@ -98,7 +98,9 @@ public class Core {
                 .addQueryHandler(GetCapacityByDateHandler::new, GetCapacityByDate.class, CapacityDto.class)
                 .addQueryHandler(GetCapacityByDateRangeHandler::new, GetCapacityByDateRange.class, CapacityDto[].class);
 
-        addInMemoryProjection(new ReservationProcess(publisher)); // TODO: spike code, need support for multiple process instances
+        // TODO: spike code, need support for multiple (persisted) process instances
+        // FIXME: projection gets stuck in the first ReservationInitiated which triggers NoRoomsAvailableException (due to synchronous command dispatch)
+        addInMemoryProjection(new ReservationProcess(publisher));
 
         this.projectionsUpdater = new WorkersPool(projections.stream()
                 .map(p -> (Runnable) p.updater::update)
