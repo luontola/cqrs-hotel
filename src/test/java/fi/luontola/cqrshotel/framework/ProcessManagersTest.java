@@ -149,33 +149,35 @@ class ProcessManagers {
 
     public void handle(Envelope<Event> event) {
         // TODO: decouple from the guinea pigs
+
+        // start new process
         if (event.payload instanceof RegisterCreated) {
             UUID processId = ((RegisterCreated) event.payload).registerId;
             processes.create(processId, RegisterProcess.class);
+        }
 
-            SpyPublisher publisher = new SpyPublisher();
-            PersistedProcess state = processes.getById(processId);
-            Projection process = state.newInstance(publisher);
-
-            process.apply(event.payload);
-
-            processes.save(processId, event);
-            publisher.publishedMessages.forEach(realPublisher::publish);
+        // handle event
+        if (event.payload instanceof RegisterCreated) {
+            UUID processId = ((RegisterCreated) event.payload).registerId;
+            delegateEventToProcess(event, processId);
         }
         if (event.payload instanceof ValueAddedToRegister) {
             UUID processId = ((ValueAddedToRegister) event.payload).registerId;
-
-            SpyPublisher publisher = new SpyPublisher();
-            PersistedProcess state = processes.getById(processId);
-            Projection process = state.newInstance(publisher);
-            state.history.forEach(e -> process.apply(e.payload));
-            publisher.publishedMessages.clear();
-
-            process.apply(event.payload);
-
-            processes.save(processId, event);
-            publisher.publishedMessages.forEach(realPublisher::publish);
+            delegateEventToProcess(event, processId);
         }
+    }
+
+    private void delegateEventToProcess(Envelope<Event> event, UUID processId) {
+        SpyPublisher publisher = new SpyPublisher();
+        PersistedProcess state = processes.getById(processId);
+        Projection process = state.newInstance(publisher);
+        state.history.forEach(e -> process.apply(e.payload));
+        publisher.publishedMessages.clear();
+
+        process.apply(event.payload);
+
+        processes.save(processId, event);
+        publisher.publishedMessages.forEach(realPublisher::publish);
     }
 }
 
