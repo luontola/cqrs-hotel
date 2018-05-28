@@ -148,23 +148,31 @@ class ProcessManagers {
     }
 
     public void handle(Envelope<Event> event) {
-        // TODO: decouple from the guinea pigs
+        startNewProcesses(event, processes);
+        UUID processId = findProcessForHanding(event);
+        if (processId != null) {
+            delegateEventToProcess(event, processId);
+        }
+    }
 
-        // start new process
+    private static void startNewProcesses(Envelope<Event> event, ProcessRepo processes) {
+        // TODO: decouple from the guinea pigs
+        // TODO: introduce subscriptions to decouple process ID from entity IDs
         if (event.payload instanceof RegisterCreated) {
             UUID processId = ((RegisterCreated) event.payload).registerId;
             processes.create(processId, RegisterProcess.class);
         }
+    }
 
-        // handle event
+    private static UUID findProcessForHanding(Envelope<Event> event) {
+        // TODO: decouple from the guinea pigs
         if (event.payload instanceof RegisterCreated) {
-            UUID processId = ((RegisterCreated) event.payload).registerId;
-            delegateEventToProcess(event, processId);
+            return ((RegisterCreated) event.payload).registerId;
         }
         if (event.payload instanceof ValueAddedToRegister) {
-            UUID processId = ((ValueAddedToRegister) event.payload).registerId;
-            delegateEventToProcess(event, processId);
+            return ((ValueAddedToRegister) event.payload).registerId;
         }
+        return null;
     }
 
     private void delegateEventToProcess(Envelope<Event> event, UUID processId) {
