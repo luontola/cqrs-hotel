@@ -7,20 +7,23 @@ package fi.luontola.cqrshotel.framework;
 import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.framework.ProcessManagersTest.RegisterCreated;
 import fi.luontola.cqrshotel.framework.ProcessManagersTest.RegisterProcess;
-import fi.luontola.cqrshotel.framework.ProcessManagersTest.ValueAddedToRegister;
 import fi.luontola.cqrshotel.util.Struct;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
 @Category(FastTests.class)
@@ -165,6 +168,19 @@ class ProcessManagers {
     }
 
     private static UUID findProcessForHanding(Envelope<Event> event) {
+        // TODO: spike code; is this making it too complex?
+        Class<? extends Event> eventType = event.payload.getClass();
+        List<Field> idFields = Arrays.stream(eventType.getFields())
+                .filter(field -> field.getType() == UUID.class
+                        && !Modifier.isStatic(field.getModifiers()))
+                .collect(Collectors.toList());
+        List<UUID> ids = getIdFieldValues(idFields, event.payload);
+        // TODO: support zero to many IDs
+        // TODO: map IDs to subscriptions
+        assertThat(ids, hasSize(1));
+        return ids.get(0);
+
+        /*
         // TODO: decouple from the guinea pigs
         if (event.payload instanceof RegisterCreated) {
             return ((RegisterCreated) event.payload).registerId;
@@ -173,6 +189,20 @@ class ProcessManagers {
             return ((ValueAddedToRegister) event.payload).registerId;
         }
         return null;
+        */
+    }
+
+    private static List<UUID> getIdFieldValues(List<Field> fields, Event event) {
+        try {
+            List<UUID> ids = new ArrayList<>();
+            for (Field idField : fields) {
+                UUID id = (UUID) idField.get(event);
+                ids.add(id);
+            }
+            return ids;
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void delegateEventToProcess(Envelope<Event> event, UUID processId) {
