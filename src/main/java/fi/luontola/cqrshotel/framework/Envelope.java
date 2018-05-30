@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -20,9 +20,9 @@ public class Envelope<M extends Message> extends Struct {
     public static <M extends Message> Envelope<M> newMessage(M payload) {
         Envelope<?> cause = threadContext.get();
         if (cause == null) {
-            return new Envelope<>(UUID.randomUUID(), UUID.randomUUID(), null, payload);
+            return new Envelope<>(UUIDs.newUUID(), UUIDs.newUUID(), null, payload);
         } else {
-            return new Envelope<>(UUID.randomUUID(), cause.correlationId, cause.messageId, payload);
+            return new Envelope<>(UUIDs.newUUID(), cause.correlationId, cause.messageId, payload);
         }
     }
 

@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.PsqlEventStore;
+import fi.luontola.cqrshotel.framework.UUIDs;
 import fi.luontola.cqrshotel.framework.consistency.ObservedPosition;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.pricing.RandomPricingEngine;
@@ -23,7 +24,6 @@ import javax.sql.DataSource;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.UUID;
 
 @SpringBootApplication
 public class Application {
@@ -41,7 +41,7 @@ public class Application {
 
     private static void initializeTestData(ApiController api) {
         for (String roomNumber : Arrays.asList("101", "102", "103", "104", "105")) {
-            api.createRoom(new CreateRoom(UUID.randomUUID(), roomNumber));
+            api.createRoom(new CreateRoom(UUIDs.newUUID(), roomNumber));
         }
     }
 
