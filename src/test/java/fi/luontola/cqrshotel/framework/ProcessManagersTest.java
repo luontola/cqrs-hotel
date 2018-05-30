@@ -4,6 +4,8 @@
 
 package fi.luontola.cqrshotel.framework;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.framework.ProcessManagersTest.RegisterCreated;
 import fi.luontola.cqrshotel.framework.ProcessManagersTest.RegisterProcess;
@@ -11,19 +13,19 @@ import fi.luontola.cqrshotel.util.Struct;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 
 @Category(FastTests.class)
@@ -37,8 +39,8 @@ public class ProcessManagersTest {
     private final ProcessManagers processManagers = new ProcessManagers(repo, publisher);
 
     // TODO: duplicate events are ignored
-    // TODO: sends_subscribed_events_to_the_same_process
-    // TODO: ignores events which nobody has subscribed
+    // TODO: removing completed processes
+    // TODO: error handling: one crashing process should prevent others from progressing
 
     @Test
     public void processes_receive_events_and_publish_commands() {
@@ -81,6 +83,13 @@ public class ProcessManagersTest {
         processManagers2.handle(Envelope.newMessage(new ValueAddedToRegister(registerId, 20)));
 
         assertThat(publisher2.publishedMessages, is(Arrays.asList(new ShowCurrentValue(registerId, 30))));
+    }
+
+    @Test
+    public void ignores_events_which_nobody_is_subscribed_to() {
+        processManagers.handle(Envelope.newMessage(new ValueAddedToRegister(registerId, 42)));
+
+        assertThat(publisher.publishedMessages, is(empty()));
     }
 
 
@@ -142,79 +151,85 @@ public class ProcessManagersTest {
 
 class ProcessManagers {
 
-    private final ProcessRepo processes;
+    private final ProcessRepo processRepo;
     private final Publisher realPublisher;
 
-    public ProcessManagers(ProcessRepo processes, Publisher publisher) {
-        this.processes = processes;
+    public ProcessManagers(ProcessRepo processRepo, Publisher publisher) {
+        this.processRepo = processRepo;
         this.realPublisher = publisher;
     }
 
     public void handle(Envelope<Event> event) {
-        startNewProcesses(event, processes);
-        UUID processId = findProcessForHanding(event);
-        if (processId != null) {
-            delegateEventToProcess(event, processId);
+        startNewProcesses(event);
+        for (ProcessManager process : findSubscribedProcesses(event)) {
+            process.handle(event);
         }
     }
 
-    private static void startNewProcesses(Envelope<Event> event, ProcessRepo processes) {
+    // startup
+
+    private void startNewProcesses(Envelope<Event> event) {
         // TODO: decouple from the guinea pigs
-        // TODO: introduce subscriptions to decouple process ID from entity IDs
         if (event.payload instanceof RegisterCreated) {
-            UUID processId = ((RegisterCreated) event.payload).registerId;
-            processes.create(processId, RegisterProcess.class);
+            UUID registerId = ((RegisterCreated) event.payload).registerId;
+            startNewProcess(RegisterProcess.class, event)
+                    .subscribe(registerId); // TODO: remove registerId subscription (if needed, make the process subscribe itself)
         }
     }
 
-    private static UUID findProcessForHanding(Envelope<Event> event) {
-        // TODO: spike code; is this making it too complex?
-        Class<? extends Event> eventType = event.payload.getClass();
-        List<Field> idFields = Arrays.stream(eventType.getFields())
-                .filter(field -> field.getType() == UUID.class
-                        && !Modifier.isStatic(field.getModifiers()))
+    private ProcessManager startNewProcess(Class<? extends Projection> processType, Envelope<Event> initialEvent) {
+        UUID processId = UUIDs.newUUID();
+        processRepo.create(processId, processType);
+        ProcessManager pm = new ProcessManager(processId, processRepo, realPublisher);
+        pm.subscribe(processId); // subscribe to itself as correlationId to receive responses to own commands
+        pm.subscribe(initialEvent.messageId); // always handle the first message (it won't have processId as correlationId)
+        return pm;
+    }
+
+    // lookup
+
+    private List<ProcessManager> findSubscribedProcesses(Envelope<Event> event) {
+        List<UUID> topics = getTopics(event);
+        Set<UUID> processIds = processRepo.findSubscribersToAnyOf(topics);
+        return processIds.stream()
+                .map(processId -> new ProcessManager(processId, processRepo, realPublisher))
                 .collect(Collectors.toList());
-        List<UUID> ids = getIdFieldValues(idFields, event.payload);
-        // TODO: support zero to many IDs
-        // TODO: map IDs to subscriptions
-        assertThat(ids, hasSize(1));
-        return ids.get(0);
-
-        /*
-        // TODO: decouple from the guinea pigs
-        if (event.payload instanceof RegisterCreated) {
-            return ((RegisterCreated) event.payload).registerId;
-        }
-        if (event.payload instanceof ValueAddedToRegister) {
-            return ((ValueAddedToRegister) event.payload).registerId;
-        }
-        return null;
-        */
     }
 
-    private static List<UUID> getIdFieldValues(List<Field> fields, Event event) {
-        try {
-            List<UUID> ids = new ArrayList<>();
-            for (Field idField : fields) {
-                UUID id = (UUID) idField.get(event);
-                ids.add(id);
-            }
-            return ids;
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
+    private static List<UUID> getTopics(Envelope<Event> event) {
+        List<UUID> topics = UUIDs.extractUUIDs(event.payload);
+        topics.add(event.correlationId);
+        topics.add(event.messageId);
+        return topics;
+    }
+}
+
+class ProcessManager { // TODO: merge ProcessManager and PersistedProcess?
+
+    private final UUID processId;
+    private final ProcessRepo processRepo;
+    private final Publisher realPublisher;
+
+    public ProcessManager(UUID processId, ProcessRepo processRepo, Publisher realPublisher) {
+        this.processId = processId;
+        this.processRepo = processRepo;
+        this.realPublisher = realPublisher;
     }
 
-    private void delegateEventToProcess(Envelope<Event> event, UUID processId) {
+    public void subscribe(UUID id) {
+        processRepo.subscribe(processId, id);
+    }
+
+    public void handle(Envelope<Event> event) {
         SpyPublisher publisher = new SpyPublisher();
-        PersistedProcess state = processes.getById(processId);
+        PersistedProcess state = processRepo.getById(processId);
         Projection process = state.newInstance(publisher);
         state.history.forEach(e -> process.apply(e.payload));
         publisher.publishedMessages.clear();
 
         process.apply(event.payload);
 
-        processes.save(processId, event);
+        processRepo.save(processId, event);
         publisher.publishedMessages.forEach(realPublisher::publish);
     }
 }
@@ -222,18 +237,33 @@ class ProcessManagers {
 class ProcessRepo {
 
     private final Map<UUID, PersistedProcess> processesById = new HashMap<>();
+    private final Multimap<UUID, UUID> subscribedProcessesByTopic = ArrayListMultimap.create(16, 1);
 
     public void create(UUID processId, Class<?> processType) {
         processesById.put(processId, new PersistedProcess(processType));
     }
 
     public PersistedProcess getById(UUID processId) {
-        return processesById.get(processId);
+        return processesById.computeIfAbsent(processId, key -> {
+            throw new IllegalArgumentException("Process not found: " + key);
+        });
     }
 
     public void save(UUID processId, Envelope<Event> processedEvent) {
         PersistedProcess process = getById(processId);
         process.history.add(processedEvent);
+    }
+
+    public void subscribe(UUID processId, UUID topic) {
+        subscribedProcessesByTopic.put(topic, processId);
+    }
+
+    public Set<UUID> findSubscribersToAnyOf(List<UUID> topics) {
+        Set<UUID> processIds = new HashSet<>();
+        for (UUID topic : topics) {
+            processIds.addAll(subscribedProcessesByTopic.get(topic));
+        }
+        return processIds;
     }
 }
 
