@@ -6,6 +6,7 @@ package fi.luontola.cqrshotel.reservation;
 
 import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.framework.BufferedPublisher;
+import fi.luontola.cqrshotel.framework.Envelope;
 import fi.luontola.cqrshotel.framework.Event;
 import fi.luontola.cqrshotel.framework.Message;
 import fi.luontola.cqrshotel.reservation.commands.AssignRoom;
@@ -63,13 +64,13 @@ public class ReservationProcessTest {
 
     private void given(Event... events) {
         for (Event event : events) {
-            process.apply(event);
+            process.apply(Envelope.newMessage(event));
         }
     }
 
     private void when(Event event) {
         publisher.publishedMessages.clear();
-        process.apply(event);
+        process.apply(Envelope.newMessage(event));
     }
 
     private void then(Message... expected) {

@@ -5,6 +5,7 @@
 package fi.luontola.cqrshotel.reservation;
 
 import fi.luontola.cqrshotel.framework.AnnotatedProjection;
+import fi.luontola.cqrshotel.framework.Event;
 import fi.luontola.cqrshotel.framework.EventListener;
 import fi.luontola.cqrshotel.framework.Publisher;
 import fi.luontola.cqrshotel.reservation.commands.AssignRoom;
@@ -18,6 +19,10 @@ public class ReservationProcess extends AnnotatedProjection {
 
     public ReservationProcess(Publisher publisher) {
         this.publisher = publisher;
+    }
+
+    public static boolean entryPoint(Event event) {
+        return event instanceof ReservationInitiated;
     }
 
     @EventListener

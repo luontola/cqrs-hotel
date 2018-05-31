@@ -8,7 +8,7 @@ public abstract class AnnotatedProjection implements Projection {
 
     private final EventListeners eventListeners = EventListeners.of(this);
 
-    public void apply(Event event) {
-        eventListeners.send(event);
+    public void apply(Envelope<Event> event) {
+        eventListeners.send(event.payload);
     }
 }

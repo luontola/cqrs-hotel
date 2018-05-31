@@ -32,12 +32,12 @@ public class ProcessManager { // TODO: merge ProcessManager and PersistedProcess
         BufferedPublisher publisher = new BufferedPublisher();
         PersistedProcess state = processRepo.getById(processId);
         Projection process = state.newInstance(publisher);
-        state.history.forEach(e -> {
-            process.apply(e.payload);
+        state.history.forEach(oldEvent -> {
+            process.apply(oldEvent);
             publisher.publishedMessages.clear(); // avoid republishing historical messages
         });
 
-        process.apply(event.payload);
+        process.apply(event);
 
         processRepo.save(processId, event);
         publisher.publishedMessages.stream()

@@ -106,7 +106,7 @@ public class InMemoryProjectionUpdaterTest {
         eventStore.saveEvents(UUID.randomUUID(), singletonList(one), EventStore.BEGINNING);
         CountDownLatch updateStarted = new CountDownLatch(1);
         InMemoryProjectionUpdater projection = new InMemoryProjectionUpdater(new Projection() {
-            public void apply(Event event) {
+            public void apply(Envelope<Event> event) {
                 updateStarted.countDown();
                 sleep(500);
             }
@@ -139,8 +139,8 @@ public class InMemoryProjectionUpdaterTest {
 
         public final List<Event> receivedEvents = new ArrayList<>();
 
-        public void apply(Event event) {
-            receivedEvents.add(event);
+        public void apply(Envelope<Event> event) {
+            receivedEvents.add(event.payload);
         }
     }
 

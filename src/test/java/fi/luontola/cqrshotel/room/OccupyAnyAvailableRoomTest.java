@@ -7,6 +7,7 @@ package fi.luontola.cqrshotel.room;
 import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.framework.BufferedPublisher;
 import fi.luontola.cqrshotel.framework.Command;
+import fi.luontola.cqrshotel.framework.Envelope;
 import fi.luontola.cqrshotel.framework.Event;
 import fi.luontola.cqrshotel.framework.Message;
 import fi.luontola.cqrshotel.room.commands.OccupyAnyAvailableRoom;
@@ -91,7 +92,7 @@ public class OccupyAnyAvailableRoomTest {
 
     private void given(Event... events) {
         for (Event event : events) {
-            roomAvailabilityView.apply(event);
+            roomAvailabilityView.apply(Envelope.newMessage(event));
         }
     }
 

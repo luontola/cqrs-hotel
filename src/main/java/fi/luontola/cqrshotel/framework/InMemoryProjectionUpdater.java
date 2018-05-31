@@ -44,7 +44,7 @@ public class InMemoryProjectionUpdater {
             log.debug("Updating projection with {} events since position {}", events.size(), position);
         }
         for (Envelope<Event> event : events) {
-            projection.apply(event.payload);
+            projection.apply(event);
             position++;
             notifyWaiters();
         }

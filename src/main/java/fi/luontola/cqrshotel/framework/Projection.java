@@ -6,7 +6,7 @@ package fi.luontola.cqrshotel.framework;
 
 public interface Projection {
 
-    void apply(Event event);
+    void apply(Envelope<Event> event);
 
     default String getProjectionName() {
         return getClass().getSimpleName();

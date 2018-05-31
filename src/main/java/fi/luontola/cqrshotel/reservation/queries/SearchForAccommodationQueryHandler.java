@@ -34,7 +34,7 @@ public class SearchForAccommodationQueryHandler implements Handler<SearchForAcco
 
     private void applyEventsFromStream(UUID streamId, Projection projection) {
         for (Envelope<Event> event : eventStore.getEventsForStream(streamId, EventStore.BEGINNING)) {
-            projection.apply(event.payload);
+            projection.apply(event);
         }
     }
 }

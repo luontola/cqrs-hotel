@@ -13,10 +13,12 @@ import fi.luontola.cqrshotel.capacity.queries.GetCapacityByDateRangeHandler;
 import fi.luontola.cqrshotel.framework.Command;
 import fi.luontola.cqrshotel.framework.Commit;
 import fi.luontola.cqrshotel.framework.CompositeHandler;
+import fi.luontola.cqrshotel.framework.Envelope;
 import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.Handler;
 import fi.luontola.cqrshotel.framework.InMemoryProjectionUpdater;
 import fi.luontola.cqrshotel.framework.Message;
+import fi.luontola.cqrshotel.framework.MessageGateway;
 import fi.luontola.cqrshotel.framework.Projection;
 import fi.luontola.cqrshotel.framework.Publisher;
 import fi.luontola.cqrshotel.framework.Query;
@@ -25,6 +27,9 @@ import fi.luontola.cqrshotel.framework.WorkersPool;
 import fi.luontola.cqrshotel.framework.consistency.ObservedPosition;
 import fi.luontola.cqrshotel.framework.consistency.UpdateObservedPositionAfterCommit;
 import fi.luontola.cqrshotel.framework.consistency.WaitForProjectionToUpdate;
+import fi.luontola.cqrshotel.framework.processes.ProcessManagers;
+import fi.luontola.cqrshotel.framework.processes.ProcessManagersProjectionAdapter;
+import fi.luontola.cqrshotel.framework.processes.ProcessRepo;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.reservation.ReservationProcess;
 import fi.luontola.cqrshotel.reservation.ReservationRepo;
@@ -56,6 +61,8 @@ import fi.luontola.cqrshotel.room.queries.RoomAvailabilityDto;
 import fi.luontola.cqrshotel.room.queries.RoomAvailabilityView;
 import fi.luontola.cqrshotel.room.queries.RoomDto;
 import fi.luontola.cqrshotel.room.queries.RoomsView;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -67,6 +74,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Core {
+
+    private static final Logger log = LoggerFactory.getLogger(Core.class);
 
     private final EventStore eventStore;
     private final ObservedPosition observedPosition;
@@ -80,7 +89,7 @@ public class Core {
     public Core(EventStore eventStore, PricingEngine pricing, Clock clock, ObservedPosition observedPosition) {
         this.eventStore = eventStore;
         this.observedPosition = observedPosition;
-        Publisher publisher = this::handle;
+        Publisher publisher = message -> handle(Envelope.newMessage(message));
 
         // projections
 
@@ -99,8 +108,17 @@ public class Core {
                 .addQueryHandler(GetCapacityByDateRangeHandler::new, GetCapacityByDateRange.class, CapacityDto[].class);
 
         // TODO: spike code, need support for multiple (persisted) process instances
-        // FIXME: projection gets stuck in the first ReservationInitiated which triggers NoRoomsAvailableException (due to synchronous command dispatch)
-        addInMemoryProjection(new ReservationProcess(publisher));
+        MessageGateway gateway = message -> {
+            // TODO: this should probably be asynchronous
+            try {
+                handle(message);
+            } catch (Throwable t) {
+                log.error("Failed to handle " + message, t);
+            }
+        };
+        addInMemoryProjection(new ProcessManagersProjectionAdapter(
+                new ProcessManagers(new ProcessRepo(), gateway)
+                        .register(ReservationProcess.class, ReservationProcess::entryPoint)));
 
         this.projectionsUpdater = new WorkersPool(projections.stream()
                 .map(p -> (Runnable) p.updater::update)
@@ -150,18 +168,28 @@ public class Core {
     }
 
     public Object handle(Message message) {
-        // XXX: It's possible for a message to implement both Command and Query,
-        // in which case the command will first execute and then the query
-        // will observe the data produced by the command.
-        Object result = null;
-        if (message instanceof Command) {
-            commandDispatcher.handle((Command) message);
-            result = Collections.emptyMap();
+        return handle(Envelope.newMessage(message));
+    }
+
+    public Object handle(Envelope<?> message) {
+        Envelope.setContext(message);
+        try {
+            log.info("Handle {}    ({})", message.payload, message);
+            // XXX: It's possible for a message to implement both Command and Query,
+            // in which case the command will first execute and then the query
+            // will observe the data produced by the command.
+            Object result = null;
+            if (message.payload instanceof Command) {
+                commandDispatcher.handle((Command) message.payload);
+                result = Collections.emptyMap();
+            }
+            if (message.payload instanceof Query) {
+                result = queryDispatcher.handle((Query) message.payload);
+            }
+            return result;
+        } finally {
+            Envelope.resetContext();
         }
-        if (message instanceof Query) {
-            result = queryDispatcher.handle((Query) message);
-        }
-        return result;
     }
 
     public StatusPage getStatus() {
