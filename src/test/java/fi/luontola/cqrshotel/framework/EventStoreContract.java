@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -298,7 +298,7 @@ public abstract class EventStoreContract {
 
     private static Envelope<Event> dummyEvent(String message) {
         // fill in all IDs to make sure that they all are saved and loaded correctly
-        return new Envelope<>(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new DummyEvent(message));
+        return new Envelope<>(new DummyEvent(message), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
     }
 
     public static class DummyEvent extends Struct implements Event {

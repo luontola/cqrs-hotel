@@ -92,7 +92,7 @@ public class EnvelopeTest {
     @Test
     public void can_change_the_correlation_ID() {
         DummyMessage payload = new DummyMessage();
-        Envelope<DummyMessage> original = new Envelope<>(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), payload);
+        Envelope<DummyMessage> original = new Envelope<>(payload, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
         UUID newCorrelationId = UUID.randomUUID();
 
         Envelope<DummyMessage> changed = original.withCorrelationId(newCorrelationId);

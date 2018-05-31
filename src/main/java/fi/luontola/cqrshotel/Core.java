@@ -109,11 +109,11 @@ public class Core {
 
         // TODO: spike code, need support for multiple (persisted) process instances
         MessageGateway gateway = message -> {
-            // TODO: this should probably be asynchronous
+            // TODO: should this be asynchronous?
             try {
                 handle(message);
             } catch (Throwable t) {
-                log.error("Failed to handle " + message, t);
+                log.error("Uncaught exception in handling " + message, t);
             }
         };
         addInMemoryProjection(new ProcessManagersProjectionAdapter(
@@ -174,7 +174,7 @@ public class Core {
     public Object handle(Envelope<?> message) {
         Envelope.setContext(message);
         try {
-            log.info("Handle {}    ({})", message.payload, message);
+            log.info("Handle {} - {}", message.payload, message.metaToString());
             // XXX: It's possible for a message to implement both Command and Query,
             // in which case the command will first execute and then the query
             // will observe the data produced by the command.

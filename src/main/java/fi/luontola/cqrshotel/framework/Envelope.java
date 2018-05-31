@@ -12,22 +12,22 @@ public class Envelope<M extends Message> extends Struct {
 
     private static final ThreadLocal<Envelope<?>> threadContext = new ThreadLocal<>();
 
+    public final M payload;
     public final UUID messageId;
     public final UUID correlationId;
     public final UUID causationId;
-    public final M payload;
 
     public static <M extends Message> Envelope<M> newMessage(M payload) {
         Envelope<?> cause = getContext();
         if (cause == null) {
-            return new Envelope<>(UUIDs.newUUID(), UUIDs.newUUID(), null, payload);
+            return new Envelope<>(payload, UUIDs.newUUID(), UUIDs.newUUID(), null);
         } else {
             return newMessage(payload, cause);
         }
     }
 
     public static <M extends Message> Envelope<M> newMessage(M payload, Envelope<?> cause) {
-        return new Envelope<>(UUIDs.newUUID(), cause.correlationId, cause.messageId, payload);
+        return new Envelope<>(payload, UUIDs.newUUID(), cause.correlationId, cause.messageId);
     }
 
     private static Envelope<?> getContext() {
@@ -42,7 +42,7 @@ public class Envelope<M extends Message> extends Struct {
         threadContext.remove();
     }
 
-    public Envelope(UUID messageId, UUID correlationId, UUID causationId, M payload) {
+    public Envelope(M payload, UUID messageId, UUID correlationId, UUID causationId) {
         this.messageId = messageId;
         this.correlationId = correlationId;
         this.causationId = causationId;
@@ -50,6 +50,10 @@ public class Envelope<M extends Message> extends Struct {
     }
 
     public Envelope<M> withCorrelationId(UUID newCorrelationId) {
-        return new Envelope<>(messageId, newCorrelationId, causationId, payload);
+        return new Envelope<>(payload, messageId, newCorrelationId, causationId);
+    }
+
+    public String metaToString() {
+        return "messageId=" + messageId + ", correlationId=" + correlationId + ", causationId=" + causationId;
     }
 }
