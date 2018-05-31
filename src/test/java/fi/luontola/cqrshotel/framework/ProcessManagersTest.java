@@ -7,11 +7,11 @@ package fi.luontola.cqrshotel.framework;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import fi.luontola.cqrshotel.FastTests;
-import fi.luontola.cqrshotel.framework.ProcessManagersTest.RegisterCreated;
-import fi.luontola.cqrshotel.framework.ProcessManagersTest.RegisterProcess;
 import fi.luontola.cqrshotel.util.Struct;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -22,21 +22,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 @Category(FastTests.class)
 public class ProcessManagersTest {
 
+    @Rule
+    public final ExpectedException thrown = ExpectedException.none();
+
     private static final UUID registerId = UUID.randomUUID();
     private static final UUID registerId2 = UUID.randomUUID();
 
-    private final SpyPublisher publisher = new SpyPublisher();
+    private final SpyMessageGateway gateway = new SpyMessageGateway();
     private final ProcessRepo repo = new ProcessRepo();
-    private final ProcessManagers processManagers = new ProcessManagers(repo, publisher);
+    private final ProcessManagers processManagers = new ProcessManagers(repo, gateway)
+            .register(RegisterProcess.class, RegisterProcess::entryPoint);
 
     // TODO: duplicate events are ignored
     // TODO: removing completed processes
@@ -46,16 +52,34 @@ public class ProcessManagersTest {
     public void processes_receive_events_and_publish_commands() {
         processManagers.handle(Envelope.newMessage(new RegisterCreated(registerId, 42)));
 
-        assertThat(publisher.publishedMessages, is(Arrays.asList(
+        assertThat(gateway.outgoingMessages(), is(Arrays.asList(
                 new ShowCurrentValue(registerId, 42))));
+    }
+
+    @Test
+    public void published_commands_have_the_event_ID_as_their_causation_ID() {
+        Envelope<Event> event = Envelope.newMessage(new RegisterCreated(registerId, 42));
+        processManagers.handle(event);
+
+        assertThat(gateway.latestMessage().causationId, is(event.messageId));
+    }
+
+    @Test
+    public void published_commands_have_the_process_ID_as_their_correlation_ID() {
+        processManagers.handle(Envelope.newMessage(new RegisterCreated(registerId, 42)));
+
+        // XXX: we cannot directly access the process ID, but we can look for a process with the same ID as this correlation ID
+        UUID processId = gateway.latestMessage().correlationId;
+        PersistedProcess process = repo.getById(processId);
+        assertThat(process, is(notNullValue()));
     }
 
     @Test
     public void processes_are_stateful() {
         processManagers.handle(Envelope.newMessage(new RegisterCreated(registerId, 10)));
-        processManagers.handle(Envelope.newMessage(new ValueAddedToRegister(registerId, 20)));
+        processManagers.handle(Envelope.newMessage(new ValueAddedToRegister(registerId, 20), gateway.latestMessage()));
 
-        assertThat(publisher.publishedMessages, is(Arrays.asList(
+        assertThat(gateway.outgoingMessages(), is(Arrays.asList(
                 new ShowCurrentValue(registerId, 10),
                 new ShowCurrentValue(registerId, 30))));
     }
@@ -63,11 +87,13 @@ public class ProcessManagersTest {
     @Test
     public void process_state_is_independent_from_other_processes() {
         processManagers.handle(Envelope.newMessage(new RegisterCreated(registerId, 10)));
+        Envelope<?> command1 = gateway.latestMessage();
         processManagers.handle(Envelope.newMessage(new RegisterCreated(registerId2, 100)));
-        processManagers.handle(Envelope.newMessage(new ValueAddedToRegister(registerId, 20)));
-        processManagers.handle(Envelope.newMessage(new ValueAddedToRegister(registerId2, 200)));
+        Envelope<?> command2 = gateway.latestMessage();
+        processManagers.handle(Envelope.newMessage(new ValueAddedToRegister(registerId, 20), command1));
+        processManagers.handle(Envelope.newMessage(new ValueAddedToRegister(registerId2, 200), command2));
 
-        assertThat(publisher.publishedMessages, is(Arrays.asList(
+        assertThat(gateway.outgoingMessages(), is(Arrays.asList(
                 new ShowCurrentValue(registerId, 10),
                 new ShowCurrentValue(registerId2, 100),
                 new ShowCurrentValue(registerId, 30),
@@ -77,19 +103,27 @@ public class ProcessManagersTest {
     @Test
     public void when_loading_an_existing_process_the_commands_from_old_events_are_not_republished() {
         processManagers.handle(Envelope.newMessage(new RegisterCreated(registerId, 10)));
-        SpyPublisher publisher2 = new SpyPublisher();
-        ProcessManagers processManagers2 = new ProcessManagers(repo, publisher2);
+        SpyMessageGateway gateway2 = new SpyMessageGateway();
+        ProcessManagers processManagers2 = new ProcessManagers(repo, gateway2)
+                .register(RegisterProcess.class, RegisterProcess::entryPoint);
 
-        processManagers2.handle(Envelope.newMessage(new ValueAddedToRegister(registerId, 20)));
+        processManagers2.handle(Envelope.newMessage(new ValueAddedToRegister(registerId, 20), gateway.latestMessage()));
 
-        assertThat(publisher2.publishedMessages, is(Arrays.asList(new ShowCurrentValue(registerId, 30))));
+        assertThat(gateway2.outgoingMessages(), is(Arrays.asList(new ShowCurrentValue(registerId, 30))));
     }
 
     @Test
     public void ignores_events_which_nobody_is_subscribed_to() {
         processManagers.handle(Envelope.newMessage(new ValueAddedToRegister(registerId, 42)));
 
-        assertThat(publisher.publishedMessages, is(empty()));
+        assertThat(gateway.outgoingMessages(), is(empty()));
+    }
+
+    @Test
+    public void cannot_register_the_same_process_twice() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage(is("Process already registered: class fi.luontola.cqrshotel.framework.ProcessManagersTest$RegisterProcess"));
+        processManagers.register(RegisterProcess.class, RegisterProcess::entryPoint);
     }
 
 
@@ -101,6 +135,10 @@ public class ProcessManagersTest {
 
         public RegisterProcess(Publisher publisher) {
             this.publisher = publisher;
+        }
+
+        public static boolean entryPoint(Event event) {
+            return event instanceof RegisterCreated;
         }
 
         @EventListener
@@ -152,11 +190,20 @@ public class ProcessManagersTest {
 class ProcessManagers {
 
     private final ProcessRepo processRepo;
-    private final Publisher realPublisher;
+    private final MessageGateway gateway;
+    private final List<EntryPoint> entryPoints = new ArrayList<>();
 
-    public ProcessManagers(ProcessRepo processRepo, Publisher publisher) {
+    public ProcessManagers(ProcessRepo processRepo, MessageGateway gateway) {
         this.processRepo = processRepo;
-        this.realPublisher = publisher;
+        this.gateway = gateway;
+    }
+
+    public ProcessManagers register(Class<? extends Projection> processType, Predicate<Event> entryPoint) {
+        if (entryPoints.stream().anyMatch(registered -> registered.processType.equals(processType))) {
+            throw new IllegalArgumentException("Process already registered: " + processType);
+        }
+        entryPoints.add(new EntryPoint(processType, entryPoint));
+        return this;
     }
 
     public void handle(Envelope<Event> event) {
@@ -169,21 +216,19 @@ class ProcessManagers {
     // startup
 
     private void startNewProcesses(Envelope<Event> event) {
-        // TODO: decouple from the guinea pigs
-        if (event.payload instanceof RegisterCreated) {
-            UUID registerId = ((RegisterCreated) event.payload).registerId;
-            startNewProcess(RegisterProcess.class, event)
-                    .subscribe(registerId); // TODO: remove registerId subscription (if needed, make the process subscribe itself)
+        for (EntryPoint entryPoint : entryPoints) {
+            if (entryPoint.matches(event)) {
+                startNewProcess(entryPoint.processType, event);
+            }
         }
     }
 
-    private ProcessManager startNewProcess(Class<? extends Projection> processType, Envelope<Event> initialEvent) {
+    private void startNewProcess(Class<? extends Projection> processType, Envelope<Event> initialEvent) {
         UUID processId = UUIDs.newUUID();
         processRepo.create(processId, processType);
-        ProcessManager pm = new ProcessManager(processId, processRepo, realPublisher);
+        ProcessManager pm = new ProcessManager(processId, processRepo, gateway);
         pm.subscribe(processId); // subscribe to itself as correlationId to receive responses to own commands
         pm.subscribe(initialEvent.messageId); // always handle the first message (it won't have processId as correlationId)
-        return pm;
     }
 
     // lookup
@@ -192,7 +237,7 @@ class ProcessManagers {
         List<UUID> topics = getTopics(event);
         Set<UUID> processIds = processRepo.findSubscribersToAnyOf(topics);
         return processIds.stream()
-                .map(processId -> new ProcessManager(processId, processRepo, realPublisher))
+                .map(processId -> new ProcessManager(processId, processRepo, gateway))
                 .collect(Collectors.toList());
     }
 
@@ -202,18 +247,33 @@ class ProcessManagers {
         topics.add(event.messageId);
         return topics;
     }
+
+
+    private static class EntryPoint {
+        final Class<? extends Projection> processType;
+        private final Predicate<Event> entryPoint;
+
+        public EntryPoint(Class<? extends Projection> processType, Predicate<Event> entryPoint) {
+            this.processType = processType;
+            this.entryPoint = entryPoint;
+        }
+
+        public boolean matches(Envelope<Event> event) {
+            return entryPoint.test(event.payload);
+        }
+    }
 }
 
 class ProcessManager { // TODO: merge ProcessManager and PersistedProcess?
 
     private final UUID processId;
     private final ProcessRepo processRepo;
-    private final Publisher realPublisher;
+    private final MessageGateway gateway;
 
-    public ProcessManager(UUID processId, ProcessRepo processRepo, Publisher realPublisher) {
+    public ProcessManager(UUID processId, ProcessRepo processRepo, MessageGateway gateway) {
         this.processId = processId;
         this.processRepo = processRepo;
-        this.realPublisher = realPublisher;
+        this.gateway = gateway;
     }
 
     public void subscribe(UUID id) {
@@ -230,7 +290,9 @@ class ProcessManager { // TODO: merge ProcessManager and PersistedProcess?
         process.apply(event.payload);
 
         processRepo.save(processId, event);
-        publisher.publishedMessages.forEach(realPublisher::publish);
+        publisher.publishedMessages.stream()
+                .map(m -> Envelope.newMessage(m, event).withCorrelationId(processId))
+                .forEach(gateway::send);
     }
 }
 

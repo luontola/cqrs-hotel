@@ -18,12 +18,20 @@ public class Envelope<M extends Message> extends Struct {
     public final M payload;
 
     public static <M extends Message> Envelope<M> newMessage(M payload) {
-        Envelope<?> cause = threadContext.get();
+        Envelope<?> cause = getContext();
         if (cause == null) {
             return new Envelope<>(UUIDs.newUUID(), UUIDs.newUUID(), null, payload);
         } else {
-            return new Envelope<>(UUIDs.newUUID(), cause.correlationId, cause.messageId, payload);
+            return newMessage(payload, cause);
         }
+    }
+
+    public static <M extends Message> Envelope<M> newMessage(M payload, Envelope<?> cause) {
+        return new Envelope<>(UUIDs.newUUID(), cause.correlationId, cause.messageId, payload);
+    }
+
+    private static Envelope<?> getContext() {
+        return threadContext.get();
     }
 
     public static void setContext(Envelope<?> context) {
@@ -39,5 +47,9 @@ public class Envelope<M extends Message> extends Struct {
         this.correlationId = correlationId;
         this.causationId = causationId;
         this.payload = payload;
+    }
+
+    public Envelope<M> withCorrelationId(UUID newCorrelationId) {
+        return new Envelope<>(messageId, newCorrelationId, causationId, payload);
     }
 }

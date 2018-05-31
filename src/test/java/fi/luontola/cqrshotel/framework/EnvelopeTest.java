@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -9,6 +9,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -85,6 +87,21 @@ public class EnvelopeTest {
 
         Envelope<DummyMessage> m2 = Envelope.newMessage(new DummyMessage());
         assertThat(m2.causationId, is(nullValue()));
+    }
+
+    @Test
+    public void can_change_the_correlation_ID() {
+        DummyMessage payload = new DummyMessage();
+        Envelope<DummyMessage> original = new Envelope<>(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), payload);
+        UUID newCorrelationId = UUID.randomUUID();
+
+        Envelope<DummyMessage> changed = original.withCorrelationId(newCorrelationId);
+
+        assertThat("correlationId", changed.correlationId, is(newCorrelationId));
+        // all others say the same
+        assertThat("messageId", changed.messageId, is(original.messageId));
+        assertThat("causationId", changed.causationId, is(original.causationId));
+        assertThat("payload", changed.payload, is(original.payload));
     }
 
     private class DummyMessage implements Message {
