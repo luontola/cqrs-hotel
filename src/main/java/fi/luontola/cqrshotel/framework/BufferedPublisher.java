@@ -7,7 +7,7 @@ package fi.luontola.cqrshotel.framework;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SpyPublisher implements Publisher {
+public class BufferedPublisher implements Publisher {
 
     public final List<Message> publishedMessages = new ArrayList<>();
 

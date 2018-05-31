@@ -5,9 +5,9 @@
 package fi.luontola.cqrshotel.reservation;
 
 import fi.luontola.cqrshotel.FastTests;
+import fi.luontola.cqrshotel.framework.BufferedPublisher;
 import fi.luontola.cqrshotel.framework.Event;
 import fi.luontola.cqrshotel.framework.Message;
-import fi.luontola.cqrshotel.framework.SpyPublisher;
 import fi.luontola.cqrshotel.reservation.commands.AssignRoom;
 import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
 import fi.luontola.cqrshotel.room.commands.OccupyAnyAvailableRoom;
@@ -33,7 +33,7 @@ public class ReservationProcessTest {
     private static final ZonedDateTime checkInTime = ZonedDateTime.parse("2000-01-01T14:00Z");
     private static final ZonedDateTime checkOutTime = ZonedDateTime.parse("2000-01-05T10:00Z");
 
-    private final SpyPublisher publisher = new SpyPublisher();
+    private final BufferedPublisher publisher = new BufferedPublisher();
     private final ReservationProcess process = new ReservationProcess(publisher);
 
     // TODO: payment and confirmation process

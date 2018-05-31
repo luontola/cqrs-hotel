@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -15,7 +15,6 @@ import org.reflections.Reflections;
 
 import javax.money.Monetary;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Modifier;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Month;
@@ -24,6 +23,7 @@ import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -49,12 +49,18 @@ public class JsonSerializationTest {
     }
 
     @Test
-    public void all_messages_are_serializable() throws Exception {
+    public void all_messages_are_serializable() {
         new Reflections("fi.luontola.cqrshotel")
                 .getSubTypesOf(Message.class).stream()
                 .filter(type -> !type.isInterface())
-                .filter(type -> Modifier.isPublic(type.getModifiers()))
+                .filter(type -> !isTestDouble(type))
                 .forEach(type -> assertSerializable(type, objectMapper));
+    }
+
+    private static boolean isTestDouble(Class<? extends Message> type) {
+        return type.isMemberClass() &&
+                Stream.of(type.getEnclosingClass().getMethods())
+                        .anyMatch(method -> method.isAnnotationPresent(Test.class));
     }
 
     private static void assertSerializable(Class<?> type, ObjectMapper objectMapper) {

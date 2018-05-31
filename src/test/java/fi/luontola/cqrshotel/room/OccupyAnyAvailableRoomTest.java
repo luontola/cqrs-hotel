@@ -5,10 +5,10 @@
 package fi.luontola.cqrshotel.room;
 
 import fi.luontola.cqrshotel.FastTests;
+import fi.luontola.cqrshotel.framework.BufferedPublisher;
 import fi.luontola.cqrshotel.framework.Command;
 import fi.luontola.cqrshotel.framework.Event;
 import fi.luontola.cqrshotel.framework.Message;
-import fi.luontola.cqrshotel.framework.SpyPublisher;
 import fi.luontola.cqrshotel.room.commands.OccupyAnyAvailableRoom;
 import fi.luontola.cqrshotel.room.commands.OccupyAnyAvailableRoomHandler;
 import fi.luontola.cqrshotel.room.commands.OccupyRoom;
@@ -45,7 +45,7 @@ public class OccupyAnyAvailableRoomTest {
     private static final UUID occupant = UUID.randomUUID();
 
     private final RoomAvailabilityView roomAvailabilityView = new RoomAvailabilityView();
-    private final SpyPublisher publisher = new SpyPublisher();
+    private final BufferedPublisher publisher = new BufferedPublisher();
 
     private final OccupyAnyAvailableRoomHandler commandHandler = new OccupyAnyAvailableRoomHandler(roomAvailabilityView, publisher);
 
