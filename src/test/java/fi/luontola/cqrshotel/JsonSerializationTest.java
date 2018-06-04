@@ -20,6 +20,7 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -113,6 +114,9 @@ public class JsonSerializationTest {
         }
         if (type == int.class) {
             return random.nextInt();
+        }
+        if (type == Class.class) {
+            return pickRandom(Arrays.asList(Integer.class, Long.class, Float.class, Double.class));
         }
         throw new IllegalArgumentException("Unsupported type: " + type);
     }

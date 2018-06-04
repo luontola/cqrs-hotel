@@ -66,7 +66,7 @@ public class ProcessManagersTest {
 
         // XXX: we cannot directly access the process ID, but we can look for a process with the same ID as this correlation ID
         UUID processId = gateway.latestMessage().correlationId;
-        PersistedProcess process = repo.getById(processId);
+        ProcessManager process = repo.getById(processId);
         assertThat(process, is(notNullValue()));
     }
 

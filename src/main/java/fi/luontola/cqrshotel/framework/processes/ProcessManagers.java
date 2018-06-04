@@ -15,16 +15,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public class ProcessManagers {
 
-    private final ProcessRepo processRepo;
+    private final ProcessRepo repo;
     private final MessageGateway gateway;
     private final List<EntryPoint> entryPoints = new ArrayList<>();
 
-    public ProcessManagers(ProcessRepo processRepo, MessageGateway gateway) {
-        this.processRepo = processRepo;
+    public ProcessManagers(ProcessRepo repo, MessageGateway gateway) {
+        this.repo = repo;
         this.gateway = gateway;
     }
 
@@ -38,9 +37,16 @@ public class ProcessManagers {
 
     public void handle(Envelope<Event> event) {
         startNewProcesses(event);
-        for (ProcessManager process : findSubscribedProcesses(event)) {
-            process.handle(event);
+        for (UUID processId : findSubscribedProcesses(event)) {
+            delegateToProcess(processId, event);
         }
+    }
+
+    private void delegateToProcess(UUID processId, Envelope<Event> event) {
+        ProcessManager process = repo.getById(processId);
+        process.handle(event);
+        repo.save(process);
+        process.publishNewMessagesTo(gateway);
     }
 
     // startup
@@ -54,21 +60,22 @@ public class ProcessManagers {
     }
 
     private void startNewProcess(Class<? extends Projection> processType, Envelope<Event> initialEvent) {
+        // FIXME: if there is a crash and the initial event is processed again, then this may start duplicate processes
+        // Possible solutions:
+        // - do not save the process yet here, but only after handing the initial event (would avoid subscription to the first message's ID)
+        // - use the initial event's message ID (or a deterministically derived ID) as the process ID
         UUID processId = UUIDs.newUUID();
-        processRepo.create(processId, processType);
-        ProcessManager pm = new ProcessManager(processId, processRepo, gateway);
-        pm.subscribe(processId); // subscribe to itself as correlationId to receive responses to own commands
-        pm.subscribe(initialEvent.messageId); // always handle the first message (it won't have processId as correlationId)
+        ProcessManager process = repo.create(processId, processType);
+        process.subscribe(processId); // subscribe to itself as correlationId to receive responses to own commands
+        process.subscribe(initialEvent.messageId); // always handle the first message (it won't have processId as correlationId)
+        repo.save(process);
     }
 
     // lookup
 
-    private List<ProcessManager> findSubscribedProcesses(Envelope<Event> event) {
+    private Set<UUID> findSubscribedProcesses(Envelope<Event> event) {
         List<UUID> topics = getTopics(event);
-        Set<UUID> processIds = processRepo.findSubscribersToAnyOf(topics);
-        return processIds.stream()
-                .map(processId -> new ProcessManager(processId, processRepo, gateway))
-                .collect(Collectors.toList());
+        return repo.findSubscribersToAnyOf(topics);
     }
 
     private static List<UUID> getTopics(Envelope<Event> event) {

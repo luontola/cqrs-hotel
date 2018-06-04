@@ -4,11 +4,16 @@
 
 package fi.luontola.cqrshotel.framework.processes;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.SetMultimap;
 import fi.luontola.cqrshotel.framework.Envelope;
 import fi.luontola.cqrshotel.framework.Event;
+import fi.luontola.cqrshotel.framework.OptimisticLockingException;
+import fi.luontola.cqrshotel.framework.processes.events.ProcessSubscribedToTopic;
+import fi.luontola.cqrshotel.framework.processes.events.ProcessUnsubscribedFromTopic;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -18,29 +23,60 @@ import java.util.UUID;
 
 public class ProcessRepo {
 
-    // TODO: write contract tests
     // TODO: create a psql version
 
-    private final Map<UUID, PersistedProcess> processesById = new HashMap<>();
-    private final Multimap<UUID, UUID> subscribedProcessesByTopic = ArrayListMultimap.create(16, 1);
+    private final Map<UUID, List<Envelope<Event>>> processesById = new HashMap<>();
+    private final SetMultimap<UUID, UUID> subscribedProcessesByTopic = HashMultimap.create();
 
-    public void create(UUID processId, Class<?> processType) {
-        processesById.put(processId, new PersistedProcess(processType));
+    public ProcessManager create(UUID processId, Class<?> processType) {
+        return ProcessManager.start(processId, processType);
     }
 
-    public PersistedProcess getById(UUID processId) {
-        return processesById.computeIfAbsent(processId, key -> {
+    public void save(ProcessManager process) {
+        UUID processId = process.processId;
+        List<Envelope<Event>> savedEvents = processesById.computeIfAbsent(processId, key -> new ArrayList<>());
+
+        int expectedVersion = process.getOriginalVersion();
+        int actualVersion = savedEvents.size();
+        if (expectedVersion != actualVersion) {
+            throw new OptimisticLockingException("expected version " + expectedVersion + " but was " + actualVersion + " for process " + processId);
+        }
+
+        List<Envelope<Event>> changes = process.getUncommittedChanges();
+        for (Envelope<Event> change : changes) {
+            // TODO: use EventListeners?
+
+            if (change.payload instanceof ProcessSubscribedToTopic) {
+                ProcessSubscribedToTopic event = (ProcessSubscribedToTopic) change.payload;
+                subscribe(event.processId, event.topic);
+
+            } else if (change.payload instanceof ProcessUnsubscribedFromTopic) {
+                ProcessUnsubscribedFromTopic event = (ProcessUnsubscribedFromTopic) change.payload;
+                unsubscribe(event.processId, event.topic);
+            }
+        }
+
+        savedEvents.addAll(changes);
+        process.markChangesAsCommitted();
+    }
+
+    public ProcessManager getById(UUID processId) {
+        List<Envelope<Event>> events = processesById.computeIfAbsent(processId, key -> {
             throw new IllegalArgumentException("Process not found: " + key);
         });
+        return ProcessManager.load(events);
     }
 
-    public void save(UUID processId, Envelope<Event> processedEvent) {
-        PersistedProcess process = getById(processId);
-        process.history.add(processedEvent);
-    }
-
-    public void subscribe(UUID processId, UUID topic) {
+    private void subscribe(UUID processId, UUID topic) {
         subscribedProcessesByTopic.put(topic, processId);
+    }
+
+    private void unsubscribe(UUID processId, UUID topic) {
+        subscribedProcessesByTopic.remove(topic, processId);
+    }
+
+    public Set<UUID> findSubscribersToAnyOf(UUID... topics) {
+        return findSubscribersToAnyOf(Arrays.asList(topics));
     }
 
     public Set<UUID> findSubscribersToAnyOf(List<UUID> topics) {
