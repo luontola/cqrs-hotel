@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.Timeout;
 
+import java.time.Duration;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
@@ -34,9 +35,10 @@ public class SingleThreadedTriggerableWorkerTest {
     private SingleThreadedTriggerableWorker worker;
 
     @After
-    public void tearDown() {
+    public void tearDown() throws InterruptedException {
         if (worker != null) {
             worker.shutdown();
+            worker.awaitTermination(Duration.ofSeconds(1));
         }
     }
 

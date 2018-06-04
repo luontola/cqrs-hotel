@@ -7,10 +7,12 @@ package fi.luontola.cqrshotel.framework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class SingleThreadedTriggerableWorker {
 
@@ -49,6 +51,10 @@ public class SingleThreadedTriggerableWorker {
 
     public void shutdown() {
         executor.shutdown();
+    }
+
+    public void awaitTermination(Duration timeout) throws InterruptedException {
+        executor.awaitTermination(timeout.toNanos(), TimeUnit.NANOSECONDS);
     }
 
     public interface UncaughtExceptionHandler {

@@ -67,6 +67,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -163,8 +164,8 @@ public class Core {
     }
 
     @PreDestroy
-    public void shutdown() {
-        projectionsUpdater.shutdown();
+    public void shutdown() throws InterruptedException {
+        projectionsUpdater.shutdown(Duration.ofSeconds(10));
     }
 
     public Object handle(Message message) {

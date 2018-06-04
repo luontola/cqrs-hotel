@@ -4,6 +4,7 @@
 
 package fi.luontola.cqrshotel.framework;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,9 +24,12 @@ public class WorkersPool {
         }
     }
 
-    public void shutdown() {
+    public void shutdown(Duration timeout) throws InterruptedException {
         for (SingleThreadedTriggerableWorker worker : workers) {
             worker.shutdown();
+        }
+        for (SingleThreadedTriggerableWorker worker : workers) {
+            worker.awaitTermination(timeout);
         }
     }
 }
