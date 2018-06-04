@@ -22,6 +22,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Stream;
@@ -106,7 +107,9 @@ public class JsonSerializationTest {
             return Instant.ofEpochMilli(random.nextLong());
         }
         if (type == ZonedDateTime.class) {
-            ZoneId zoneId = ZoneId.of(pickRandom(ZoneId.getAvailableZoneIds()));
+            Set<String> zoneIds = ZoneId.getAvailableZoneIds();
+            zoneIds.remove("GMT0"); // XXX: cannot be parsed by java.time.format.DateTimeFormatterBuilder.appendZoneRegionId - fixed in Java 9 https://bugs.openjdk.java.net/browse/JDK-8138664
+            ZoneId zoneId = ZoneId.of(pickRandom(zoneIds));
             return Instant.ofEpochMilli(random.nextLong()).atZone(zoneId);
         }
         if (type == String.class) {
