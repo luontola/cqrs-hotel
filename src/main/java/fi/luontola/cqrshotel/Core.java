@@ -58,6 +58,10 @@ import fi.luontola.cqrshotel.room.queries.FindAllRooms;
 import fi.luontola.cqrshotel.room.queries.FindAllRoomsHandler;
 import fi.luontola.cqrshotel.room.queries.GetAvailabilityByDateRange;
 import fi.luontola.cqrshotel.room.queries.GetAvailabilityByDateRangeHandler;
+import fi.luontola.cqrshotel.room.queries.GetAvailabilityByTimeRange;
+import fi.luontola.cqrshotel.room.queries.GetAvailabilityByTimeRangeHandler;
+import fi.luontola.cqrshotel.room.queries.GetRoomById;
+import fi.luontola.cqrshotel.room.queries.GetRoomByIdHandler;
 import fi.luontola.cqrshotel.room.queries.RoomAvailabilityDto;
 import fi.luontola.cqrshotel.room.queries.RoomAvailabilityView;
 import fi.luontola.cqrshotel.room.queries.RoomDto;
@@ -100,9 +104,11 @@ public class Core {
                 .addQueryHandler(FindReservationByIdHandler::new, FindReservationById.class, ReservationDto.class);
 
         addInMemoryProjection(new RoomsView())
+                .addQueryHandler(GetRoomByIdHandler::new, GetRoomById.class, RoomDto.class)
                 .addQueryHandler(FindAllRoomsHandler::new, FindAllRooms.class, RoomDto[].class);
 
         addInMemoryProjection(new RoomAvailabilityView())
+                .addQueryHandler(GetAvailabilityByTimeRangeHandler::new, GetAvailabilityByTimeRange.class, RoomAvailabilityDto[].class)
                 .addQueryHandler(GetAvailabilityByDateRangeHandler::new, GetAvailabilityByDateRange.class, RoomAvailabilityDto[].class);
 
         addInMemoryProjection(new CapacityView())
@@ -142,12 +148,12 @@ public class Core {
         ReservationRepo reservationRepo = new ReservationRepo(eventStore);
         commands.register(SearchForAccommodation.class, new SearchForAccommodationCommandHandler(reservationRepo, pricing, clock));
         commands.register(MakeReservation.class, new MakeReservationHandler(reservationRepo, clock));
-        commands.register(AssignRoom.class, new AssignRoomHandler(reservationRepo, getProjection(RoomsView.class).projection));
+        commands.register(AssignRoom.class, new AssignRoomHandler(reservationRepo, getQueryHandler(GetRoomById.class, RoomDto.class)));
 
         RoomRepo roomRepo = new RoomRepo(eventStore);
         commands.register(CreateRoom.class, new CreateRoomHandler(roomRepo));
         commands.register(OccupyRoom.class, new OccupyRoomHandler(roomRepo));
-        commands.register(OccupyAnyAvailableRoom.class, new OccupyAnyAvailableRoomHandler(getProjection(RoomAvailabilityView.class).projection, publisher));
+        commands.register(OccupyAnyAvailableRoom.class, new OccupyAnyAvailableRoomHandler(publisher, getQueryHandler(GetAvailabilityByTimeRange.class, RoomAvailabilityDto[].class)));
 
         this.commandDispatcher = new UpdateObservedPositionAfterCommit(observedPosition,
                 new UpdateProjectionsAfterHandling<>(projectionsUpdater, commands));
@@ -199,13 +205,15 @@ public class Core {
     }
 
     @SuppressWarnings("unchecked")
-    public <P extends Projection> ProjectionConfig<P> getProjection(Class<P> projectionType) {
-        for (ProjectionConfig projection : projections) {
-            if (projectionType.isInstance(projection.projection)) {
-                return projection;
+    private <Q extends Query, R> Handler<Q, R> getQueryHandler(Class<Q> queryType, Class<R> responseType) {
+        for (ProjectionConfig<?> projection : projections) {
+            for (QueryHandlerConfig<?, ?> queryHandler : projection.queryHandlers) {
+                if (queryHandler.queryType.equals(queryType) && queryHandler.responseType.equals(responseType)) {
+                    return (Handler<Q, R>) queryHandler.handler;
+                }
             }
         }
-        throw new IllegalArgumentException("not found: " + projectionType);
+        throw new IllegalArgumentException("Query handler not found: " + queryType + " -> " + responseType);
     }
 
     public class ProjectionConfig<P extends Projection> {

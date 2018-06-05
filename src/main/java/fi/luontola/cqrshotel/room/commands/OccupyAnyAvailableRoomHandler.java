@@ -8,19 +8,20 @@ import fi.luontola.cqrshotel.framework.Commit;
 import fi.luontola.cqrshotel.framework.Handler;
 import fi.luontola.cqrshotel.framework.Publisher;
 import fi.luontola.cqrshotel.room.NoRoomsAvailableException;
+import fi.luontola.cqrshotel.room.queries.GetAvailabilityByTimeRange;
 import fi.luontola.cqrshotel.room.queries.RoomAvailabilityDto;
-import fi.luontola.cqrshotel.room.queries.RoomAvailabilityView;
 
 import java.time.Instant;
+import java.util.stream.Stream;
 
 public class OccupyAnyAvailableRoomHandler implements Handler<OccupyAnyAvailableRoom, Commit> {
 
-    private final RoomAvailabilityView roomAvailabilityView;
     private final Publisher publisher;
+    private final Handler<GetAvailabilityByTimeRange, RoomAvailabilityDto[]> getAvailabilityByTimeRange;
 
-    public OccupyAnyAvailableRoomHandler(RoomAvailabilityView roomAvailabilityView, Publisher publisher) {
-        this.roomAvailabilityView = roomAvailabilityView;
+    public OccupyAnyAvailableRoomHandler(Publisher publisher, Handler<GetAvailabilityByTimeRange, RoomAvailabilityDto[]> getAvailabilityByTimeRange) {
         this.publisher = publisher;
+        this.getAvailabilityByTimeRange = getAvailabilityByTimeRange;
     }
 
     @Override
@@ -31,7 +32,7 @@ public class OccupyAnyAvailableRoomHandler implements Handler<OccupyAnyAvailable
     }
 
     private RoomAvailabilityDto getAnyAvailableRoom(Instant start, Instant end) {
-        return roomAvailabilityView.getAvailabilityForAllRooms(start, end).stream()
+        return Stream.of(getAvailabilityByTimeRange.handle(new GetAvailabilityByTimeRange(start, end)))
                 .filter(room -> room.available)
                 .findAny()
                 .orElseThrow(NoRoomsAvailableException::new);

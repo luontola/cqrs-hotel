@@ -11,12 +11,12 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.arrayWithSize;
 import static org.hamcrest.Matchers.is;
 
 @Category(FastTests.class)
@@ -33,14 +33,16 @@ public class RoomAvailabilityViewTest {
     private static final Instant t4 = Instant.parse("2018-01-04T12:00:00.000Z");
 
     private final RoomAvailabilityView view = new RoomAvailabilityView();
+    private final GetAvailabilityByDateRangeHandler getAvailabilityByDateRange = new GetAvailabilityByDateRangeHandler(view);
+    private final GetAvailabilityByTimeRangeHandler getAvailabilityByTimeRange = new GetAvailabilityByTimeRangeHandler(view);
 
     @Test
     public void lists_all_rooms() {
         view.apply(new RoomCreated(roomId, "101"));
         view.apply(new RoomCreated(roomId2, "102"));
 
-        List<RoomAvailabilityDto> rooms = view.getAvailabilityForAllRooms(t1, t2);
-        assertThat(rooms, hasSize(2));
+        RoomAvailabilityDto[] rooms = getAvailabilityByTimeRange.handle(new GetAvailabilityByTimeRange(t1, t2));
+        assertThat(rooms, is(arrayWithSize(2)));
     }
 
     @Test
@@ -139,7 +141,20 @@ public class RoomAvailabilityViewTest {
         assertThat("available?", availability.available, is(false));
     }
 
+    @Test
+    public void queries_from_start_of_day_to_end_of_day_in_hotel_timezone() {
+        view.apply(new RoomCreated(UUID.randomUUID(), "101"));
+
+        LocalDate start = LocalDate.parse("2000-01-01");
+        LocalDate end = LocalDate.parse("2000-01-05");
+        RoomAvailabilityDto[] result = getAvailabilityByDateRange.handle(new GetAvailabilityByDateRange(start, end));
+
+        RoomAvailabilityIntervalDto interval = result[0].details.get(0);
+        assertThat("start", interval.start, is(Instant.parse("1999-12-31T22:00:00Z")));
+        assertThat("end", interval.end, is(Instant.parse("2000-01-05T22:00:00Z")));
+    }
+
     private RoomAvailabilityDto availabilityBetween(Instant start, Instant end) {
-        return view.getAvailabilityForAllRooms(start, end).get(0);
+        return getAvailabilityByTimeRange.handle(new GetAvailabilityByTimeRange(start, end))[0];
     }
 }

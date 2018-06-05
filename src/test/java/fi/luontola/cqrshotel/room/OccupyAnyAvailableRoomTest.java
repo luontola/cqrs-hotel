@@ -15,6 +15,7 @@ import fi.luontola.cqrshotel.room.commands.OccupyAnyAvailableRoomHandler;
 import fi.luontola.cqrshotel.room.commands.OccupyRoom;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
 import fi.luontola.cqrshotel.room.events.RoomOccupied;
+import fi.luontola.cqrshotel.room.queries.GetAvailabilityByTimeRangeHandler;
 import fi.luontola.cqrshotel.room.queries.RoomAvailabilityView;
 import org.hamcrest.Matcher;
 import org.junit.Rule;
@@ -48,7 +49,8 @@ public class OccupyAnyAvailableRoomTest {
     private final RoomAvailabilityView roomAvailabilityView = new RoomAvailabilityView();
     private final BufferedPublisher publisher = new BufferedPublisher();
 
-    private final OccupyAnyAvailableRoomHandler commandHandler = new OccupyAnyAvailableRoomHandler(roomAvailabilityView, publisher);
+    private final OccupyAnyAvailableRoomHandler commandHandler =
+            new OccupyAnyAvailableRoomHandler(publisher, new GetAvailabilityByTimeRangeHandler(roomAvailabilityView));
 
     @Test
     public void occupies_an_available_room() {

@@ -13,6 +13,7 @@ import fi.luontola.cqrshotel.reservation.events.CustomerDiscovered;
 import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
 import fi.luontola.cqrshotel.reservation.events.RoomAssigned;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
+import fi.luontola.cqrshotel.room.queries.GetRoomByIdHandler;
 import fi.luontola.cqrshotel.room.queries.RoomsView;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,12 +36,12 @@ public class AssignRoomTest extends AggregateRootTester {
     private static final String roomNumber = "101";
     private static final String roomNumber2 = "102";
 
-    private final RoomsView roomsView = new RoomsView();
-
     {
+        RoomsView roomsView = new RoomsView();
         roomsView.apply(new RoomCreated(roomId, roomNumber));
         roomsView.apply(new RoomCreated(roomId2, roomNumber2));
-        commandHandler = new AssignRoomHandler(new ReservationRepo(eventStore), roomsView);
+        GetRoomByIdHandler getRoomById = new GetRoomByIdHandler(roomsView);
+        commandHandler = new AssignRoomHandler(new ReservationRepo(eventStore), getRoomById);
     }
 
     @Test

@@ -8,22 +8,22 @@ import fi.luontola.cqrshotel.framework.Commit;
 import fi.luontola.cqrshotel.framework.Handler;
 import fi.luontola.cqrshotel.reservation.Reservation;
 import fi.luontola.cqrshotel.reservation.ReservationRepo;
+import fi.luontola.cqrshotel.room.queries.GetRoomById;
 import fi.luontola.cqrshotel.room.queries.RoomDto;
-import fi.luontola.cqrshotel.room.queries.RoomsView;
 
 public class AssignRoomHandler implements Handler<AssignRoom, Commit> {
 
     private final ReservationRepo repo;
-    private final RoomsView roomsView;
+    private final Handler<GetRoomById, RoomDto> getRoomById;
 
-    public AssignRoomHandler(ReservationRepo repo, RoomsView roomsView) {
+    public AssignRoomHandler(ReservationRepo repo, Handler<GetRoomById, RoomDto> getRoomById) {
         this.repo = repo;
-        this.roomsView = roomsView;
+        this.getRoomById = getRoomById;
     }
 
     @Override
     public Commit handle(AssignRoom command) {
-        RoomDto room = roomsView.getById(command.roomId);
+        RoomDto room = getRoomById.handle(new GetRoomById(command.roomId));
         Reservation reservation = repo.getById(command.reservationId);
         int originalVersion = reservation.getVersion();
         reservation.assignRoom(room.roomId, room.roomNumber);

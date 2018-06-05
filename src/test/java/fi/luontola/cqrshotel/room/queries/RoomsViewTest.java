@@ -11,11 +11,10 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 
-import java.util.List;
 import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.arrayWithSize;
 import static org.hamcrest.Matchers.is;
 
 @Category(FastTests.class)
@@ -28,6 +27,8 @@ public class RoomsViewTest {
     private static final UUID roomId2 = UUID.randomUUID();
 
     private final RoomsView view = new RoomsView();
+    private final GetRoomByIdHandler getRoomById = new GetRoomByIdHandler(view);
+    private final FindAllRoomsHandler findAllRooms = new FindAllRoomsHandler(view);
 
     @Test
     public void fills_in_all_fields() {
@@ -37,7 +38,7 @@ public class RoomsViewTest {
         expected.roomId = roomId;
         expected.roomNumber = "123";
 
-        RoomDto actual = view.getById(roomId);
+        RoomDto actual = getRoomById.handle(new GetRoomById(roomId));
         assertThat(actual, is(expected));
     }
 
@@ -46,14 +47,14 @@ public class RoomsViewTest {
         view.apply(new RoomCreated(roomId, "101"));
         view.apply(new RoomCreated(roomId2, "102"));
 
-        List<RoomDto> results = view.findAll();
-        assertThat(results, hasSize(2));
+        RoomDto[] results = findAllRooms.handle(new FindAllRooms());
+        assertThat(results, is(arrayWithSize(2)));
     }
 
     @Test
     public void cannot_find_rooms_which_do_not_exist() {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("room not found: " + roomId);
-        view.getById(roomId);
+        getRoomById.handle(new GetRoomById(roomId));
     }
 }
