@@ -2,8 +2,11 @@
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
-package fi.luontola.cqrshotel.framework;
+package fi.luontola.cqrshotel.framework.projections;
 
+import fi.luontola.cqrshotel.framework.Envelope;
+import fi.luontola.cqrshotel.framework.Event;
+import fi.luontola.cqrshotel.framework.eventstore.EventStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,13 +16,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Projections are the way for reading and analyzing event-sourced data.
- * Their {@link EventListener event listener} methods will be called for every {@link Event event} in the system.
- * This way projections can construct a read-optimized model from the event data
- * for the purpose of serving {@link Query queries} efficiently.
- */
-public class InMemoryProjectionUpdater {
+public class InMemoryProjection implements UpdatableProjection {
 
     private final Logger log;
 
@@ -28,16 +25,18 @@ public class InMemoryProjectionUpdater {
     private final PriorityBlockingQueue<Waiter> waiters = new PriorityBlockingQueue<>();
     private volatile long position = EventStore.BEGINNING;
 
-    public InMemoryProjectionUpdater(Projection projection, EventStore eventStore) {
+    public InMemoryProjection(Projection projection, EventStore eventStore) {
         this.log = LoggerFactory.getLogger(projection.getClass());
         this.projection = projection;
         this.eventStore = eventStore;
     }
 
+    @Override
     public final long getPosition() {
         return position;
     }
 
+    @Override
     public synchronized final void update() {
         List<Envelope<Event>> events = eventStore.getAllEvents(position);
         if (!events.isEmpty()) {
@@ -69,6 +68,7 @@ public class InMemoryProjectionUpdater {
      * @return {@code true} if this projection has reached the expected position
      * and {@code false} if the waiting time elapsed before that
      */
+    @Override
     public final boolean awaitPosition(long expectedPosition, Duration timeout) throws InterruptedException {
         // quick path in case no waiting is needed
         if (position >= expectedPosition) {

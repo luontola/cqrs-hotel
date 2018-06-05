@@ -14,22 +14,23 @@ import fi.luontola.cqrshotel.framework.Command;
 import fi.luontola.cqrshotel.framework.Commit;
 import fi.luontola.cqrshotel.framework.CompositeHandler;
 import fi.luontola.cqrshotel.framework.Envelope;
-import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.Handler;
-import fi.luontola.cqrshotel.framework.InMemoryProjectionUpdater;
 import fi.luontola.cqrshotel.framework.Message;
 import fi.luontola.cqrshotel.framework.MessageGateway;
-import fi.luontola.cqrshotel.framework.Projection;
 import fi.luontola.cqrshotel.framework.Publisher;
 import fi.luontola.cqrshotel.framework.Query;
-import fi.luontola.cqrshotel.framework.UpdateProjectionsAfterHandling;
-import fi.luontola.cqrshotel.framework.WorkersPool;
 import fi.luontola.cqrshotel.framework.consistency.ObservedPosition;
 import fi.luontola.cqrshotel.framework.consistency.UpdateObservedPositionAfterCommit;
 import fi.luontola.cqrshotel.framework.consistency.WaitForProjectionToUpdate;
+import fi.luontola.cqrshotel.framework.eventstore.EventStore;
 import fi.luontola.cqrshotel.framework.processes.ProcessManagers;
 import fi.luontola.cqrshotel.framework.processes.ProcessManagersProjectionAdapter;
 import fi.luontola.cqrshotel.framework.processes.ProcessRepo;
+import fi.luontola.cqrshotel.framework.projections.InMemoryProjection;
+import fi.luontola.cqrshotel.framework.projections.Projection;
+import fi.luontola.cqrshotel.framework.projections.UpdatableProjection;
+import fi.luontola.cqrshotel.framework.projections.UpdateProjectionsAfterHandling;
+import fi.luontola.cqrshotel.framework.util.WorkersPool;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.reservation.ReservationProcess;
 import fi.luontola.cqrshotel.reservation.ReservationRepo;
@@ -117,7 +118,7 @@ public class Core {
                 log.error("Uncaught exception in handling " + message, t);
             }
         };
-        addInMemoryProjection(new ProcessManagersProjectionAdapter(
+        addInMemoryProjection(new ProcessManagersProjectionAdapter( // TODO: smarter projection, keep track of individual processes
                 new ProcessManagers(new ProcessRepo(), gateway)
                         .register(ReservationProcess.class, ReservationProcess::entryPoint)));
 
@@ -153,7 +154,7 @@ public class Core {
     }
 
     private <T extends Projection> ProjectionConfig<T> addInMemoryProjection(T projection) {
-        ProjectionConfig<T> config = new ProjectionConfig<>(projection, new InMemoryProjectionUpdater(projection, eventStore));
+        ProjectionConfig<T> config = new ProjectionConfig<>(projection, new InMemoryProjection(projection, eventStore));
         projections.add(config);
         return config;
     }
@@ -209,10 +210,10 @@ public class Core {
 
     public class ProjectionConfig<P extends Projection> {
         public final P projection;
-        public final InMemoryProjectionUpdater updater;
+        public final UpdatableProjection updater;
         public final List<QueryHandlerConfig<?, ?>> queryHandlers = new ArrayList<>();
 
-        public ProjectionConfig(P projection, InMemoryProjectionUpdater updater) {
+        public ProjectionConfig(P projection, UpdatableProjection updater) {
             this.projection = projection;
             this.updater = updater;
         }
@@ -240,7 +241,7 @@ public class Core {
             this.handler = handler;
         }
 
-        public void register(CompositeHandler<Query, Object> registry, InMemoryProjectionUpdater updater) {
+        public void register(CompositeHandler<Query, Object> registry, UpdatableProjection updater) {
             registry.register(queryType, new WaitForProjectionToUpdate<>(updater, observedPosition, handler));
         }
     }

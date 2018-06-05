@@ -2,10 +2,10 @@
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
-package fi.luontola.cqrshotel.framework;
+package fi.luontola.cqrshotel.framework.util;
 
 import fi.luontola.cqrshotel.FastTests;
-import fi.luontola.cqrshotel.framework.SingleThreadedTriggerableWorker.UncaughtExceptionHandler;
+import fi.luontola.cqrshotel.framework.util.SingleThreadedTriggerableWorker.UncaughtExceptionHandler;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;

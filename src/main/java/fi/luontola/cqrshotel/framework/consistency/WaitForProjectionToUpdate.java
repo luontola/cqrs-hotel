@@ -5,16 +5,16 @@
 package fi.luontola.cqrshotel.framework.consistency;
 
 import fi.luontola.cqrshotel.framework.Handler;
-import fi.luontola.cqrshotel.framework.InMemoryProjectionUpdater;
 import fi.luontola.cqrshotel.framework.Message;
+import fi.luontola.cqrshotel.framework.projections.UpdatableProjection;
 
 public class WaitForProjectionToUpdate<M extends Message, R> implements Handler<M, R> {
 
-    private final InMemoryProjectionUpdater projection;
+    private final UpdatableProjection projection;
     private final ObservedPosition observedPosition;
     private final Handler<M, R> handler;
 
-    public WaitForProjectionToUpdate(InMemoryProjectionUpdater projection, ObservedPosition observedPosition, Handler<M, R> handler) {
+    public WaitForProjectionToUpdate(UpdatableProjection projection, ObservedPosition observedPosition, Handler<M, R> handler) {
         this.projection = projection;
         this.observedPosition = observedPosition;
         this.handler = handler;

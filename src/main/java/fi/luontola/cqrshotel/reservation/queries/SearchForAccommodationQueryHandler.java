@@ -6,9 +6,9 @@ package fi.luontola.cqrshotel.reservation.queries;
 
 import fi.luontola.cqrshotel.framework.Envelope;
 import fi.luontola.cqrshotel.framework.Event;
-import fi.luontola.cqrshotel.framework.EventStore;
 import fi.luontola.cqrshotel.framework.Handler;
-import fi.luontola.cqrshotel.framework.Projection;
+import fi.luontola.cqrshotel.framework.eventstore.EventStore;
+import fi.luontola.cqrshotel.framework.projections.Projection;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
 
 import java.time.Clock;

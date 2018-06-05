@@ -8,11 +8,11 @@ import fi.luontola.cqrshotel.framework.Envelope;
 import fi.luontola.cqrshotel.framework.Event;
 import fi.luontola.cqrshotel.framework.Message;
 import fi.luontola.cqrshotel.framework.MessageGateway;
-import fi.luontola.cqrshotel.framework.Projection;
 import fi.luontola.cqrshotel.framework.Publisher;
 import fi.luontola.cqrshotel.framework.processes.events.ProcessStarted;
 import fi.luontola.cqrshotel.framework.processes.events.ProcessSubscribedToTopic;
 import fi.luontola.cqrshotel.framework.processes.events.ProcessUnsubscribedFromTopic;
+import fi.luontola.cqrshotel.framework.projections.Projection;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;

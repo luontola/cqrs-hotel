@@ -7,8 +7,8 @@ package fi.luontola.cqrshotel.framework.processes;
 import fi.luontola.cqrshotel.framework.Envelope;
 import fi.luontola.cqrshotel.framework.Event;
 import fi.luontola.cqrshotel.framework.MessageGateway;
-import fi.luontola.cqrshotel.framework.Projection;
-import fi.luontola.cqrshotel.framework.UUIDs;
+import fi.luontola.cqrshotel.framework.projections.Projection;
+import fi.luontola.cqrshotel.framework.util.UUIDs;
 
 import java.util.ArrayList;
 import java.util.List;

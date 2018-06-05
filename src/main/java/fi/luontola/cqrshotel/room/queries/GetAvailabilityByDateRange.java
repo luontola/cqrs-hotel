@@ -7,7 +7,7 @@ package fi.luontola.cqrshotel.room.queries;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import fi.luontola.cqrshotel.framework.Query;
-import fi.luontola.cqrshotel.util.Struct;
+import fi.luontola.cqrshotel.framework.util.Struct;
 
 import java.time.LocalDate;
 

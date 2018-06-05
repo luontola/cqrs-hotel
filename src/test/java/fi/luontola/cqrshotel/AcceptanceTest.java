@@ -4,10 +4,10 @@
 
 package fi.luontola.cqrshotel;
 
-import fi.luontola.cqrshotel.framework.EventStore;
-import fi.luontola.cqrshotel.framework.InMemoryEventStore;
 import fi.luontola.cqrshotel.framework.consistency.ObservedPosition;
 import fi.luontola.cqrshotel.framework.consistency.ReadModelNotUpToDateException;
+import fi.luontola.cqrshotel.framework.eventstore.EventStore;
+import fi.luontola.cqrshotel.framework.eventstore.InMemoryEventStore;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.pricing.RandomPricingEngine;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservation;

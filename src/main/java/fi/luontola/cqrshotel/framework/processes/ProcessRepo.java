@@ -8,7 +8,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
 import fi.luontola.cqrshotel.framework.Envelope;
 import fi.luontola.cqrshotel.framework.Event;
-import fi.luontola.cqrshotel.framework.OptimisticLockingException;
+import fi.luontola.cqrshotel.framework.eventstore.OptimisticLockingException;
 import fi.luontola.cqrshotel.framework.processes.events.ProcessSubscribedToTopic;
 import fi.luontola.cqrshotel.framework.processes.events.ProcessUnsubscribedFromTopic;
 

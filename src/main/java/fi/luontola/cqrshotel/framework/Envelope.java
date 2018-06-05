@@ -4,7 +4,8 @@
 
 package fi.luontola.cqrshotel.framework;
 
-import fi.luontola.cqrshotel.util.Struct;
+import fi.luontola.cqrshotel.framework.util.Struct;
+import fi.luontola.cqrshotel.framework.util.UUIDs;
 
 import java.util.UUID;
 

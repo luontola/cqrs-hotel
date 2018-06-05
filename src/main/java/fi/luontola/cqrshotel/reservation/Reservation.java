@@ -5,8 +5,8 @@
 package fi.luontola.cqrshotel.reservation;
 
 import fi.luontola.cqrshotel.framework.AggregateRoot;
-import fi.luontola.cqrshotel.framework.EventListener;
-import fi.luontola.cqrshotel.framework.EventStore;
+import fi.luontola.cqrshotel.framework.eventstore.EventStore;
+import fi.luontola.cqrshotel.framework.util.EventListener;
 import fi.luontola.cqrshotel.hotel.Hotel;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.reservation.events.ContactInformationUpdated;

@@ -2,11 +2,13 @@
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
-package fi.luontola.cqrshotel.framework;
+package fi.luontola.cqrshotel.framework.eventstore;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import fi.luontola.cqrshotel.util.Struct;
+import fi.luontola.cqrshotel.framework.Envelope;
+import fi.luontola.cqrshotel.framework.Event;
+import fi.luontola.cqrshotel.framework.util.Struct;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;

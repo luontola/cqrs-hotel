@@ -4,10 +4,10 @@
 
 package fi.luontola.cqrshotel.reservation;
 
-import fi.luontola.cqrshotel.framework.AnnotatedProjection;
 import fi.luontola.cqrshotel.framework.Event;
-import fi.luontola.cqrshotel.framework.EventListener;
 import fi.luontola.cqrshotel.framework.Publisher;
+import fi.luontola.cqrshotel.framework.projections.AnnotatedProjection;
+import fi.luontola.cqrshotel.framework.util.EventListener;
 import fi.luontola.cqrshotel.reservation.commands.AssignRoom;
 import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
 import fi.luontola.cqrshotel.room.commands.OccupyAnyAvailableRoom;

@@ -5,9 +5,9 @@
 package fi.luontola.cqrshotel;
 
 import fi.luontola.cqrshotel.StatusPage.ProjectionStatus;
-import fi.luontola.cqrshotel.framework.InMemoryEventStore;
 import fi.luontola.cqrshotel.framework.consistency.ObservedPosition;
 import fi.luontola.cqrshotel.framework.consistency.ReadModelNotUpToDateException;
+import fi.luontola.cqrshotel.framework.eventstore.InMemoryEventStore;
 import fi.luontola.cqrshotel.pricing.InMemoryPricingEngine;
 import fi.luontola.cqrshotel.room.commands.CreateRoom;
 import fi.luontola.cqrshotel.room.queries.FindAllRooms;

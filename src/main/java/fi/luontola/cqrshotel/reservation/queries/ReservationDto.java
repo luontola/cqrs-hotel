@@ -4,7 +4,7 @@
 
 package fi.luontola.cqrshotel.reservation.queries;
 
-import fi.luontola.cqrshotel.util.Struct;
+import fi.luontola.cqrshotel.framework.util.Struct;
 
 import java.time.LocalDate;
 import java.util.UUID;

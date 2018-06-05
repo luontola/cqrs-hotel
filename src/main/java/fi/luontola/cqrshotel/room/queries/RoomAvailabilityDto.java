@@ -4,7 +4,7 @@
 
 package fi.luontola.cqrshotel.room.queries;
 
-import fi.luontola.cqrshotel.util.Struct;
+import fi.luontola.cqrshotel.framework.util.Struct;
 
 import java.util.List;
 import java.util.UUID;

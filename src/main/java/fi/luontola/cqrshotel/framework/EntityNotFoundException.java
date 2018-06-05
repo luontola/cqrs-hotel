@@ -4,11 +4,11 @@
 
 package fi.luontola.cqrshotel.framework;
 
-public interface Projection {
+import java.util.UUID;
 
-    void apply(Envelope<Event> event);
+public class EntityNotFoundException extends RuntimeException {
 
-    default String getProjectionName() {
-        return getClass().getSimpleName();
+    public EntityNotFoundException(UUID streamId) {
+        super(String.valueOf(streamId));
     }
 }

@@ -1,10 +1,14 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
 package fi.luontola.cqrshotel.framework;
 
 import fi.luontola.cqrshotel.FastTests;
+import fi.luontola.cqrshotel.framework.eventstore.EventStore;
+import fi.luontola.cqrshotel.framework.eventstore.InMemoryEventStore;
+import fi.luontola.cqrshotel.framework.eventstore.OptimisticLockingException;
+import fi.luontola.cqrshotel.framework.util.EventListener;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -53,7 +57,7 @@ public class RepositoryTest {
 
     @Test
     public void cannot_get_non_existing_entity_by_id() {
-        thrown.expect(EventStreamNotFoundException.class);
+        thrown.expect(EntityNotFoundException.class);
         thrown.expectMessage(id.toString());
         repo.getById(id);
     }

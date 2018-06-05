@@ -5,9 +5,11 @@
 package fi.luontola.cqrshotel.framework.consistency;
 
 import fi.luontola.cqrshotel.FastTests;
-import fi.luontola.cqrshotel.framework.InMemoryEventStore;
-import fi.luontola.cqrshotel.framework.InMemoryProjectionUpdater;
-import fi.luontola.cqrshotel.room.queries.RoomsView;
+import fi.luontola.cqrshotel.framework.Envelope;
+import fi.luontola.cqrshotel.framework.Event;
+import fi.luontola.cqrshotel.framework.eventstore.InMemoryEventStore;
+import fi.luontola.cqrshotel.framework.projections.InMemoryProjection;
+import fi.luontola.cqrshotel.framework.projections.Projection;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -102,7 +104,7 @@ public class ObservedPositionTest {
     @Test
     public void waiting_returns_silently_if_projection_is_up_to_date() {
         ObservedPosition observedPosition = new ObservedPosition(Duration.ZERO);
-        InMemoryProjectionUpdater projection = new InMemoryProjectionUpdater(new RoomsView(), new InMemoryEventStore());
+        InMemoryProjection projection = new InMemoryProjection(new DummyProjection(), new InMemoryEventStore());
         assertThat(observedPosition.get(), is(projection.getPosition()));
 
         observedPosition.waitForProjectionToUpdate(projection);
@@ -111,11 +113,18 @@ public class ObservedPositionTest {
     @Test
     public void waiting_throws_exception_if_projection_update_times_out() {
         ObservedPosition observedPosition = new ObservedPosition(Duration.ZERO);
-        InMemoryProjectionUpdater projection = new InMemoryProjectionUpdater(new RoomsView(), new InMemoryEventStore());
+        InMemoryProjection projection = new InMemoryProjection(new DummyProjection(), new InMemoryEventStore());
         observedPosition.observe(1);
         assertThat(observedPosition.get(), is(greaterThan(projection.getPosition())));
 
         thrown.expect(ReadModelNotUpToDateException.class);
         observedPosition.waitForProjectionToUpdate(projection);
+    }
+
+
+    private static class DummyProjection implements Projection {
+        @Override
+        public void apply(Envelope<Event> event) {
+        }
     }
 }

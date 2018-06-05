@@ -2,7 +2,11 @@
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
-package fi.luontola.cqrshotel.framework;
+package fi.luontola.cqrshotel.framework.projections;
+
+import fi.luontola.cqrshotel.framework.Envelope;
+import fi.luontola.cqrshotel.framework.Event;
+import fi.luontola.cqrshotel.framework.util.EventListeners;
 
 public abstract class AnnotatedProjection implements Projection {
 

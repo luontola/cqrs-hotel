@@ -4,6 +4,8 @@
 
 package fi.luontola.cqrshotel.framework;
 
+import fi.luontola.cqrshotel.framework.eventstore.EventStore;
+
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
 import java.util.UUID;
@@ -56,7 +58,7 @@ public class Repository<T extends AggregateRoot> {
     public T getById(UUID id) {
         T aggregate = createOrGet(id);
         if (aggregate.getVersion() == EventStore.BEGINNING) {
-            throw new EventStreamNotFoundException(id);
+            throw new EntityNotFoundException(id);
         }
         return aggregate;
     }

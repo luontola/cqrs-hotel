@@ -1,15 +1,18 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
 package fi.luontola.cqrshotel.framework;
+
+import fi.luontola.cqrshotel.framework.util.EventListener;
+import fi.luontola.cqrshotel.framework.util.EventListeners;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import static fi.luontola.cqrshotel.framework.EventListeners.Requirements.MUST_BE_PRIVATE;
+import static fi.luontola.cqrshotel.framework.util.EventListeners.Requirements.MUST_BE_PRIVATE;
 
 /**
  * Aggregate root is the consistency boundary for doing atomic transactions.

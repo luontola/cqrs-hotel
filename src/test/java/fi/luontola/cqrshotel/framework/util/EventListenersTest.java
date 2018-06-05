@@ -1,11 +1,11 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
-package fi.luontola.cqrshotel.framework;
+package fi.luontola.cqrshotel.framework.util;
 
 import fi.luontola.cqrshotel.FastTests;
-import fi.luontola.cqrshotel.util.Struct;
+import fi.luontola.cqrshotel.framework.Event;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -15,7 +15,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static fi.luontola.cqrshotel.framework.EventListeners.Requirements.MUST_BE_PRIVATE;
+import static fi.luontola.cqrshotel.framework.util.EventListeners.Requirements.MUST_BE_PRIVATE;
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;

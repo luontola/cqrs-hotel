@@ -2,10 +2,12 @@
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
-package fi.luontola.cqrshotel.framework;
+package fi.luontola.cqrshotel.framework.eventstore;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fi.luontola.cqrshotel.framework.Envelope;
+import fi.luontola.cqrshotel.framework.Event;
 import org.postgresql.util.PSQLException;
 import org.postgresql.util.ServerErrorMessage;
 import org.slf4j.Logger;

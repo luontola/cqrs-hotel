@@ -4,7 +4,7 @@
 
 package fi.luontola.cqrshotel;
 
-import fi.luontola.cqrshotel.framework.EventStore;
+import fi.luontola.cqrshotel.framework.eventstore.EventStore;
 
 import java.util.List;
 import java.util.Map;

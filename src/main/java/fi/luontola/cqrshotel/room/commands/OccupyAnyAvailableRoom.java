@@ -7,7 +7,7 @@ package fi.luontola.cqrshotel.room.commands;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import fi.luontola.cqrshotel.framework.Command;
-import fi.luontola.cqrshotel.util.Struct;
+import fi.luontola.cqrshotel.framework.util.Struct;
 
 import java.time.Instant;
 import java.util.UUID;

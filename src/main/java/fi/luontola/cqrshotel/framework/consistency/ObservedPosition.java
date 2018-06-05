@@ -4,7 +4,7 @@
 
 package fi.luontola.cqrshotel.framework.consistency;
 
-import fi.luontola.cqrshotel.framework.InMemoryProjectionUpdater;
+import fi.luontola.cqrshotel.framework.projections.UpdatableProjection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +29,7 @@ public class ObservedPosition {
         }
     }
 
-    public void waitForProjectionToUpdate(InMemoryProjectionUpdater projection) {
+    public void waitForProjectionToUpdate(UpdatableProjection projection) {
         try {
             long expectedPosition = this.get();
             boolean upToDate = projection.awaitPosition(expectedPosition, queryTimeout);

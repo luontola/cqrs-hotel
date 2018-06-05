@@ -5,9 +5,9 @@
 package fi.luontola.cqrshotel.framework.processes;
 
 import fi.luontola.cqrshotel.FastTests;
-import fi.luontola.cqrshotel.framework.AnnotatedProjection;
-import fi.luontola.cqrshotel.framework.OptimisticLockingException;
 import fi.luontola.cqrshotel.framework.Publisher;
+import fi.luontola.cqrshotel.framework.eventstore.OptimisticLockingException;
+import fi.luontola.cqrshotel.framework.projections.AnnotatedProjection;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

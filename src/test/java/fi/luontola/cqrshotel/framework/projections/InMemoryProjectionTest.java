@@ -2,11 +2,15 @@
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
-package fi.luontola.cqrshotel.framework;
+package fi.luontola.cqrshotel.framework.projections;
 
 import com.google.common.base.Stopwatch;
 import fi.luontola.cqrshotel.FastTests;
-import fi.luontola.cqrshotel.util.Struct;
+import fi.luontola.cqrshotel.framework.Envelope;
+import fi.luontola.cqrshotel.framework.Event;
+import fi.luontola.cqrshotel.framework.eventstore.EventStore;
+import fi.luontola.cqrshotel.framework.eventstore.InMemoryEventStore;
+import fi.luontola.cqrshotel.framework.util.Struct;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -27,7 +31,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
 
 @Category(FastTests.class)
-public class InMemoryProjectionUpdaterTest {
+public class InMemoryProjectionTest {
 
     @Rule
     public final Timeout timeout = Timeout.seconds(1);
@@ -38,7 +42,7 @@ public class InMemoryProjectionUpdaterTest {
 
     private final EventStore eventStore = new InMemoryEventStore();
     private final SpyProjection projection = new SpyProjection();
-    private final InMemoryProjectionUpdater updater = new InMemoryProjectionUpdater(projection, eventStore);
+    private final InMemoryProjection updater = new InMemoryProjection(projection, eventStore);
 
     @Test
     public void does_nothing_if_no_events() {
@@ -105,7 +109,7 @@ public class InMemoryProjectionUpdaterTest {
     public void awaiting_position_is_not_blocked_by_a_concurrently_running_update() throws InterruptedException {
         eventStore.saveEvents(UUID.randomUUID(), singletonList(one), EventStore.BEGINNING);
         CountDownLatch updateStarted = new CountDownLatch(1);
-        InMemoryProjectionUpdater projection = new InMemoryProjectionUpdater(new Projection() {
+        InMemoryProjection projection = new InMemoryProjection(new Projection() {
             public void apply(Envelope<Event> event) {
                 updateStarted.countDown();
                 sleep(500);

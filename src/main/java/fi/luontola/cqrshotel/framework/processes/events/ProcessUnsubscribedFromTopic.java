@@ -7,7 +7,7 @@ package fi.luontola.cqrshotel.framework.processes.events;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import fi.luontola.cqrshotel.framework.Event;
-import fi.luontola.cqrshotel.util.Struct;
+import fi.luontola.cqrshotel.framework.util.Struct;
 
 import java.util.UUID;
 

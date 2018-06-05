@@ -5,14 +5,14 @@
 package fi.luontola.cqrshotel.framework.processes;
 
 import fi.luontola.cqrshotel.FastTests;
-import fi.luontola.cqrshotel.framework.AnnotatedProjection;
 import fi.luontola.cqrshotel.framework.Command;
 import fi.luontola.cqrshotel.framework.Envelope;
 import fi.luontola.cqrshotel.framework.Event;
-import fi.luontola.cqrshotel.framework.EventListener;
 import fi.luontola.cqrshotel.framework.Publisher;
 import fi.luontola.cqrshotel.framework.SpyMessageGateway;
-import fi.luontola.cqrshotel.util.Struct;
+import fi.luontola.cqrshotel.framework.projections.AnnotatedProjection;
+import fi.luontola.cqrshotel.framework.util.EventListener;
+import fi.luontola.cqrshotel.framework.util.Struct;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

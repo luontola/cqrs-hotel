@@ -4,8 +4,8 @@
 
 package fi.luontola.cqrshotel.capacity.queries;
 
-import fi.luontola.cqrshotel.framework.AnnotatedProjection;
-import fi.luontola.cqrshotel.framework.EventListener;
+import fi.luontola.cqrshotel.framework.projections.AnnotatedProjection;
+import fi.luontola.cqrshotel.framework.util.EventListener;
 import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
 
