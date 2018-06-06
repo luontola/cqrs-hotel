@@ -45,12 +45,12 @@ public class FakeEventStore implements EventStore {
     // generated delegate methods
 
     @Override
-    public List<Envelope<Event>> getEventsForStream(UUID streamId, int sinceVersion) {
+    public List<PersistedEvent> getEventsForStream(UUID streamId, int sinceVersion) {
         return eventStore.getEventsForStream(streamId, sinceVersion);
     }
 
     @Override
-    public List<Envelope<Event>> getAllEvents(long sincePosition) {
+    public List<PersistedEvent> getAllEvents(long sincePosition) {
         return eventStore.getAllEvents(sincePosition);
     }
 

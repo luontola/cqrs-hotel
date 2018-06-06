@@ -80,18 +80,19 @@ public class PsqlEventStore implements EventStore {
                 }
             }
             throw e;
-        } catch (SQLException | JsonProcessingException e) {
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public List<Envelope<Event>> getEventsForStream(UUID streamId, int sinceVersion) {
-        return jdbcTemplate.query("SELECT data, metadata " +
-                        "FROM event " +
-                        "WHERE stream_id = :stream_id " +
-                        "  AND version > :since_version " +
-                        "ORDER BY version",
+    public List<PersistedEvent> getEventsForStream(UUID streamId, int sinceVersion) {
+        return jdbcTemplate.query("SELECT e.data, e.metadata, e.stream_id, e.version, s.position " +
+                        "FROM event e " +
+                        "JOIN event_sequence s USING (stream_id, version) " +
+                        "WHERE e.stream_id = :stream_id " +
+                        "  AND e.version > :since_version " +
+                        "ORDER BY e.version",
                 new MapSqlParameterSource()
                         .addValue("stream_id", streamId)
                         .addValue("since_version", sinceVersion),
@@ -99,8 +100,8 @@ public class PsqlEventStore implements EventStore {
     }
 
     @Override
-    public List<Envelope<Event>> getAllEvents(long sincePosition) {
-        return jdbcTemplate.query("SELECT e.data, e.metadata " +
+    public List<PersistedEvent> getAllEvents(long sincePosition) {
+        return jdbcTemplate.query("SELECT e.data, e.metadata, e.stream_id, e.version, s.position " +
                         "FROM event e " +
                         "JOIN event_sequence s USING (stream_id, version) " +
                         "WHERE s.position > :position " +
@@ -127,20 +128,24 @@ public class PsqlEventStore implements EventStore {
         return position.isEmpty() ? BEGINNING : position.get(0);
     }
 
-    private Envelope<Event> eventMapping(ResultSet rs, int rowNum) throws SQLException {
+    private PersistedEvent eventMapping(ResultSet rs, int rowNum) throws SQLException {
         String data = rs.getString("data");
         String metadata = rs.getString("metadata");
-        return deserialize(data, metadata);
+        Envelope<Event> event = deserialize(data, metadata);
+        UUID streamId = UUID.fromString(rs.getString("stream_id"));
+        int version = rs.getInt("version");
+        long position = rs.getLong("position");
+        return new PersistedEvent(event, streamId, version, position);
     }
 
-    private String[] serializeData(List<Envelope<Event>> events) throws JsonProcessingException {
+    private String[] serializeData(List<Envelope<Event>> events) {
         return events.stream()
                 .map(event -> event.payload)
                 .map(this::serialize)
                 .toArray(String[]::new);
     }
 
-    private String[] serializeMetadata(List<Envelope<Event>> events) throws JsonProcessingException {
+    private String[] serializeMetadata(List<Envelope<Event>> events) {
         return events.stream()
                 .map(PsqlEventStore::getMetadata)
                 .map(this::serialize)

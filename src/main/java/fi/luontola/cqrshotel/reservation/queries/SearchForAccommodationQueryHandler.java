@@ -4,10 +4,9 @@
 
 package fi.luontola.cqrshotel.reservation.queries;
 
-import fi.luontola.cqrshotel.framework.Envelope;
-import fi.luontola.cqrshotel.framework.Event;
 import fi.luontola.cqrshotel.framework.Handler;
 import fi.luontola.cqrshotel.framework.eventstore.EventStore;
+import fi.luontola.cqrshotel.framework.eventstore.PersistedEvent;
 import fi.luontola.cqrshotel.framework.projections.Projection;
 import fi.luontola.cqrshotel.reservation.commands.SearchForAccommodation;
 
@@ -33,8 +32,8 @@ public class SearchForAccommodationQueryHandler implements Handler<SearchForAcco
     }
 
     private void applyEventsFromStream(UUID streamId, Projection projection) {
-        for (Envelope<Event> event : eventStore.getEventsForStream(streamId, EventStore.BEGINNING)) {
-            projection.apply(event);
+        for (PersistedEvent event : eventStore.getEventsForStream(streamId, EventStore.BEGINNING)) {
+            projection.apply(event.event);
         }
     }
 }

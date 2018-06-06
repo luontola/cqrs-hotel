@@ -48,12 +48,12 @@ public class InMemoryEventStore_ReadRecentEventsBenchmark {
     }
 
     @Benchmark
-    public List<Envelope<Event>> getEventsForStream() {
+    public List<PersistedEvent> getEventsForStream() {
         return eventStore.getEventsForStream(streamId, readPosition);
     }
 
     @Benchmark
-    public List<Envelope<Event>> getAllEvents() {
+    public List<PersistedEvent> getAllEvents() {
         return eventStore.getAllEvents(readPosition);
     }
 

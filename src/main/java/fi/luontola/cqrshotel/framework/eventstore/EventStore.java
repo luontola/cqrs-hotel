@@ -16,17 +16,17 @@ public interface EventStore {
 
     long saveEvents(UUID streamId, List<Envelope<Event>> newEvents, int expectedVersion);
 
-    default List<Envelope<Event>> getEventsForStream(UUID streamId) {
+    default List<PersistedEvent> getEventsForStream(UUID streamId) {
         return getEventsForStream(streamId, BEGINNING);
     }
 
-    List<Envelope<Event>> getEventsForStream(UUID streamId, int sinceVersion);
+    List<PersistedEvent> getEventsForStream(UUID streamId, int sinceVersion);
 
-    default List<Envelope<Event>> getAllEvents() {
+    default List<PersistedEvent> getAllEvents() {
         return getAllEvents(BEGINNING);
     }
 
-    List<Envelope<Event>> getAllEvents(long sincePosition);
+    List<PersistedEvent> getAllEvents(long sincePosition);
 
     int getCurrentVersion(UUID streamId);
 

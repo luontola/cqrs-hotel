@@ -5,6 +5,7 @@
 package fi.luontola.cqrshotel.framework;
 
 import fi.luontola.cqrshotel.framework.eventstore.EventStore;
+import fi.luontola.cqrshotel.framework.eventstore.PersistedEvent;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
@@ -47,10 +48,10 @@ public class Repository<T extends AggregateRoot> {
 
     public T createOrGet(UUID id) {
         T aggregate = create(id);
-        List<Envelope<Event>> events = eventStore.getEventsForStream(id);
+        List<PersistedEvent> events = eventStore.getEventsForStream(id);
         aggregate.loadFromHistory(
                 events.stream()
-                        .map(e -> e.payload)
+                        .map(e -> e.event.payload)
                         .collect(Collectors.toList()));
         return aggregate;
     }

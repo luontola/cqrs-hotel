@@ -4,9 +4,8 @@
 
 package fi.luontola.cqrshotel.framework.projections;
 
-import fi.luontola.cqrshotel.framework.Envelope;
-import fi.luontola.cqrshotel.framework.Event;
 import fi.luontola.cqrshotel.framework.eventstore.EventStore;
+import fi.luontola.cqrshotel.framework.eventstore.PersistedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,13 +37,13 @@ public class InMemoryProjection implements UpdatableProjection {
 
     @Override
     public synchronized final void update() {
-        List<Envelope<Event>> events = eventStore.getAllEvents(position);
+        List<PersistedEvent> events = eventStore.getAllEvents(position);
         if (!events.isEmpty()) {
             log.debug("Updating projection with {} events since position {}", events.size(), position);
         }
-        for (Envelope<Event> event : events) {
-            projection.apply(event);
-            position++;
+        for (PersistedEvent event : events) {
+            projection.apply(event.event);
+            position = event.position;
             notifyWaiters();
         }
     }

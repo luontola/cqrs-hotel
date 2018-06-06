@@ -33,6 +33,8 @@ import static org.hamcrest.Matchers.is;
 
 public abstract class EventStoreContract {
 
+    // TODO: use a cursor to search results
+
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
@@ -50,12 +52,15 @@ public abstract class EventStoreContract {
     public void saving_new_aggregate() {
         Envelope<Event> one = dummyEvent("one");
         Envelope<Event> two = dummyEvent("two");
-        UUID id = UUID.randomUUID();
+        UUID streamId = UUID.randomUUID();
+        long start = eventStore.getCurrentPosition();
 
-        eventStore.saveEvents(id, Arrays.asList(one, two), EventStore.BEGINNING);
+        eventStore.saveEvents(streamId, Arrays.asList(one, two), EventStore.BEGINNING);
 
-        List<Envelope<Event>> events = eventStore.getEventsForStream(id);
-        assertThat(events, is(Arrays.asList(one, two)));
+        List<PersistedEvent> events = eventStore.getEventsForStream(streamId);
+        assertThat(events, is(Arrays.asList(
+                new PersistedEvent(one, streamId, 1, start + 1),
+                new PersistedEvent(two, streamId, 2, start + 2))));
     }
 
     @Test
@@ -64,13 +69,18 @@ public abstract class EventStoreContract {
         Envelope<Event> two = dummyEvent("two");
         Envelope<Event> three = dummyEvent("three");
         Envelope<Event> four = dummyEvent("four");
-        UUID id = UUID.randomUUID();
-        eventStore.saveEvents(id, Arrays.asList(one, two), EventStore.BEGINNING);
+        UUID streamId = UUID.randomUUID();
+        long start = eventStore.getCurrentPosition();
+        eventStore.saveEvents(streamId, Arrays.asList(one, two), EventStore.BEGINNING);
 
-        eventStore.saveEvents(id, Arrays.asList(three, four), 2);
+        eventStore.saveEvents(streamId, Arrays.asList(three, four), 2);
 
-        List<Envelope<Event>> events = eventStore.getEventsForStream(id);
-        assertThat(events, is(Arrays.asList(one, two, three, four)));
+        List<PersistedEvent> events = eventStore.getEventsForStream(streamId);
+        assertThat(events, is(Arrays.asList(
+                new PersistedEvent(one, streamId, 1, start + 1),
+                new PersistedEvent(two, streamId, 2, start + 2),
+                new PersistedEvent(three, streamId, 3, start + 3),
+                new PersistedEvent(four, streamId, 4, start + 4))));
     }
 
     @Test
@@ -79,29 +89,29 @@ public abstract class EventStoreContract {
         Envelope<Event> two = dummyEvent("two");
         Envelope<Event> three = dummyEvent("three");
         Envelope<Event> four = dummyEvent("four");
-        UUID id = UUID.randomUUID();
-        eventStore.saveEvents(id, Arrays.asList(one, two), EventStore.BEGINNING);
+        UUID streamId = UUID.randomUUID();
+        eventStore.saveEvents(streamId, Arrays.asList(one, two), EventStore.BEGINNING);
 
         thrown.expect(OptimisticLockingException.class);
-        thrown.expectMessage("expected version 1 but was 2 for stream " + id);
-        eventStore.saveEvents(id, Arrays.asList(three, four), 1);
+        thrown.expectMessage("expected version 1 but was 2 for stream " + streamId);
+        eventStore.saveEvents(streamId, Arrays.asList(three, four), 1);
     }
 
     @Test
     public void non_existing_streams_are_reported_as_empty() {
-        UUID id = UUID.randomUUID();
+        UUID streamId = UUID.randomUUID();
 
-        List<Envelope<Event>> events = eventStore.getEventsForStream(id);
+        List<PersistedEvent> events = eventStore.getEventsForStream(streamId);
         assertThat(events, is(empty()));
     }
 
     @Test
     public void reports_current_stream_version() {
-        UUID id = UUID.randomUUID();
+        UUID streamId = UUID.randomUUID();
 
-        int v0 = eventStore.getCurrentVersion(id);
-        eventStore.saveEvents(id, Arrays.asList(dummyEvent("foo")), v0);
-        int v1 = eventStore.getCurrentVersion(id);
+        int v0 = eventStore.getCurrentVersion(streamId);
+        eventStore.saveEvents(streamId, Arrays.asList(dummyEvent("foo")), v0);
+        int v1 = eventStore.getCurrentVersion(streamId);
 
         assertThat("v0", v0, is(0));
         assertThat("v1", v1, is(1));
@@ -118,69 +128,72 @@ public abstract class EventStoreContract {
 
     @Test
     public void global_position_starts_from_one() {
-        // ensure at least two events have been saved previously
+        // ensure at least two events have been saved previously (the SQL database is not emptied between tests)
         eventStore.saveEvents(UUID.randomUUID(),
                 Arrays.asList(dummyEvent("one"), dummyEvent("two")),
                 EventStore.BEGINNING);
 
-        List<Envelope<Event>> sinceBeginning = eventStore.getAllEvents(EventStore.BEGINNING).subList(0, 2);
-        List<Envelope<Event>> sinceOne = eventStore.getAllEvents(1).subList(0, 1);
+        List<PersistedEvent> sinceBeginning = eventStore.getAllEvents(EventStore.BEGINNING).subList(0, 2);
+        List<PersistedEvent> sinceOne = eventStore.getAllEvents(1).subList(0, 1);
 
         assertThat(sinceBeginning.get(1), is(sinceOne.get(0)));
+        assertThat(sinceBeginning.get(0).position, is(1L));
+        assertThat(sinceBeginning.get(1).position, is(2L));
     }
 
     @Test
     public void reading_events_since_a_particular_version() {
         Envelope<Event> one = dummyEvent("one");
         Envelope<Event> two = dummyEvent("two");
-        UUID id = UUID.randomUUID();
-        eventStore.saveEvents(id, Arrays.asList(one, two), EventStore.BEGINNING);
+        long start = eventStore.getCurrentPosition();
+        UUID streamId = UUID.randomUUID();
+        eventStore.saveEvents(streamId, Arrays.asList(one, two), EventStore.BEGINNING);
 
-        assertThat("since beginning", eventStore.getEventsForStream(id, EventStore.BEGINNING),
-                is(Arrays.asList(one, two)));
-        assertThat("since middle", eventStore.getEventsForStream(id, 1),
-                is(Arrays.asList(two)));
-        assertThat("since end", eventStore.getEventsForStream(id, 2),
-                is(Arrays.asList()));
+        assertThat("since beginning", eventStore.getEventsForStream(streamId, EventStore.BEGINNING), is(Arrays.asList(
+                new PersistedEvent(one, streamId, 1, start + 1),
+                new PersistedEvent(two, streamId, 2, start + 2))));
+        assertThat("since middle", eventStore.getEventsForStream(streamId, 1), is(Arrays.asList(
+                new PersistedEvent(two, streamId, 2, start + 2))));
+        assertThat("since end", eventStore.getEventsForStream(streamId, 2), is(empty()));
     }
 
     @Test
     public void reading_events_from_all_streams() {
         Envelope<Event> one = dummyEvent("one");
         Envelope<Event> two = dummyEvent("two");
-        long position = eventStore.getCurrentPosition();
-        UUID id1 = UUID.randomUUID();
-        eventStore.saveEvents(id1, Arrays.asList(one), EventStore.BEGINNING);
-        UUID id2 = UUID.randomUUID();
-        eventStore.saveEvents(id2, Arrays.asList(two), EventStore.BEGINNING);
+        long start = eventStore.getCurrentPosition();
+        UUID streamId1 = UUID.randomUUID();
+        UUID streamId2 = UUID.randomUUID();
+        eventStore.saveEvents(streamId1, Arrays.asList(one), EventStore.BEGINNING);
+        eventStore.saveEvents(streamId2, Arrays.asList(two), EventStore.BEGINNING);
 
-        List<Envelope<Event>> events = eventStore.getAllEvents(position);
+        List<PersistedEvent> events = (eventStore.getAllEvents(start));
 
-        assertThat(events, is(Arrays.asList(one, two)));
+        assertThat(events, is(Arrays.asList(
+                new PersistedEvent(one, streamId1, 1, start + 1),
+                new PersistedEvent(two, streamId2, 1, start + 2))));
     }
 
     @Test
     public void reports_the_global_position_of_the_last_saved_event() {
-        Envelope<Event> a1 = dummyEvent("a1");
-        Envelope<Event> a2 = dummyEvent("a2");
-        Envelope<Event> b = dummyEvent("b");
-        Envelope<Event> c = dummyEvent("c");
-        long posA = eventStore.saveEvents(UUID.randomUUID(), Arrays.asList(a1, a2), EventStore.BEGINNING);
-        long posB = eventStore.saveEvents(UUID.randomUUID(), Arrays.asList(b), EventStore.BEGINNING);
-        long posC = eventStore.saveEvents(UUID.randomUUID(), Arrays.asList(c), EventStore.BEGINNING);
+        Envelope<Event> a = dummyEvent("a");
+        Envelope<Event> b1 = dummyEvent("b1");
+        Envelope<Event> b2 = dummyEvent("b2");
+        UUID streamA = UUID.randomUUID();
+        UUID streamB = UUID.randomUUID();
+        long posA = eventStore.saveEvents(streamA, Arrays.asList(a), EventStore.BEGINNING);
+        long posB = eventStore.saveEvents(streamB, Arrays.asList(b1, b2), EventStore.BEGINNING);
 
-        assertThat("since a", eventStore.getAllEvents(posA), is(Arrays.asList(b, c)));
-        assertThat("since b", eventStore.getAllEvents(posB), is(Arrays.asList(c)));
-        assertThat("since c", eventStore.getAllEvents(posC), is(Arrays.asList()));
+        assertThat(eventStore.getAllEvents(posA - 1).get(0), is(new PersistedEvent(a, streamA, 1, posA)));
+        assertThat(eventStore.getAllEvents(posB - 1).get(0), is(new PersistedEvent(b2, streamB, 2, posB)));
     }
 
     @Test
     public void concurrent_writers_to_same_stream() throws Exception {
         final int BATCH_SIZE = 10;
         final int ITERATIONS = 100;
-
         UUID streamId = UUID.randomUUID();
-        long initialPosition = eventStore.getCurrentPosition();
+        long start = eventStore.getCurrentPosition();
         AtomicInteger taskIdSeq = new AtomicInteger(0);
 
         repeatInParallel(ITERATIONS, () -> {
@@ -198,10 +211,10 @@ public abstract class EventStoreContract {
             }
         }, createRuntimeInvariantChecker(BATCH_SIZE));
 
-        List<Envelope<Event>> streamEvents = eventStore.getEventsForStream(streamId);
+        List<PersistedEvent> streamEvents = eventStore.getEventsForStream(streamId);
         assertThat("number of saved events", streamEvents.size(), is(BATCH_SIZE * ITERATIONS));
         assertAtomicBatches(BATCH_SIZE, streamEvents);
-        List<Envelope<Event>> allEvents = eventStore.getAllEvents(initialPosition);
+        List<PersistedEvent> allEvents = eventStore.getAllEvents(start);
         assertThat("global order should equal stream order", allEvents, contains(streamEvents.toArray()));
     }
 
@@ -209,8 +222,7 @@ public abstract class EventStoreContract {
     public void concurrent_writers_to_different_streams() throws Exception {
         final int BATCH_SIZE = 10;
         final int ITERATIONS = 100;
-
-        long initialPosition = eventStore.getCurrentPosition();
+        long start = eventStore.getCurrentPosition();
         AtomicInteger taskIdSeq = new AtomicInteger(0);
 
         repeatInParallel(ITERATIONS, () -> {
@@ -221,17 +233,16 @@ public abstract class EventStoreContract {
             eventStore.saveEvents(streamId, batch, EventStore.BEGINNING);
         }, createRuntimeInvariantChecker(BATCH_SIZE));
 
-        List<Envelope<Event>> allEvents = eventStore.getAllEvents(initialPosition);
+        List<PersistedEvent> allEvents = eventStore.getAllEvents(start);
         assertThat("number of saved events", allEvents.size(), is(BATCH_SIZE * ITERATIONS));
         assertAtomicBatches(BATCH_SIZE, allEvents);
     }
 
     private Runnable createRuntimeInvariantChecker(int batchSize) {
-        long initialPosition = eventStore.getCurrentPosition();
-        AtomicLong position = new AtomicLong(initialPosition);
+        AtomicLong position = new AtomicLong(eventStore.getCurrentPosition());
         return () -> {
             long pos = position.get();
-            List<Envelope<Event>> events = eventStore.getAllEvents(pos);
+            List<PersistedEvent> events = eventStore.getAllEvents(pos);
             assertAtomicBatches(batchSize, events);
             position.set(pos + events.size());
         };
@@ -272,21 +283,21 @@ public abstract class EventStoreContract {
         return events;
     }
 
-    private static void assertAtomicBatches(int batchSize, List<Envelope<Event>> events) {
+    private static void assertAtomicBatches(int batchSize, List<PersistedEvent> events) {
         if (events.size() % batchSize != 0) {
             throw new AssertionError("incomplete batches found: " + events.size() + " events but " + batchSize + " batch size");
         }
-        List<List<Envelope<Event>>> batches = new ArrayList<>();
+        List<List<PersistedEvent>> batches = new ArrayList<>();
         for (int i = 0; i < events.size() / batchSize; i++) {
             int start = i * batchSize;
             batches.add(events.subList(start, start + batchSize));
         }
-        for (List<Envelope<Event>> batch : batches) {
-            DummyEvent sample = (DummyEvent) batch.get(0).payload;
+        for (List<PersistedEvent> batch : batches) {
+            DummyEvent sample = (DummyEvent) batch.get(0).event.payload;
             String prefix = sample.message.substring(0, sample.message.indexOf('.'));
             try {
                 for (int i = 0; i < batch.size(); i++) {
-                    DummyEvent event = (DummyEvent) batch.get(i).payload;
+                    DummyEvent event = (DummyEvent) batch.get(i).event.payload;
                     assertThat(event.message, is(prefix + "." + i));
                 }
             } catch (AssertionError e) {
@@ -294,9 +305,6 @@ public abstract class EventStoreContract {
             }
         }
     }
-
-    // TODO: use a cursor to search results
-
 
     private static Envelope<Event> dummyEvent(String message) {
         // fill in all IDs to make sure that they all are saved and loaded correctly
