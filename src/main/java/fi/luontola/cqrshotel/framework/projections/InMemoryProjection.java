@@ -39,7 +39,8 @@ public class InMemoryProjection implements UpdatableProjection {
     public synchronized final void update() {
         List<PersistedEvent> events = eventStore.getAllEvents(position);
         if (!events.isEmpty()) {
-            log.debug("Updating projection with {} events since position {}", events.size(), position);
+            PersistedEvent last = events.get(events.size() - 1);
+            log.debug("Updating projection with {} events from position {} to {}", events.size(), position, last.position);
         }
         for (PersistedEvent event : events) {
             projection.apply(event.event);
