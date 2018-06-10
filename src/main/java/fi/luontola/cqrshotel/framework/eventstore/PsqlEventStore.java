@@ -47,9 +47,16 @@ public class PsqlEventStore implements EventStore {
 
     @Override
     public long saveEvents(UUID streamId, List<Envelope<Event>> newEvents, int expectedVersion) {
-        try (Connection connection = DataSourceUtils.getConnection(dataSource)) {
-            Array data = connection.createArrayOf("jsonb", serializeData(newEvents));
-            Array metadata = connection.createArrayOf("jsonb", serializeMetadata(newEvents));
+        try {
+            Array data;
+            Array metadata;
+            try (Connection connection = DataSourceUtils.getConnection(dataSource)) {
+                // The connection must be closed before using JdbcTemplate, because otherwise
+                // the JdbcTemplate tries to get another connection and the pool may run out
+                // of available connections.
+                data = connection.createArrayOf("jsonb", serializeData(newEvents));
+                metadata = connection.createArrayOf("jsonb", serializeMetadata(newEvents));
+            }
 
             long endPosition = jdbcTemplate.queryForObject(
                     "SELECT save_events(:stream_id, :expected_version, :data, :metadata)",

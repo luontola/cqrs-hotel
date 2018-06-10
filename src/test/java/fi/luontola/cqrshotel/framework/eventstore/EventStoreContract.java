@@ -202,8 +202,8 @@ public abstract class EventStoreContract {
 
             while (true) {
                 try {
-                    int version1 = eventStore.getCurrentVersion(streamId);
-                    eventStore.saveEvents(streamId, batch, version1);
+                    int version = eventStore.getCurrentVersion(streamId);
+                    eventStore.saveEvents(streamId, batch, version);
                     return;
                 } catch (OptimisticLockingException e) {
                     // retry
