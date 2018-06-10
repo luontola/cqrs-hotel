@@ -149,6 +149,7 @@ public class RoomAvailabilityViewTest {
         LocalDate end = LocalDate.parse("2000-01-05");
         RoomAvailabilityDto[] result = getAvailabilityByDateRange.handle(new GetAvailabilityByDateRange(start, end));
 
+        // XXX: assumes Hotel.TIMEZONE is Europe/Helsinki but it's not apparent in this test (the timezone is not configurable)
         RoomAvailabilityIntervalDto interval = result[0].details.get(0);
         assertThat("start", interval.start, is(Instant.parse("1999-12-31T22:00:00Z")));
         assertThat("end", interval.end, is(Instant.parse("2000-01-05T22:00:00Z")));

@@ -14,7 +14,7 @@ import java.time.ZonedDateTime;
 public class Hotel {
 
     public static final CurrencyUnit CURRENCY = Monetary.getCurrency("EUR");
-    public static final ZoneId TIMEZONE = ZoneId.systemDefault();
+    public static final ZoneId TIMEZONE = ZoneId.of("Europe/Helsinki");
     public static final LocalTime CHECK_IN_TIME = LocalTime.of(14, 0);
     public static final LocalTime CHECK_OUT_TIME = LocalTime.of(12, 0);
 
