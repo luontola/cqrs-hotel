@@ -48,8 +48,8 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.stub;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.POST;
@@ -75,8 +75,8 @@ public class ApiControllerTest {
 
     @Before
     public void initMocks() {
-        stub(pricingEngine.getAccommodationPrice(any(LocalDate.class)))
-                .toReturn(Optional.of(pricePerDay));
+        when(pricingEngine.getAccommodationPrice(any(LocalDate.class)))
+                .thenReturn(Optional.of(pricePerDay));
     }
 
     @Test
