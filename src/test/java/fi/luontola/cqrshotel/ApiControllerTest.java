@@ -44,6 +44,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.emptyArray;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
@@ -184,7 +185,8 @@ public class ApiControllerTest {
         assertThat("availability intervals", intervals, is(not(empty())));
         RoomAvailabilityIntervalDto first = intervals.get(0);
         RoomAvailabilityIntervalDto last = intervals.get(intervals.size() - 1);
-        assertThat("availability interval in days", first.start.until(last.end, DAYS), is(3L));
+        long days = first.start.until(last.end, DAYS); // may be longer than 3 days when the first or last interval is occupied
+        assertThat("availability interval in days", days, is(greaterThanOrEqualTo(3L)));
     }
 
     @Test
