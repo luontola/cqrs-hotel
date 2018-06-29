@@ -45,17 +45,41 @@ To learn how the **read models** work, read [ReservationsView](https://github.co
 
 ## Running
 
-You must have installed Java 8, Maven 3.2.5, Node.js 6.8.0, Yarn 1.0, Docker 1.12 or higher versions of those. The project can be built with the `./build.sh` script. Below are the commands for developing this project.
+The easiest way to run this project is to use [Docker](https://www.docker.com/community-edition).
 
-Start the database:
+Start the application
+
+    docker-compose pull
+    docker-compose up -d 
+
+The application will run at http://localhost:8080/
+
+View application logs (in `--follow` mode)
+
+    docker-compose logs -f api
+
+Stop the application
+
+    docker-compose stop
+
+Stop the application and remove all data 
+
+    docker-compose down
+
+
+## Developing
+
+To develop this project, you must have installed recent versions of [Java (JDK)](http://www.oracle.com/technetwork/java/javase/downloads/), [Maven](https://maven.apache.org/), [Node.js](https://nodejs.org/), [Yarn](https://yarnpkg.com/) and [Docker](https://www.docker.com/community-edition). You can do a clean build with the `./build.sh` script. You can run this project's components individually with the following commands.
+
+Start the database
 
     docker-compose up -d db
 
-Start the application:
+Start the API backend (without an IDE)
 
     mvn spring-boot:run
 
-Start the web frontend:
+Start the web frontend (with live reloading)
 
     yarn install
     yarn start
