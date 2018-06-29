@@ -7,9 +7,11 @@ This project is a sandbox for exploring how CQRS+ES affects the design of a syst
 
 This project strives to differ from your typical toy examples in that *the problem domain is complex enough to warrant all the techniques being used.* The solution has been simplified, but the implemented features are production quality.
 
-GitHub Project: <https://github.com/orfjackal/cqrs-hotel>
+**Source Code:** <https://github.com/orfjackal/cqrs-hotel>
 
-[![Build Status](https://travis-ci.org/orfjackal/cqrs-hotel.svg?branch=master)](https://travis-ci.org/orfjackal/cqrs-hotel)
+[![CI Build Status](https://travis-ci.org/orfjackal/cqrs-hotel.svg?branch=master)](https://travis-ci.org/orfjackal/cqrs-hotel)
+[![Docker Build Status - API](https://img.shields.io/docker/build/luontola/cqrs-hotel-api.svg)](https://hub.docker.com/r/luontola/cqrs-hotel-api/)
+[![Docker Build Status - Web](https://img.shields.io/docker/build/luontola/cqrs-hotel-web.svg)](https://hub.docker.com/r/luontola/cqrs-hotel-web/)
 
 
 ## Project Status
