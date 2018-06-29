@@ -1,13 +1,34 @@
-FROM java:8-jre-alpine
+FROM openjdk:10-jdk AS builder
 
-RUN adduser -S -h /app app
+# tools
+RUN apt-get update && \
+    apt-get install -y maven && \
+    rm -rf /var/lib/apt/lists/*
 
-EXPOSE 8080
-
-WORKDIR /app
-
+# working directory
+RUN useradd --create-home app && \
+    mkdir -p /project && \
+    chown app /project
+WORKDIR /project
 USER app
 
+# cache Maven dependencies
+COPY --chown=app pom.xml /project/
+RUN mvn dependency:go-offline
+
+# do the build
+COPY --chown=app . /project/
+RUN mvn clean verify -DskipTests --offline --batch-mode --errors
+
+# ------------------------------------------------------------
+
+FROM openjdk:10-jre-slim
+
+RUN adduser --system --home /app app
+WORKDIR /app
+USER app
+
+EXPOSE 8080
 CMD ["java", "-Xmx200m", "-XX:MaxMetaspaceSize=64m", "-jar", "cqrs-hotel.jar", "--spring.profiles.active=docker"]
 
-COPY target/cqrs-hotel.jar /app/cqrs-hotel.jar
+COPY --from=builder /project/target/cqrs-hotel.jar /app/cqrs-hotel.jar
