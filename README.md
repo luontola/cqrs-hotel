@@ -7,6 +7,7 @@ This project is a sandbox for exploring how CQRS+ES affects the design of a syst
 
 This project strives to differ from your typical toy examples in that *the problem domain is complex enough to warrant all the techniques being used.* The solution has been simplified, but the implemented features are production quality.
 
+GitHub Project: <https://github.com/orfjackal/cqrs-hotel>
 
 ## Project Status
 

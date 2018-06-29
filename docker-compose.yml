@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-web
-    image: cqrs-hotel-web
+    image: luontola/cqrs-hotel-web
     ports:
     - "8080:80"
 
