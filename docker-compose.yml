@@ -13,7 +13,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-api
-    image: cqrs-hotel-api
+    image: luontola/cqrs-hotel-api
     environment:
       DB_USERNAME: cqrshotel
       DB_PASSWORD: cqrshotel
