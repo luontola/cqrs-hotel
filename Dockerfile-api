@@ -14,7 +14,7 @@ USER app
 
 # cache Maven dependencies
 COPY --chown=app pom.xml /project/
-RUN mvn dependency:go-offline
+RUN mvn dependency:go-offline --batch-mode --errors
 
 # do the build
 COPY --chown=app . /project/

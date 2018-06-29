@@ -8,13 +8,13 @@ USER node
 
 # cache node_modules
 COPY --chown=node package.json yarn.lock /project/
-RUN yarn install --frozen-lockfile --non-interactive && \
+RUN yarn install --frozen-lockfile --non-interactive --no-progress && \
     yarn cache clean
 
 # do the build
 COPY --chown=node . /project/
 RUN yarn run test && \
-    yarn run build
+    yarn run build --no-progress --no-colors
 
 # ------------------------------------------------------------
 
