@@ -162,6 +162,34 @@
                 </configuration>
             </plugin>
 
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>**/*Test.java</include>
+                    </includes>
+                    <groups>fi.luontola.cqrshotel.FastTests</groups>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>**/*Test.java</include>
+                    </includes>
+                    <groups>fi.luontola.cqrshotel.SlowTests</groups>
+                </configuration>
+            </plugin>
+
+            <!-- XXX: plugin dependencies which `mvn dependency:go-offline` fails to detect automatically -->
+
+            <plugin>
+                <groupId>org.apache.maven.surefire</groupId>
+                <artifactId>surefire-junit47</artifactId>
+                <version>${maven-surefire-plugin.version}</version>
+            </plugin>
+
         </plugins>
     </build>
 </project>

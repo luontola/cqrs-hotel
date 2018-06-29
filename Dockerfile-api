@@ -18,7 +18,7 @@ RUN mvn dependency:go-offline --batch-mode --errors
 
 # do the build
 COPY --chown=app . /project/
-RUN mvn clean verify -DskipTests --offline --batch-mode --errors
+RUN mvn clean package --offline --batch-mode --errors
 
 # ------------------------------------------------------------
 
