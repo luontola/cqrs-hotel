@@ -9,6 +9,9 @@ This project strives to differ from your typical toy examples in that *the probl
 
 GitHub Project: <https://github.com/orfjackal/cqrs-hotel>
 
+[![Build Status](https://travis-ci.org/orfjackal/cqrs-hotel.svg?branch=master)](https://travis-ci.org/orfjackal/cqrs-hotel)
+
+
 ## Project Status
 
 - technical features
