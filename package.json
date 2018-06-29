@@ -1,9 +1,14 @@
 {
   "name": "cqrs-hotel",
-  "version": "1.0.0",
+  "version": "1.0.0-SNAPSHOT",
   "description": "Example application about CQRS and Event Sourcing",
-  "directories": {
-    "test": "src/test/js"
+  "homepage": "https://github.com/orfjackal/cqrs-hotel",
+  "author": "Esko Luontola (http://luontola.fi)",
+  "license": "Apache-2.0",
+  "bugs": "https://github.com/orfjackal/cqrs-hotel/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/orfjackal/cqrs-hotel.git"
   },
   "dependencies": {
     "axios": "0.15.3",
@@ -39,21 +44,15 @@
     "webpack": "2.2.1",
     "webpack-dev-server": "2.4.2"
   },
+  "engines": {
+    "node": ">= 10.0.0",
+    "yarn": ">= 1.0.0"
+  },
   "scripts": {
     "test": "cross-env NODE_ENV=test mocha --compilers js:babel-core/register --require ./src/main/js/test_setup.js 'src/main/js/**/*.test.js'",
     "build": "cross-env NODE_ENV=production webpack --progress --colors -p",
     "autobuild": "webpack --progress --colors --watch",
     "start": "webpack-dev-server --content-base src/main/web --host 0.0.0.0 --progress --colors",
     "analyze": "source-map-explorer target/webpack/bundle.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/orfjackal/cqrs-hotel.git"
-  },
-  "author": "Esko Luontola",
-  "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/orfjackal/cqrs-hotel/issues"
-  },
-  "homepage": "https://github.com/orfjackal/cqrs-hotel"
+  }
 }
