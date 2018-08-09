@@ -9,9 +9,9 @@ This project strives to differ from your typical toy examples in that *the probl
 
 **Source Code:** <https://github.com/luontola/cqrs-hotel>
 
-[![CI Build Status](https://travis-ci.org/luontola/cqrs-hotel.svg?branch=master)](https://travis-ci.org/luontola/cqrs-hotel)
-[![Docker Build Status - API](https://img.shields.io/docker/build/luontola/cqrs-hotel-api.svg)](https://hub.docker.com/r/luontola/cqrs-hotel-api/)
-[![Docker Build Status - Web](https://img.shields.io/docker/build/luontola/cqrs-hotel-web.svg)](https://hub.docker.com/r/luontola/cqrs-hotel-web/)
+ `master` branch  | API container | Web container
+:----------------:|:-------------:|:-------------:
+[![CI Build Status](https://travis-ci.org/luontola/cqrs-hotel.svg?branch=master)](https://travis-ci.org/luontola/cqrs-hotel) | [![Docker Build Status - API](https://img.shields.io/docker/build/luontola/cqrs-hotel-api.svg)](https://hub.docker.com/r/luontola/cqrs-hotel-api/) | [![Docker Build Status - Web](https://img.shields.io/docker/build/luontola/cqrs-hotel-web.svg)](https://hub.docker.com/r/luontola/cqrs-hotel-web/)
 
 
 ## Project Status
