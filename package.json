@@ -2,13 +2,13 @@
   "name": "cqrs-hotel",
   "version": "1.0.0-SNAPSHOT",
   "description": "Example application about CQRS and Event Sourcing",
-  "homepage": "https://github.com/orfjackal/cqrs-hotel",
+  "homepage": "https://github.com/luontola/cqrs-hotel",
   "author": "Esko Luontola (http://luontola.fi)",
   "license": "Apache-2.0",
-  "bugs": "https://github.com/orfjackal/cqrs-hotel/issues",
+  "bugs": "https://github.com/luontola/cqrs-hotel/issues",
   "repository": {
     "type": "git",
-    "url": "https://github.com/orfjackal/cqrs-hotel.git"
+    "url": "https://github.com/luontola/cqrs-hotel.git"
   },
   "dependencies": {
     "axios": "0.15.3",

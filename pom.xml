@@ -15,7 +15,7 @@
 
     <name>CQRS Hotel</name>
     <description>Example application about CQRS and Event Sourcing</description>
-    <url>https://github.com/orfjackal/cqrs-hotel</url>
+    <url>https://github.com/luontola/cqrs-hotel</url>
     <inceptionYear>2016</inceptionYear>
 
     <licenses>
@@ -34,8 +34,8 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/orfjackal/cqrs-hotel.git</connection>
-        <url>https://github.com/orfjackal/cqrs-hotel</url>
+        <connection>scm:git:git://github.com/luontola/cqrs-hotel.git</connection>
+        <url>https://github.com/luontola/cqrs-hotel</url>
     </scm>
 
     <properties>

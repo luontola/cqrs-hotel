@@ -61,7 +61,7 @@ class Layout extends React.Component {
             <MenuLink to="/" title="Home"/>
             <MenuLink to="/reservations" title="Reservations" divided/>
             <MenuLink to="/rooms" title="Rooms"/>
-            <MenuLink to="https://github.com/orfjackal/cqrs-hotel" title="GitHub Project 🔗" divided/>
+            <MenuLink to="https://github.com/luontola/cqrs-hotel" title="GitHub Project 🔗" divided/>
           </ul>
         </div>
       </div>
