@@ -12,7 +12,10 @@ RUN yarn install --frozen-lockfile --non-interactive --no-progress && \
     yarn cache clean
 
 # do the build
-COPY --chown=node . /project/
+COPY --chown=node .babelrc webpack.config.js /project/
+COPY --chown=node src/main/web /project/src/main/web/
+COPY --chown=node src/main/css /project/src/main/css/
+COPY --chown=node src/main/js /project/src/main/js/
 RUN yarn run test && \
     yarn run build --no-progress --no-colors
 

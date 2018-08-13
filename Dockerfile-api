@@ -17,7 +17,9 @@ COPY --chown=app pom.xml /project/
 RUN mvn dependency:go-offline --batch-mode --errors
 
 # do the build
-COPY --chown=app . /project/
+COPY --chown=app src/main/resources /project/src/main/resources/
+COPY --chown=app src/main/java /project/src/main/java/
+COPY --chown=app src/test/java /project/src/test/java/
 RUN mvn clean package --offline --batch-mode --errors
 
 # ------------------------------------------------------------
