@@ -80,7 +80,7 @@ Start the database
 
     docker-compose up -d db
 
-Start the API backend (without an IDE)
+Start the API backend (if not using an IDE)
 
     mvn spring-boot:run
 
@@ -90,6 +90,11 @@ Start the web frontend (with live reloading)
     yarn start
 
 The application will run at http://localhost:8080/
+
+You may also start just the frontend or backend using Docker if you're developing only one layer of the application.  
+
+    docker-compose up -d api
+    docker-compose up -d web
 
 
 ## More Resources

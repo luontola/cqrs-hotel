@@ -18,6 +18,8 @@ services:
       DB_USERNAME: cqrshotel
       DB_PASSWORD: cqrshotel
       DB_URL: jdbc:postgresql://db:5432/cqrshotel
+    ports:
+    - "8081:8080"
 
   db:
     image: postgres:9.6.1
