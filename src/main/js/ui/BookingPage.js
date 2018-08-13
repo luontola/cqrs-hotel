@@ -18,7 +18,13 @@ const BookingPage = ({reservation, reservationOffer, makeReservation}) => (
       <b>Departure:</b> {reservationOffer.departure}<br/>
       {reservationOffer.totalPrice ? <div>
         <b>Cost:</b> {reservationOffer.totalPrice}<br/>
-        <button type="button" // TODO: fields for inputting name and email
+
+        <h3>Contact Information</h3>
+        <p>
+          <b>Name:</b> <input type="text" name="name"/><br/>
+          <b>Email:</b> <input type="text" name="email"/>
+        </p>
+        <button type="button" // TODO: hook in the fields for name and email
                 onClick={() => makeReservation({...reservationOffer, name: "John Doe", email: "john@example.com"})}>
           Make Reservation
         </button>
