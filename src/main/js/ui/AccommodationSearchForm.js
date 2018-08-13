@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2018 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 import React from "react";
@@ -13,8 +13,8 @@ import addDays from "date-fns/add_days";
 let AccommodationSearchForm = ({handleSubmit, submitting, error}) => (
   <form onSubmit={handleSubmit(searchForAccommodation)}>
     <div>
-      <Field name="arrival" component="input" type="text"/>
-      <Field name="departure" component="input" type="text"/>
+      <Field name="arrival" component="input" type="date"/>
+      <Field name="departure" component="input" type="date"/>
       <button type="submit" disabled={submitting}>Find A Room</button>
       {error && <div style={{color: 'red'}}>{error}</div>}
     </div>
