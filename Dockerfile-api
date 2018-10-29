@@ -1,4 +1,4 @@
-FROM openjdk:10-jdk AS builder
+FROM openjdk:11-jdk AS builder
 
 # tools
 RUN apt-get update && \
@@ -24,7 +24,7 @@ RUN mvn clean package --offline --batch-mode --errors
 
 # ------------------------------------------------------------
 
-FROM openjdk:10-jre-slim
+FROM openjdk:11-jre-slim
 
 RUN adduser --system --home /app app
 WORKDIR /app
