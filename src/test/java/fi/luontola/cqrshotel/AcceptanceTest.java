@@ -47,7 +47,7 @@ public class AcceptanceTest {
 
     private static final UUID reservationId = UUID.randomUUID();
     private static final LocalDate arrival = LocalDate.now();
-    private static final LocalDate departure = arrival.plusDays(1);
+    private static final LocalDate departure = arrival.plusDays(2);
 
     private final Clock clock = Clock.systemDefaultZone();
     private final EventStore eventStore = new InMemoryEventStore();
