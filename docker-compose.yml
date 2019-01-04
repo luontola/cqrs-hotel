@@ -22,7 +22,7 @@ services:
     - "8081:8080"
 
   db:
-    image: postgres:9.6.1
+    image: postgres:11
     environment:
       POSTGRES_USER: cqrshotel
       POSTGRES_PASSWORD: cqrshotel
