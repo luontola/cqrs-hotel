@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -167,6 +167,9 @@ public class Core {
 
     @PostConstruct
     public void startup() {
+        // FIXME: Spring calls this before Flyway is initialized,
+        //  which results in error when the database tables are missing.
+        //  Must configure Spring initialization order, or better, get rid of Spring.
         projectionsUpdater.updateAll();
     }
 
