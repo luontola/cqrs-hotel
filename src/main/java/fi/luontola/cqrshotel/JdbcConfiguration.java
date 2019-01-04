@@ -1,4 +1,4 @@
-// Copyright © 2016 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -14,8 +14,6 @@ import org.springframework.jdbc.datasource.DataSourceUtils;
 
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
 @Configuration
@@ -34,8 +32,8 @@ public class JdbcConfiguration {
 
     @PostConstruct
     public void statusReport() throws SQLException {
-        try (Connection connection = DataSourceUtils.getConnection(dataSource)) {
-            DatabaseMetaData metaData = connection.getMetaData();
+        try (var connection = DataSourceUtils.getConnection(dataSource)) {
+            var metaData = connection.getMetaData();
             log.info("Database: {} {}", metaData.getDatabaseProductName(), metaData.getDatabaseProductVersion());
             log.info("User: {}", metaData.getUserName());
             log.info("Connection URL: {} (configuration was {})", metaData.getURL(), dataSourceProperties.getUrl());

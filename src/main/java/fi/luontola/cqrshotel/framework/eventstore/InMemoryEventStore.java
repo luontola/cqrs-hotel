@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -25,13 +25,13 @@ public class InMemoryEventStore implements EventStore {
 
     @Override
     public synchronized long saveEvents(UUID streamId, List<Envelope<Event>> newEvents, int expectedVersion) {
-        List<PersistedEvent> stream = streamsById.computeIfAbsent(streamId, uuid -> new ArrayList<>());
-        int actualVersion = stream.size();
+        var stream = streamsById.computeIfAbsent(streamId, uuid -> new ArrayList<>());
+        var actualVersion = stream.size();
         if (expectedVersion != actualVersion) {
             throw new OptimisticLockingException("expected version " + expectedVersion + " but was " + actualVersion + " for stream " + streamId);
         }
-        for (Envelope<Event> newEvent : newEvents) {
-            PersistedEvent persisted = new PersistedEvent(newEvent, streamId, stream.size() + 1, allEvents.size() + 1);
+        for (var newEvent : newEvents) {
+            var persisted = new PersistedEvent(newEvent, streamId, stream.size() + 1, allEvents.size() + 1);
             stream.add(persisted);
             allEvents.add(persisted);
             log.trace("Saved stream {} version {}: {}", persisted.streamId, persisted.version, persisted.event);
@@ -41,7 +41,7 @@ public class InMemoryEventStore implements EventStore {
 
     @Override
     public synchronized List<PersistedEvent> getEventsForStream(UUID streamId, int sinceVersion) {
-        List<PersistedEvent> stream = streamsById.getOrDefault(streamId, Collections.emptyList());
+        var stream = streamsById.getOrDefault(streamId, Collections.emptyList());
         return readSince(sinceVersion, stream);
     }
 
@@ -56,7 +56,7 @@ public class InMemoryEventStore implements EventStore {
 
     @Override
     public synchronized int getCurrentVersion(UUID streamId) {
-        List<PersistedEvent> events = streamsById.get(streamId);
+        var events = streamsById.get(streamId);
         if (events == null) {
             return BEGINNING;
         }

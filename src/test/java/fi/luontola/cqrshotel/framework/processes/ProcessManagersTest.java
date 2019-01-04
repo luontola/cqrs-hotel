@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -65,8 +65,8 @@ public class ProcessManagersTest {
         processManagers.handle(Envelope.newMessage(new RegisterCreated(registerId, 42)));
 
         // XXX: we cannot directly access the process ID, but we can look for a process with the same ID as this correlation ID
-        UUID processId = gateway.latestMessage().correlationId;
-        ProcessManager process = repo.getById(processId);
+        var processId = gateway.latestMessage().correlationId;
+        var process = repo.getById(processId);
         assertThat(process, is(notNullValue()));
     }
 
@@ -83,9 +83,9 @@ public class ProcessManagersTest {
     @Test
     public void process_state_is_independent_from_other_processes() {
         processManagers.handle(Envelope.newMessage(new RegisterCreated(registerId, 10)));
-        Envelope<?> command1 = gateway.latestMessage();
+        var command1 = gateway.latestMessage();
         processManagers.handle(Envelope.newMessage(new RegisterCreated(registerId2, 100)));
-        Envelope<?> command2 = gateway.latestMessage();
+        var command2 = gateway.latestMessage();
         processManagers.handle(Envelope.newMessage(new ValueAddedToRegister(registerId, 20), command1));
         processManagers.handle(Envelope.newMessage(new ValueAddedToRegister(registerId2, 200), command2));
 
@@ -99,8 +99,8 @@ public class ProcessManagersTest {
     @Test
     public void when_loading_an_existing_process_the_commands_from_old_events_are_not_republished() {
         processManagers.handle(Envelope.newMessage(new RegisterCreated(registerId, 10)));
-        SpyMessageGateway gateway2 = new SpyMessageGateway();
-        ProcessManagers processManagers2 = new ProcessManagers(repo, gateway2)
+        var gateway2 = new SpyMessageGateway();
+        var processManagers2 = new ProcessManagers(repo, gateway2)
                 .register(RegisterProcess.class, RegisterProcess::entryPoint);
 
         processManagers2.handle(Envelope.newMessage(new ValueAddedToRegister(registerId, 20), gateway.latestMessage()));

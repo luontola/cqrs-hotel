@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -23,7 +23,7 @@ public class ObservedPosition {
     }
 
     public void observe(long position) {
-        Long current = observedPosition.get();
+        var current = observedPosition.get();
         if (current == null || current < position) {
             observedPosition.set(position);
         }
@@ -31,8 +31,8 @@ public class ObservedPosition {
 
     public void waitForProjectionToUpdate(UpdatableProjection projection) {
         try {
-            long expectedPosition = this.get();
-            boolean upToDate = projection.awaitPosition(expectedPosition, queryTimeout);
+            var expectedPosition = this.get();
+            var upToDate = projection.awaitPosition(expectedPosition, queryTimeout);
             if (upToDate) {
                 return;
             }
@@ -45,7 +45,7 @@ public class ObservedPosition {
     }
 
     public long get() {
-        Long value = observedPosition.get();
+        var value = observedPosition.get();
         return value == null ? 0 : value;
     }
 

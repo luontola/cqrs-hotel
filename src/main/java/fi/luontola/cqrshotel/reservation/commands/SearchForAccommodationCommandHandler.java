@@ -7,7 +7,6 @@ package fi.luontola.cqrshotel.reservation.commands;
 import fi.luontola.cqrshotel.framework.Commit;
 import fi.luontola.cqrshotel.framework.Handler;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
-import fi.luontola.cqrshotel.reservation.Reservation;
 import fi.luontola.cqrshotel.reservation.ReservationRepo;
 
 import java.time.Clock;
@@ -26,8 +25,8 @@ public class SearchForAccommodationCommandHandler implements Handler<SearchForAc
 
     @Override
     public Commit handle(SearchForAccommodation command) {
-        Reservation reservation = repo.createOrGet(command.reservationId);
-        int originalVersion = reservation.getVersion();
+        var reservation = repo.createOrGet(command.reservationId);
+        var originalVersion = reservation.getVersion();
         reservation.searchForAccommodation(command.arrival, command.departure, pricing, clock);
         return repo.save(reservation, originalVersion);
     }

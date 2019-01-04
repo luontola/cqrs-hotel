@@ -25,7 +25,7 @@ public class ReservationsView extends AnnotatedProjection {
 
     @EventListener
     public void apply(ReservationCreated event) {
-        ReservationDto reservation = getReservation(event.reservationId);
+        var reservation = getReservation(event.reservationId);
         reservation.arrival = event.arrival;
         reservation.departure = event.departure;
         reservation.checkInTime = event.checkInTime.format(DATE_TIME_FORMAT);
@@ -35,14 +35,14 @@ public class ReservationsView extends AnnotatedProjection {
 
     @EventListener
     public void apply(ContactInformationUpdated event) {
-        ReservationDto reservation = getReservation(event.reservationId);
+        var reservation = getReservation(event.reservationId);
         reservation.name = event.name;
         reservation.email = event.email;
     }
 
     @EventListener
     public void apply(RoomAssigned event) {
-        ReservationDto reservation = getReservation(event.reservationId);
+        var reservation = getReservation(event.reservationId);
         reservation.roomId = event.roomId;
         reservation.roomNumber = event.roomNumber;
     }
@@ -61,7 +61,7 @@ public class ReservationsView extends AnnotatedProjection {
 
     private ReservationDto getReservation(UUID reservationId) {
         return reservationsById.computeIfAbsent(reservationId, id -> {
-            ReservationDto r = new ReservationDto();
+            var r = new ReservationDto();
             r.reservationId = id;
             return r;
         });

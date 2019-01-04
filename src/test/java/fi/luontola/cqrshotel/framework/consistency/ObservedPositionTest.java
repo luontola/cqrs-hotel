@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -32,14 +32,14 @@ public class ObservedPositionTest {
 
     @Test
     public void starts_with_zero() {
-        ObservedPosition observedPosition = new ObservedPosition(Duration.ZERO);
+        var observedPosition = new ObservedPosition(Duration.ZERO);
 
         assertThat(observedPosition.get(), is(0L));
     }
 
     @Test
     public void increases_when_observing_higher_values() {
-        ObservedPosition observedPosition = new ObservedPosition(Duration.ZERO);
+        var observedPosition = new ObservedPosition(Duration.ZERO);
         observedPosition.observe(1L);
         assertThat(observedPosition.get(), is(1L));
 
@@ -49,7 +49,7 @@ public class ObservedPositionTest {
 
     @Test
     public void stays_same_when_observing_lower_values() {
-        ObservedPosition observedPosition = new ObservedPosition(Duration.ZERO);
+        var observedPosition = new ObservedPosition(Duration.ZERO);
         observedPosition.observe(2L);
         assertThat(observedPosition.get(), is(2L));
 
@@ -59,7 +59,7 @@ public class ObservedPositionTest {
 
     @Test
     public void reset_brings_it_to_zero() {
-        ObservedPosition observedPosition = new ObservedPosition(Duration.ZERO);
+        var observedPosition = new ObservedPosition(Duration.ZERO);
         observedPosition.observe(10L);
         assertThat(observedPosition.get(), is(10L));
 
@@ -69,9 +69,9 @@ public class ObservedPositionTest {
 
     @Test
     public void value_is_thread_local() throws InterruptedException {
-        ObservedPosition observedPosition = new ObservedPosition(Duration.ZERO);
-        CyclicBarrier barrier = new CyclicBarrier(3);
-        Long[] results = new Long[2];
+        var observedPosition = new ObservedPosition(Duration.ZERO);
+        var barrier = new CyclicBarrier(3);
+        var results = new Long[2];
 
         new Thread(() -> {
             observedPosition.observe(10L);
@@ -103,8 +103,8 @@ public class ObservedPositionTest {
 
     @Test
     public void waiting_returns_silently_if_projection_is_up_to_date() {
-        ObservedPosition observedPosition = new ObservedPosition(Duration.ZERO);
-        InMemoryProjection projection = new InMemoryProjection(new DummyProjection(), new InMemoryEventStore());
+        var observedPosition = new ObservedPosition(Duration.ZERO);
+        var projection = new InMemoryProjection(new DummyProjection(), new InMemoryEventStore());
         assertThat(observedPosition.get(), is(projection.getPosition()));
 
         observedPosition.waitForProjectionToUpdate(projection);
@@ -112,8 +112,8 @@ public class ObservedPositionTest {
 
     @Test
     public void waiting_throws_exception_if_projection_update_times_out() {
-        ObservedPosition observedPosition = new ObservedPosition(Duration.ZERO);
-        InMemoryProjection projection = new InMemoryProjection(new DummyProjection(), new InMemoryEventStore());
+        var observedPosition = new ObservedPosition(Duration.ZERO);
+        var projection = new InMemoryProjection(new DummyProjection(), new InMemoryEventStore());
         observedPosition.observe(1);
         assertThat(observedPosition.get(), is(greaterThan(projection.getPosition())));
 

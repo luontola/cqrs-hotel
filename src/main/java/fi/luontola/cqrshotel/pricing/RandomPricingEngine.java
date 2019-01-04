@@ -1,4 +1,4 @@
-// Copyright © 2016 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -24,7 +24,7 @@ public class RandomPricingEngine implements PricingEngine {
 
     @Override
     public Optional<Money> getAccommodationPrice(LocalDate date) {
-        LocalDate limit = LocalDate.now(clock).plusDays(MAX_DAYS_IN_FUTURE);
+        var limit = LocalDate.now(clock).plusDays(MAX_DAYS_IN_FUTURE);
         if (date.isBefore(limit)) {
             return Optional.of(Money.of(ThreadLocalRandom.current().nextInt(50, 150), Hotel.CURRENCY));
         } else {

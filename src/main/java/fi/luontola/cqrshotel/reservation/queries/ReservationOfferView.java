@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -38,14 +38,14 @@ public class ReservationOfferView extends AnnotatedProjection {
 
     public ReservationOffer query(SearchForAccommodation query) {
         checkReservationId(query.reservationId);
-        ReservationOffer result = new ReservationOffer();
+        var result = new ReservationOffer();
         result.reservationId = query.reservationId;
         result.arrival = query.arrival;
         result.departure = query.departure;
 
-        Money totalPrice = Money.of(0, Hotel.CURRENCY);
-        for (LocalDate date = query.arrival; date.isBefore(query.departure); date = date.plusDays(1)) {
-            PriceOffered offer = offersByDate.get(date);
+        var totalPrice = Money.of(0, Hotel.CURRENCY);
+        for (var date = query.arrival; date.isBefore(query.departure); date = date.plusDays(1)) {
+            var offer = offersByDate.get(date);
             if (offer != null && offer.isStillValid(clock)) {
                 totalPrice = totalPrice.add(offer.price);
             } else {

@@ -17,7 +17,6 @@ import fi.luontola.cqrshotel.reservation.events.SearchedForAccommodation;
 
 import java.time.Clock;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
@@ -53,7 +52,7 @@ public class Reservation extends AggregateRoot {
 
     public void searchForAccommodation(LocalDate arrival, LocalDate departure, PricingEngine pricing, Clock clock) {
         publish(new SearchedForAccommodation(getId(), arrival, departure));
-        for (LocalDate date = arrival; date.isBefore(departure); date = date.plusDays(1)) {
+        for (var date = arrival; date.isBefore(departure); date = date.plusDays(1)) {
             makePriceOffer(date, pricing, clock);
         }
     }
@@ -63,13 +62,13 @@ public class Reservation extends AggregateRoot {
             return;
         }
         pricing.getAccommodationPrice(date).ifPresent(price -> {
-            Instant expires = clock.instant().plus(PRICE_VALIDITY_DURATION);
+            var expires = clock.instant().plus(PRICE_VALIDITY_DURATION);
             publish(new PriceOffered(getId(), date, price, expires));
         });
     }
 
     private boolean hasValidPriceOffer(LocalDate date, Clock clock) {
-        PriceOffered offer = priceOffersByDate.get(date);
+        var offer = priceOffersByDate.get(date);
         return offer != null && offer.isStillValid(clock);
     }
 
@@ -81,14 +80,14 @@ public class Reservation extends AggregateRoot {
         checkStateIs(PROSPECTIVE);
         publish(new ReservationCreated(getId(), arrival, departure, Hotel.checkInTime(arrival), Hotel.checkOutTime(departure)));
 
-        for (LocalDate date = arrival; date.isBefore(departure); date = date.plusDays(1)) {
-            PriceOffered offer = getValidPriceOffer(date, clock);
+        for (var date = arrival; date.isBefore(departure); date = date.plusDays(1)) {
+            var offer = getValidPriceOffer(date, clock);
             publish(new LineItemCreated(getId(), lineItems + 1, offer.date, offer.price));
         }
     }
 
     private PriceOffered getValidPriceOffer(LocalDate date, Clock clock) {
-        PriceOffered offer = priceOffersByDate.get(date);
+        var offer = priceOffersByDate.get(date);
         if (offer == null) {
             throw new IllegalStateException("no price offer for date " + date);
         }

@@ -1,10 +1,9 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
 package fi.luontola.cqrshotel;
 
-import fi.luontola.cqrshotel.StatusPage.ProjectionStatus;
 import fi.luontola.cqrshotel.framework.consistency.ObservedPosition;
 import fi.luontola.cqrshotel.framework.consistency.ReadModelNotUpToDateException;
 import fi.luontola.cqrshotel.framework.eventstore.InMemoryEventStore;
@@ -64,7 +63,7 @@ public class CoreTest {
         core.handle(new CreateRoom(UUID.randomUUID(), "123"));
 
         // projections are update asynchronously, so this must block based on observed position
-        RoomDto[] rooms = (RoomDto[]) core.handle(new FindAllRooms());
+        var rooms = (RoomDto[]) core.handle(new FindAllRooms());
 
         assertThat(rooms, is(arrayWithSize(1)));
         assertThat(rooms[0].roomNumber, is("123"));
@@ -72,8 +71,8 @@ public class CoreTest {
 
     @Test
     public void throws_exception_if_projection_is_not_up_to_date_query_after_timeout() {
-        ObservedPosition observedPosition = new ObservedPosition(Duration.ofSeconds(0));
-        Core core = new Core(eventStore, pricing, clock, observedPosition);
+        var observedPosition = new ObservedPosition(Duration.ofSeconds(0));
+        var core = new Core(eventStore, pricing, clock, observedPosition);
         core.handle(new CreateRoom(UUID.randomUUID(), "123"));
 
         observedPosition.observe(observedPosition.get() + 1); // wait for a future that will never arrive
@@ -84,11 +83,11 @@ public class CoreTest {
 
     @Test
     public void status_page() {
-        StatusPage status = core.getStatus();
+        var status = core.getStatus();
 
         assertThat("eventStore.position", status.eventStore.position, is(notNullValue()));
 
-        ProjectionStatus projection = status.projections.get("RoomsView");
+        var projection = status.projections.get("RoomsView");
         assertThat("projection", projection, is(notNullValue()));
         assertThat("projection.position", projection.position, is(notNullValue()));
     }

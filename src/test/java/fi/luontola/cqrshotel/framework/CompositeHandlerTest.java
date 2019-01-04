@@ -1,4 +1,4 @@
-// Copyright © 2016 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -21,16 +21,16 @@ public class CompositeHandlerTest {
 
     @Test
     public void delegates_messages_to_the_handlers_by_message_type() {
-        Handler1 handler1 = new Handler1();
-        Handler2 handler2 = new Handler2();
-        CompositeHandler<Message, String> composite = new CompositeHandler<>();
+        var handler1 = new Handler1();
+        var handler2 = new Handler2();
+        var composite = new CompositeHandler<Message, String>();
         composite.register(Message1.class, handler1);
         composite.register(Message2.class, handler2);
-        Message1 message1 = new Message1();
-        Message2 message2 = new Message2();
+        var message1 = new Message1();
+        var message2 = new Message2();
 
-        String result1 = composite.handle(message1);
-        String result2 = composite.handle(message2);
+        var result1 = composite.handle(message1);
+        var result2 = composite.handle(message2);
 
         assertThat("handler1.received", handler1.received, is(message1));
         assertThat("result1", result1, is("one"));
@@ -40,9 +40,9 @@ public class CompositeHandlerTest {
 
     @Test
     public void cannot_register_two_handlers_for_the_same_message() {
-        Handler1 handler1 = new Handler1();
-        Handler1 handler2 = new Handler1();
-        CompositeHandler<Message, String> composite = new CompositeHandler<>();
+        var handler1 = new Handler1();
+        var handler2 = new Handler1();
+        var composite = new CompositeHandler<Message, String>();
 
         composite.register(Message1.class, handler1);
 
@@ -53,9 +53,9 @@ public class CompositeHandlerTest {
 
     @Test
     public void fails_for_messages_not_registered() {
-        CompositeHandler<Message, String> composite = new CompositeHandler<>();
+        var composite = new CompositeHandler<Message, String>();
 
-        Message1 message = new Message1();
+        var message = new Message1();
 
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("no handler");

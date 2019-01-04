@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -41,7 +41,7 @@ public class RoomAvailabilityViewTest {
         view.apply(new RoomCreated(roomId, "101"));
         view.apply(new RoomCreated(roomId2, "102"));
 
-        RoomAvailabilityDto[] rooms = getAvailabilityByTimeRange.handle(new GetAvailabilityByTimeRange(t1, t2));
+        var rooms = getAvailabilityByTimeRange.handle(new GetAvailabilityByTimeRange(t1, t2));
         assertThat(rooms, is(arrayWithSize(2)));
     }
 
@@ -49,7 +49,7 @@ public class RoomAvailabilityViewTest {
     public void lists_room_basic_information() {
         view.apply(new RoomCreated(roomId, "101"));
 
-        RoomAvailabilityDto availability = availabilityBetween(t1, t2);
+        var availability = availabilityBetween(t1, t2);
         assertThat("roomId", availability.roomId, is(roomId));
         assertThat("roomNumber", availability.roomNumber, is("101"));
     }
@@ -58,7 +58,7 @@ public class RoomAvailabilityViewTest {
     public void when_room_is_not_occupied() {
         view.apply(new RoomCreated(roomId, "101"));
 
-        RoomAvailabilityDto availability = availabilityBetween(t1, t2);
+        var availability = availabilityBetween(t1, t2);
         assertThat(availability.details, is(Arrays.asList(
                 new RoomAvailabilityIntervalDto(t1, t2, false))));
         assertThat("available?", availability.available, is(true));
@@ -69,7 +69,7 @@ public class RoomAvailabilityViewTest {
         view.apply(new RoomCreated(roomId, "101"));
         view.apply(new RoomOccupied(roomId, t1, t2, occupant));
 
-        RoomAvailabilityDto availability = availabilityBetween(t1, t2);
+        var availability = availabilityBetween(t1, t2);
         assertThat(availability.details, is(Arrays.asList(
                 new RoomAvailabilityIntervalDto(t1, t2, true))));
         assertThat("available?", availability.available, is(false));
@@ -80,7 +80,7 @@ public class RoomAvailabilityViewTest {
         view.apply(new RoomCreated(roomId, "101"));
         view.apply(new RoomOccupied(roomId, t1, t4, occupant));
 
-        RoomAvailabilityDto availability = availabilityBetween(t2, t3);
+        var availability = availabilityBetween(t2, t3);
         assertThat(availability.details, is(Arrays.asList(
                 new RoomAvailabilityIntervalDto(t1, t4, true))));
         assertThat("available?", availability.available, is(false));
@@ -91,7 +91,7 @@ public class RoomAvailabilityViewTest {
         view.apply(new RoomCreated(roomId, "101"));
         view.apply(new RoomOccupied(roomId, t2, t3, occupant));
 
-        RoomAvailabilityDto availability = availabilityBetween(t1, t4);
+        var availability = availabilityBetween(t1, t4);
         assertThat(availability.details, is(Arrays.asList(
                 new RoomAvailabilityIntervalDto(t1, t2, false),
                 new RoomAvailabilityIntervalDto(t2, t3, true),
@@ -106,7 +106,7 @@ public class RoomAvailabilityViewTest {
         view.apply(new RoomOccupied(roomId, t3, t4, occupant2)); // NOT in chronological order
         view.apply(new RoomOccupied(roomId, t2, t3, occupant3));
 
-        RoomAvailabilityDto availability = availabilityBetween(t1, t4);
+        var availability = availabilityBetween(t1, t4);
         assertThat(availability.details, is(Arrays.asList(
                 new RoomAvailabilityIntervalDto(t1, t2, true),
                 new RoomAvailabilityIntervalDto(t2, t3, true),
@@ -121,7 +121,7 @@ public class RoomAvailabilityViewTest {
         view.apply(new RoomOccupied(roomId, t2, t3, occupant2));
         view.apply(new RoomOccupied(roomId, t3, t4, occupant3));
 
-        RoomAvailabilityDto availability = availabilityBetween(t2, t3);
+        var availability = availabilityBetween(t2, t3);
         assertThat(availability.details, is(Arrays.asList(
                 new RoomAvailabilityIntervalDto(t2, t3, true))));
         assertThat("available?", availability.available, is(false));
@@ -133,7 +133,7 @@ public class RoomAvailabilityViewTest {
         view.apply(new RoomOccupied(roomId, t1, t2, occupant));
         view.apply(new RoomOccupied(roomId, t3, t4, occupant2));
 
-        RoomAvailabilityDto availability = availabilityBetween(t1, t4);
+        var availability = availabilityBetween(t1, t4);
         assertThat(availability.details, is(Arrays.asList(
                 new RoomAvailabilityIntervalDto(t1, t2, true),
                 new RoomAvailabilityIntervalDto(t2, t3, false),
@@ -145,12 +145,12 @@ public class RoomAvailabilityViewTest {
     public void queries_from_start_of_day_to_end_of_day_in_hotel_timezone() {
         view.apply(new RoomCreated(UUID.randomUUID(), "101"));
 
-        LocalDate start = LocalDate.parse("2000-01-01");
-        LocalDate end = LocalDate.parse("2000-01-05");
-        RoomAvailabilityDto[] result = getAvailabilityByDateRange.handle(new GetAvailabilityByDateRange(start, end));
+        var start = LocalDate.parse("2000-01-01");
+        var end = LocalDate.parse("2000-01-05");
+        var result = getAvailabilityByDateRange.handle(new GetAvailabilityByDateRange(start, end));
 
         // XXX: assumes Hotel.TIMEZONE is Europe/Helsinki but it's not apparent in this test (the timezone is not configurable)
-        RoomAvailabilityIntervalDto interval = result[0].details.get(0);
+        var interval = result[0].details.get(0);
         assertThat("start", interval.start, is(Instant.parse("1999-12-31T22:00:00Z")));
         assertThat("end", interval.end, is(Instant.parse("2000-01-05T22:00:00Z")));
     }

@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -41,7 +41,7 @@ public class EventListenersTest {
                 receivedEvents.add(event);
             }
         }
-        EventListeners eventListeners = EventListeners.of(new Target());
+        var eventListeners = EventListeners.of(new Target());
 
         eventListeners.send(new DummyEvent1());
         eventListeners.send(new DummyEvent2());
@@ -53,7 +53,7 @@ public class EventListenersTest {
     public void silently_ignores_events_which_are_not_listened() {
         class Target {
         }
-        EventListeners eventListeners = EventListeners.of(new Target());
+        var eventListeners = EventListeners.of(new Target());
 
         eventListeners.send(new DummyEvent1());
     }
@@ -66,7 +66,7 @@ public class EventListenersTest {
                 throw new IllegalArgumentException("dummy exception");
             }
         }
-        EventListeners eventListeners = EventListeners.of(new Target());
+        var eventListeners = EventListeners.of(new Target());
 
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("event listener failed for event: EventListenersTest.DummyEvent1[]");

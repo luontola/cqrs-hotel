@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -30,8 +30,8 @@ public class EnvelopeTest {
 
     @Test
     public void message_IDs_are_unique() {
-        Envelope<DummyMessage> m1 = Envelope.newMessage(new DummyMessage());
-        Envelope<DummyMessage> m2 = Envelope.newMessage(new DummyMessage());
+        var m1 = Envelope.newMessage(new DummyMessage());
+        var m2 = Envelope.newMessage(new DummyMessage());
 
         assertThat(m1.messageId, is(notNullValue()));
         assertThat(m1.messageId, is(not(equalTo(m2.messageId))));
@@ -39,8 +39,8 @@ public class EnvelopeTest {
 
     @Test
     public void origin_messages_have_unique_correlation_IDs() {
-        Envelope<DummyMessage> m1 = Envelope.newMessage(new DummyMessage());
-        Envelope<DummyMessage> m2 = Envelope.newMessage(new DummyMessage());
+        var m1 = Envelope.newMessage(new DummyMessage());
+        var m2 = Envelope.newMessage(new DummyMessage());
 
         assertThat(m1.correlationId, is(notNullValue()));
         assertThat(m1.correlationId, is(not(equalTo(m2.correlationId))));
@@ -48,17 +48,17 @@ public class EnvelopeTest {
 
     @Test
     public void origin_messages_do_not_have_causation_IDs() {
-        Envelope<DummyMessage> m1 = Envelope.newMessage(new DummyMessage());
+        var m1 = Envelope.newMessage(new DummyMessage());
 
         assertThat(m1.causationId, is(nullValue()));
     }
 
     @Test
     public void outcome_messages_have_the_same_correlation_ID_as_their_cause() {
-        Envelope<DummyMessage> origin = Envelope.newMessage(new DummyMessage());
+        var origin = Envelope.newMessage(new DummyMessage());
         Envelope.setContext(origin);
-        Envelope<DummyMessage> m1 = Envelope.newMessage(new DummyMessage());
-        Envelope<DummyMessage> m2 = Envelope.newMessage(new DummyMessage());
+        var m1 = Envelope.newMessage(new DummyMessage());
+        var m2 = Envelope.newMessage(new DummyMessage());
 
         assertThat(m1.correlationId, is(notNullValue()));
         assertThat(m1.correlationId, is(origin.correlationId));
@@ -67,10 +67,10 @@ public class EnvelopeTest {
 
     @Test
     public void outcome_messages_have_the_message_ID_of_their_cause_as_their_causation_ID() {
-        Envelope<DummyMessage> origin = Envelope.newMessage(new DummyMessage());
+        var origin = Envelope.newMessage(new DummyMessage());
         Envelope.setContext(origin);
-        Envelope<DummyMessage> m1 = Envelope.newMessage(new DummyMessage());
-        Envelope<DummyMessage> m2 = Envelope.newMessage(new DummyMessage());
+        var m1 = Envelope.newMessage(new DummyMessage());
+        var m2 = Envelope.newMessage(new DummyMessage());
 
         assertThat(m1.causationId, is(notNullValue()));
         assertThat(m1.causationId, is(origin.messageId));
@@ -80,22 +80,22 @@ public class EnvelopeTest {
     @Test
     public void after_resetting_the_context_only_origin_messages_are_created() {
         Envelope.setContext(Envelope.newMessage(new DummyMessage()));
-        Envelope<DummyMessage> m1 = Envelope.newMessage(new DummyMessage());
+        var m1 = Envelope.newMessage(new DummyMessage());
         assertThat(m1.causationId, is(notNullValue()));
 
         Envelope.resetContext();
 
-        Envelope<DummyMessage> m2 = Envelope.newMessage(new DummyMessage());
+        var m2 = Envelope.newMessage(new DummyMessage());
         assertThat(m2.causationId, is(nullValue()));
     }
 
     @Test
     public void can_change_the_correlation_ID() {
-        DummyMessage payload = new DummyMessage();
-        Envelope<DummyMessage> original = new Envelope<>(payload, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
-        UUID newCorrelationId = UUID.randomUUID();
+        var payload = new DummyMessage();
+        var original = new Envelope<>(payload, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+        var newCorrelationId = UUID.randomUUID();
 
-        Envelope<DummyMessage> changed = original.withCorrelationId(newCorrelationId);
+        var changed = original.withCorrelationId(newCorrelationId);
 
         assertThat("correlationId", changed.correlationId, is(newCorrelationId));
         // all others say the same

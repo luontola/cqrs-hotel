@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -24,8 +24,8 @@ public class UUIDsTest {
 
     @Test
     public void generates_unique_time_based_UUIDs() {
-        UUID uuid = UUIDs.newUUID();
-        UUID anotherUuid = UUIDs.newUUID();
+        var uuid = UUIDs.newUUID();
+        var anotherUuid = UUIDs.newUUID();
         assertThat(uuid, is(not(anotherUuid)));
         assertThat(uuid.version(), is(1));
     }
@@ -37,13 +37,13 @@ public class UUIDsTest {
             public UUID foo = id1;
             public UUID bar = id2;
         }
-        GuineaPig obj = new GuineaPig();
+        var obj = new GuineaPig();
         assertThat(UUIDs.extractUUIDs(obj), containsInAnyOrder(id1, id2));
     }
 
     @Test
     public void extracting_UUIDs_ignores_other_fields() {
-        IgnoredFieldsGuineaPig obj = new IgnoredFieldsGuineaPig();
+        var obj = new IgnoredFieldsGuineaPig();
         assertThat(UUIDs.extractUUIDs(obj), is(empty()));
     }
 

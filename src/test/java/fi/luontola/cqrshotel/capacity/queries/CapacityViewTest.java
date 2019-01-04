@@ -11,7 +11,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -32,7 +31,7 @@ public class CapacityViewTest {
 
     @Test
     public void default_values() {
-        CapacityDto capacity = view.getCapacityByDate(date1);
+        var capacity = view.getCapacityByDate(date1);
 
         assertThat("date", capacity.date, is(date1));
         assertThat("capacity", capacity.capacity, is(0));
@@ -44,7 +43,7 @@ public class CapacityViewTest {
         view.apply(new RoomCreated(UUID.randomUUID(), "101"));
         view.apply(new RoomCreated(UUID.randomUUID(), "102"));
 
-        CapacityDto capacity = view.getCapacityByDate(date1);
+        var capacity = view.getCapacityByDate(date1);
 
         assertThat("capacity", capacity.capacity, is(2));
         assertThat("reserved", capacity.reserved, is(0)); // unaffected
@@ -55,7 +54,7 @@ public class CapacityViewTest {
         view.apply(new ReservationCreated(UUID.randomUUID(), date1, date2, null, null));
         view.apply(new ReservationCreated(UUID.randomUUID(), date1, date2, null, null));
 
-        CapacityDto capacity = view.getCapacityByDate(date1);
+        var capacity = view.getCapacityByDate(date1);
 
         assertThat("capacity", capacity.capacity, is(0)); // unaffected
         assertThat("reserved", capacity.reserved, is(2));
@@ -79,10 +78,10 @@ public class CapacityViewTest {
 
     @Test
     public void lists_capacity_by_date_range() {
-        List<CapacityDto> results = view.getCapacityByDateRange(date1, date3);
+        var results = view.getCapacityByDateRange(date1, date3);
 
         assertThat(results, hasSize(3));
-        CapacityDto capacity = results.get(0);
+        var capacity = results.get(0);
         assertThat(capacity.date, is(date1));
         assertThat(capacity.capacity, is(notNullValue()));
         assertThat(capacity.reserved, is(notNullValue()));

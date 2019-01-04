@@ -37,10 +37,10 @@ public class AssignRoomTest extends AggregateRootTester {
     private static final String roomNumber2 = "102";
 
     {
-        RoomsView roomsView = new RoomsView();
+        var roomsView = new RoomsView();
         roomsView.apply(new RoomCreated(roomId, roomNumber));
         roomsView.apply(new RoomCreated(roomId2, roomNumber2));
-        GetRoomByIdHandler getRoomById = new GetRoomByIdHandler(roomsView);
+        var getRoomById = new GetRoomByIdHandler(roomsView);
         commandHandler = new AssignRoomHandler(new ReservationRepo(eventStore), getRoomById);
     }
 
@@ -74,7 +74,7 @@ public class AssignRoomTest extends AggregateRootTester {
 
     @Test
     public void validates_the_roomId() {
-        UUID roomId3 = UUID.randomUUID();
+        var roomId3 = UUID.randomUUID();
 
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("room not found: " + roomId3);

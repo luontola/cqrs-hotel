@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -17,7 +17,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,23 +40,23 @@ public class ObservedPositionHeadersTest {
 
     @Test
     public void reads_observed_position_from_request_headers() {
-        HttpHeaders headers = new HttpHeaders();
+        var headers = new HttpHeaders();
         headers.add(ObservedPosition.HTTP_HEADER, "42");
-        ResponseEntity<String> response = restTemplate.exchange("/getObservedPosition", HttpMethod.GET, new HttpEntity<>(headers), String.class);
+        var response = restTemplate.exchange("/getObservedPosition", HttpMethod.GET, new HttpEntity<>(headers), String.class);
 
         assertThat(response.getBody(), is("42"));
     }
 
     @Test
     public void writes_observed_position_to_response_headers() {
-        ResponseEntity<String> response = restTemplate.exchange("/setObservedPosition/2501", HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), String.class);
+        var response = restTemplate.exchange("/setObservedPosition/2501", HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), String.class);
 
         assertThat(response.getHeaders().getFirst(ObservedPosition.HTTP_HEADER), is("2501"));
     }
 
     @Test
     public void sends_error_503_Service_Unavailable_if_read_model_is_not_up_to_date() {
-        ResponseEntity<String> response = restTemplate.exchange("/readModelNotUpToDate", HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), String.class);
+        var response = restTemplate.exchange("/readModelNotUpToDate", HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), String.class);
 
         assertThat(response.getStatusCode(), is(HttpStatus.SERVICE_UNAVAILABLE));
     }

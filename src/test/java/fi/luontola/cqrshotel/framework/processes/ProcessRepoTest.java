@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -35,18 +35,18 @@ public class ProcessRepoTest {
 
     @Test
     public void creates_new_processes() {
-        ProcessManager newProcess = repo.create(processId, DummyProcess.class);
+        var newProcess = repo.create(processId, DummyProcess.class);
         repo.save(newProcess);
 
-        ProcessManager savedProcess = repo.getById(processId);
+        var savedProcess = repo.getById(processId);
         assertThat("processId", savedProcess.processId, is(processId));
         assertThat("processType", savedProcess.processType, is(equalTo(DummyProcess.class)));
     }
 
     @Test
     public void cannot_create_multiple_processes_with_same_ID() {
-        ProcessManager p1 = repo.create(processId, DummyProcess.class);
-        ProcessManager p2 = repo.create(processId, DummyProcess.class);
+        var p1 = repo.create(processId, DummyProcess.class);
+        var p2 = repo.create(processId, DummyProcess.class);
         repo.save(p1);
 
         thrown.expect(OptimisticLockingException.class);
@@ -58,8 +58,8 @@ public class ProcessRepoTest {
     public void cannot_modify_the_same_process_concurrently() {
         createProcess();
 
-        ProcessManager p1 = repo.getById(processId);
-        ProcessManager p2 = repo.getById(processId);
+        var p1 = repo.getById(processId);
+        var p2 = repo.getById(processId);
         p1.subscribe(topic);
         p2.subscribe(topic);
         repo.save(p1);
@@ -112,13 +112,13 @@ public class ProcessRepoTest {
     }
 
     private void createProcess(Consumer<ProcessManager> action) {
-        ProcessManager process = repo.create(processId, DummyProcess.class);
+        var process = repo.create(processId, DummyProcess.class);
         action.accept(process);
         repo.save(process);
     }
 
     private void updateProcess(Consumer<ProcessManager> action) {
-        ProcessManager process = repo.getById(processId);
+        var process = repo.getById(processId);
         action.accept(process);
         repo.save(process);
     }

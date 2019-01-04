@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -17,7 +17,6 @@ import fi.luontola.cqrshotel.pricing.RandomPricingEngine;
 import fi.luontola.cqrshotel.room.commands.CreateRoom;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 
 import javax.sql.DataSource;
@@ -31,16 +30,16 @@ public class Application {
     private static final Duration QUERY_TIMEOUT = Duration.ofSeconds(15);
 
     public static void main(String[] args) throws Exception {
-        ConfigurableApplicationContext app = SpringApplication.run(Application.class, args);
-        EventStore eventStore = app.getBean(EventStore.class);
+        var app = SpringApplication.run(Application.class, args);
+        var eventStore = app.getBean(EventStore.class);
         if (eventStore.getCurrentPosition() == 0) {
-            ApiController api = app.getBean(ApiController.class);
+            var api = app.getBean(ApiController.class);
             initializeTestData(api);
         }
     }
 
     private static void initializeTestData(ApiController api) {
-        for (String roomNumber : Arrays.asList("101", "102", "103", "104", "105")) {
+        for (var roomNumber : Arrays.asList("101", "102", "103", "104", "105")) {
             api.createRoom(new CreateRoom(UUIDs.newUUID(), roomNumber));
         }
     }
@@ -72,7 +71,7 @@ public class Application {
 
     @Bean
     public ObjectMapper jacksonObjectMapper() {
-        ObjectMapper om = new ObjectMapper();
+        var om = new ObjectMapper();
         om.registerModules(new JavaTimeModule(), new MoneyModule());
         om.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         om.configure(SerializationFeature.INDENT_OUTPUT, true);

@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -14,7 +14,6 @@ import org.junit.experimental.categories.Category;
 import org.reflections.Reflections;
 
 import javax.money.Monetary;
-import java.lang.reflect.Constructor;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Month;
@@ -22,7 +21,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Stream;
@@ -67,9 +65,9 @@ public class JsonSerializationTest {
 
     private static void assertSerializable(Class<?> type, ObjectMapper objectMapper) {
         try {
-            Object original = newDummy(type);
-            String json = objectMapper.writeValueAsString(original);
-            Object deserialized = objectMapper.readValue(json, type);
+            var original = newDummy(type);
+            var json = objectMapper.writeValueAsString(original);
+            var deserialized = objectMapper.readValue(json, type);
             assertThat(deserialized, is(original));
         } catch (Exception e) {
             e.printStackTrace();
@@ -78,17 +76,17 @@ public class JsonSerializationTest {
     }
 
     private static Object newDummy(Class<?> type) throws Exception {
-        Constructor<?> ctor = type.getConstructors()[0];
-        Class<?>[] paramTypes = ctor.getParameterTypes();
-        Object[] params = new Object[paramTypes.length];
-        for (int i = 0; i < paramTypes.length; i++) {
+        var ctor = type.getConstructors()[0];
+        var paramTypes = ctor.getParameterTypes();
+        var params = new Object[paramTypes.length];
+        for (var i = 0; i < paramTypes.length; i++) {
             params[i] = randomValue(paramTypes[i]);
         }
         return ctor.newInstance(params);
     }
 
     private static Object randomValue(Class<?> type) {
-        ThreadLocalRandom random = ThreadLocalRandom.current();
+        var random = ThreadLocalRandom.current();
         if (type == UUID.class) {
             return UUID.randomUUID();
         }
@@ -107,9 +105,9 @@ public class JsonSerializationTest {
             return Instant.ofEpochMilli(random.nextLong());
         }
         if (type == ZonedDateTime.class) {
-            Set<String> zoneIds = ZoneId.getAvailableZoneIds();
+            var zoneIds = ZoneId.getAvailableZoneIds();
             zoneIds.remove("GMT0"); // XXX: cannot be parsed by java.time.format.DateTimeFormatterBuilder.appendZoneRegionId - fixed in Java 9 https://bugs.openjdk.java.net/browse/JDK-8138664
-            ZoneId zoneId = ZoneId.of(pickRandom(zoneIds));
+            var zoneId = ZoneId.of(pickRandom(zoneIds));
             return Instant.ofEpochMilli(random.nextLong()).atZone(zoneId);
         }
         if (type == String.class) {
@@ -125,7 +123,7 @@ public class JsonSerializationTest {
     }
 
     private static <T> T pickRandom(Collection<T> values) {
-        ThreadLocalRandom random = ThreadLocalRandom.current();
+        var random = ThreadLocalRandom.current();
         return values.stream()
                 .skip(random.nextInt(values.size()))
                 .findFirst()

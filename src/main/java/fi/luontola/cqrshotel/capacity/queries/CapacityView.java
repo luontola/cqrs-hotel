@@ -28,7 +28,7 @@ public class CapacityView extends AnnotatedProjection {
 
     @EventListener
     public void apply(ReservationCreated event) {
-        for (LocalDate date = event.arrival; date.isBefore(event.departure); date = date.plusDays(1)) {
+        for (var date = event.arrival; date.isBefore(event.departure); date = date.plusDays(1)) {
             reservationsByDate.computeIfAbsent(date, _date -> new AtomicInteger(0))
                     .incrementAndGet();
         }
@@ -37,7 +37,7 @@ public class CapacityView extends AnnotatedProjection {
     // queries
 
     public CapacityDto getCapacityByDate(LocalDate date) {
-        CapacityDto capacity = new CapacityDto();
+        var capacity = new CapacityDto();
         capacity.date = date;
         capacity.capacity = numberOfRooms.intValue();
         capacity.reserved = reservationsByDate.getOrDefault(date, new AtomicInteger(0)).intValue();
@@ -45,9 +45,9 @@ public class CapacityView extends AnnotatedProjection {
     }
 
     public List<CapacityDto> getCapacityByDateRange(LocalDate start, LocalDate endInclusive) {
-        LocalDate endExclusive = endInclusive.plusDays(1);
+        var endExclusive = endInclusive.plusDays(1);
         List<CapacityDto> results = new ArrayList<>();
-        for (LocalDate date = start; date.isBefore(endExclusive); date = date.plusDays(1)) {
+        for (var date = start; date.isBefore(endExclusive); date = date.plusDays(1)) {
             results.add(getCapacityByDate(date));
         }
         return results;

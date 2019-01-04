@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -60,7 +60,7 @@ public class AcceptanceTest {
         core.handle(new CreateRoom(UUID.randomUUID(), "101"));
         assertRoomAvailable("before reservation", is(true));
 
-        ReservationOffer offer = (ReservationOffer) core.handle(new SearchForAccommodation(reservationId, arrival, departure));
+        var offer = (ReservationOffer) core.handle(new SearchForAccommodation(reservationId, arrival, departure));
         assertThat("total price", offer.totalPrice, is(notNullValue()));
 
         core.handle(new MakeReservation(reservationId, arrival, departure, "John Doe", "john@example.com"));
@@ -76,7 +76,7 @@ public class AcceptanceTest {
     // helpers
 
     private void assertRoomAvailable(String message, Matcher<Boolean> matcher) {
-        RoomAvailabilityDto[] rooms = (RoomAvailabilityDto[]) core.handle(new GetAvailabilityByDateRange(arrival, departure));
+        var rooms = (RoomAvailabilityDto[]) core.handle(new GetAvailabilityByDateRange(arrival, departure));
         assertThat(rooms, is(arrayWithSize(1)));
         assertThat("room available " + message + "?", rooms[0].available, matcher);
     }
@@ -85,7 +85,7 @@ public class AcceptanceTest {
      * Makes assertions about eventually consistent facts, typically when dealing with process managers.
      */
     private void eventually(Runnable assertion) {
-        Instant timeout = Instant.now().plus(assertionTimeout);
+        var timeout = Instant.now().plus(assertionTimeout);
         AssertionError assertionError = null;
         do {
             try {

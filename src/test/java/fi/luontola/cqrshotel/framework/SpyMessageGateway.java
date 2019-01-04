@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -24,7 +24,7 @@ public class SpyMessageGateway implements MessageGateway {
     }
 
     public Envelope<?> latestMessage() {
-        int size = outgoing.size();
+        var size = outgoing.size();
         if (size == 0) {
             throw new IllegalStateException("no messages");
         }

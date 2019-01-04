@@ -134,8 +134,8 @@ public class Core {
 
         // queries
 
-        CompositeHandler<Query, Object> queries = new CompositeHandler<>();
-        for (ProjectionConfig<?> projection : projections) {
+        var queries = new CompositeHandler<Query, Object>();
+        for (var projection : projections) {
             projection.registerQueryHandlers(queries);
         }
         queries.register(SearchForAccommodation.class, new SearchForAccommodationQueryHandler(eventStore, clock));
@@ -143,14 +143,14 @@ public class Core {
 
         // commands
 
-        CompositeHandler<Command, Commit> commands = new CompositeHandler<>();
+        var commands = new CompositeHandler<Command, Commit>();
 
-        ReservationRepo reservationRepo = new ReservationRepo(eventStore);
+        var reservationRepo = new ReservationRepo(eventStore);
         commands.register(SearchForAccommodation.class, new SearchForAccommodationCommandHandler(reservationRepo, pricing, clock));
         commands.register(MakeReservation.class, new MakeReservationHandler(reservationRepo, clock));
         commands.register(AssignRoom.class, new AssignRoomHandler(reservationRepo, getQueryHandler(GetRoomById.class, RoomDto.class)));
 
-        RoomRepo roomRepo = new RoomRepo(eventStore);
+        var roomRepo = new RoomRepo(eventStore);
         commands.register(CreateRoom.class, new CreateRoomHandler(roomRepo));
         commands.register(OccupyRoom.class, new OccupyRoomHandler(roomRepo));
         commands.register(OccupyAnyAvailableRoom.class, new OccupyAnyAvailableRoomHandler(publisher, getQueryHandler(GetAvailabilityByTimeRange.class, RoomAvailabilityDto[].class)));
@@ -160,7 +160,7 @@ public class Core {
     }
 
     private <T extends Projection> ProjectionConfig<T> addInMemoryProjection(T projection) {
-        ProjectionConfig<T> config = new ProjectionConfig<>(projection, new InMemoryProjection(projection, eventStore));
+        var config = new ProjectionConfig<>(projection, new InMemoryProjection(projection, eventStore));
         projections.add(config);
         return config;
     }
@@ -209,8 +209,8 @@ public class Core {
 
     @SuppressWarnings("unchecked")
     private <Q extends Query, R> Handler<Q, R> getQueryHandler(Class<Q> queryType, Class<R> responseType) {
-        for (ProjectionConfig<?> projection : projections) {
-            for (QueryHandlerConfig<?, ?> queryHandler : projection.queryHandlers) {
+        for (var projection : projections) {
+            for (var queryHandler : projection.queryHandlers) {
                 if (queryHandler.queryType.equals(queryType) && queryHandler.responseType.equals(responseType)) {
                     return (Handler<Q, R>) queryHandler.handler;
                 }
@@ -235,7 +235,7 @@ public class Core {
         }
 
         public void registerQueryHandlers(CompositeHandler<Query, Object> registry) {
-            for (QueryHandlerConfig<?, ?> queryHandler : queryHandlers) {
+            for (var queryHandler : queryHandlers) {
                 queryHandler.register(registry, updater);
             }
         }

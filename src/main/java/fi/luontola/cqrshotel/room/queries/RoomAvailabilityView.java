@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -14,7 +14,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -25,7 +24,7 @@ public class RoomAvailabilityView extends AnnotatedProjection {
 
     @EventListener
     public void apply(RoomCreated event) {
-        RoomAvailabilityDto room = new RoomAvailabilityDto();
+        var room = new RoomAvailabilityDto();
         room.roomId = event.roomId;
         room.roomNumber = event.roomNumber;
         room.details = new LinkedList<>();
@@ -34,7 +33,7 @@ public class RoomAvailabilityView extends AnnotatedProjection {
 
     @EventListener
     public void apply(RoomOccupied event) {
-        RoomAvailabilityDto room = roomsById.get(event.roomId);
+        var room = roomsById.get(event.roomId);
         // TODO: insert more efficiently; use an O(log n) instead of O(n * log n) algorithm
         room.details.add(new RoomAvailabilityIntervalDto(event.start, event.end, true));
         room.details.sort(Comparator.comparing(o -> o.start));
@@ -51,7 +50,7 @@ public class RoomAvailabilityView extends AnnotatedProjection {
     // helpers
 
     private static RoomAvailabilityDto copyForResponse(RoomAvailabilityDto src, Instant start, Instant end) {
-        RoomAvailabilityDto response = new RoomAvailabilityDto();
+        var response = new RoomAvailabilityDto();
         response.roomId = src.roomId;
         response.roomNumber = src.roomNumber;
         response.details = availabilityForResponse(src, start, end);
@@ -60,7 +59,7 @@ public class RoomAvailabilityView extends AnnotatedProjection {
     }
 
     private static LinkedList<RoomAvailabilityIntervalDto> availabilityForResponse(RoomAvailabilityDto src, Instant queryStart, Instant queryEnd) {
-        LinkedList<RoomAvailabilityIntervalDto> availability = src.details.stream()
+        var availability = src.details.stream()
                 // TODO: avoid linear search; use an O(log n) instead of O(n) algorithm
                 .filter(interval -> interval.overlapsWith(queryStart, queryEnd))
                 .collect(Collectors.toCollection(LinkedList::new));
@@ -69,9 +68,9 @@ public class RoomAvailabilityView extends AnnotatedProjection {
     }
 
     private static void fillUnoccupiedIntervals(LinkedList<RoomAvailabilityIntervalDto> availability, Instant queryStart, Instant queryEnd) {
-        Instant previousEnd = queryStart;
-        for (ListIterator<RoomAvailabilityIntervalDto> iterator = availability.listIterator(); iterator.hasNext(); ) {
-            RoomAvailabilityIntervalDto next = iterator.next();
+        var previousEnd = queryStart;
+        for (var iterator = availability.listIterator(); iterator.hasNext(); ) {
+            var next = iterator.next();
             if (previousEnd.isBefore(next.start)) {
                 // there is a gap before the next interval
                 iterator.previous();

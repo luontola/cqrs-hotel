@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -30,7 +30,7 @@ public class RepositoryTest {
 
     @Test
     public void can_create_new_entity() {
-        GuineaPig entity = repo.create(id);
+        var entity = repo.create(id);
 
         assertThat(entity.getVersion(), is(0));
     }
@@ -41,7 +41,7 @@ public class RepositoryTest {
 
         thrown.expect(OptimisticLockingException.class);
         thrown.expectMessage("expected version 0 but was 1");
-        GuineaPig entity = repo.create(id);
+        var entity = repo.create(id);
         repo.save(entity, entity.getVersion());
     }
 
@@ -49,7 +49,7 @@ public class RepositoryTest {
     public void can_get_existing_entity_by_id() {
         saveEvents(id, "foo");
 
-        GuineaPig entity = repo.getById(id);
+        var entity = repo.getById(id);
 
         assertThat(entity.getVersion(), is(1));
         assertThat(entity.value, is("foo"));
@@ -64,7 +64,7 @@ public class RepositoryTest {
 
     @Test
     public void lazy_create_can_return_new_entity() {
-        GuineaPig entity = repo.createOrGet(id);
+        var entity = repo.createOrGet(id);
 
         assertThat(entity.getVersion(), is(0));
     }
@@ -73,7 +73,7 @@ public class RepositoryTest {
     public void lazy_create_can_return_existing_entity() {
         saveEvents(id, "foo");
 
-        GuineaPig entity = repo.createOrGet(id);
+        var entity = repo.createOrGet(id);
 
         assertThat(entity.getVersion(), is(1));
         assertThat(entity.value, is("foo"));
@@ -81,17 +81,17 @@ public class RepositoryTest {
 
     @Test
     public void save_returns_the_global_committed_position() {
-        Commit commit1 = saveEvents(UUID.randomUUID(), "event1", "event2", "event3");
+        var commit1 = saveEvents(UUID.randomUUID(), "event1", "event2", "event3");
         assertThat(commit1.committedPosition, is(3L));
 
-        Commit commit2 = saveEvents(UUID.randomUUID(), "event4", "event5");
+        var commit2 = saveEvents(UUID.randomUUID(), "event4", "event5");
         assertThat(commit2.committedPosition, is(5L));
     }
 
     private Commit saveEvents(UUID id, String... values) {
-        GuineaPig entity = repo.createOrGet(id);
-        int originalVersion = entity.getVersion();
-        for (String value : values) {
+        var entity = repo.createOrGet(id);
+        var originalVersion = entity.getVersion();
+        for (var value : values) {
             entity.setValue(value);
         }
         return repo.save(entity, originalVersion);

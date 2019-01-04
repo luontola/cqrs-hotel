@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -20,7 +20,7 @@ public class UpdateProjectionsAfterHandling<M extends Message, R> implements Han
 
     @Override
     public R handle(M message) {
-        R result = handler.handle(message);
+        var result = handler.handle(message);
         projections.updateAll();
         return result;
     }

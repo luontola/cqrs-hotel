@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -20,7 +20,7 @@ public class RoomsView extends AnnotatedProjection {
 
     @EventListener
     public void apply(RoomCreated event) {
-        RoomDto room = new RoomDto();
+        var room = new RoomDto();
         room.roomId = event.roomId;
         room.roomNumber = event.roomNumber;
         roomsById.put(room.roomId, room);
@@ -29,7 +29,7 @@ public class RoomsView extends AnnotatedProjection {
     // queries
 
     public RoomDto getById(UUID roomId) {
-        RoomDto room = roomsById.get(roomId);
+        var room = roomsById.get(roomId);
         if (room == null) {
             throw new IllegalArgumentException("room not found: " + roomId);
         }

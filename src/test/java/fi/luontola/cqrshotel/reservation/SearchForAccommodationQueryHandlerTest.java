@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -52,9 +52,9 @@ public class SearchForAccommodationQueryHandlerTest {
                 new PriceOffered(id, date2, price2, expires)
         );
 
-        ReservationOffer result = queryHandler.handle(new SearchForAccommodation(id, date1, date3));
+        var result = queryHandler.handle(new SearchForAccommodation(id, date1, date3));
 
-        ReservationOffer expected = new ReservationOffer();
+        var expected = new ReservationOffer();
         expected.reservationId = id;
         expected.arrival = date1;
         expected.departure = date3;
@@ -71,7 +71,7 @@ public class SearchForAccommodationQueryHandlerTest {
                 new PriceOffered(id, date3, price3, expires)
         );
 
-        ReservationOffer result = queryHandler.handle(new SearchForAccommodation(id, date2, date3));
+        var result = queryHandler.handle(new SearchForAccommodation(id, date2, date3));
 
         assertThat("totalPrice", result.totalPrice, is(price2));
     }
@@ -82,7 +82,7 @@ public class SearchForAccommodationQueryHandlerTest {
                 new PriceOffered(id, date2, price2, expires)
         );
 
-        ReservationOffer result = queryHandler.handle(new SearchForAccommodation(id, date1, date3));
+        var result = queryHandler.handle(new SearchForAccommodation(id, date1, date3));
 
         assertThat("totalPrice", result.totalPrice, is(nullValue()));
     }
@@ -94,7 +94,7 @@ public class SearchForAccommodationQueryHandlerTest {
                 new PriceOffered(id, date2, price2, now.minusSeconds(1))
         );
 
-        ReservationOffer result = queryHandler.handle(new SearchForAccommodation(id, date1, date3));
+        var result = queryHandler.handle(new SearchForAccommodation(id, date1, date3));
 
         assertThat("totalPrice", result.totalPrice, is(nullValue()));
     }

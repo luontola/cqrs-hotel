@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -26,7 +26,7 @@ public class OccupyAnyAvailableRoomHandler implements Handler<OccupyAnyAvailable
 
     @Override
     public Commit handle(OccupyAnyAvailableRoom command) {
-        RoomAvailabilityDto room = getAnyAvailableRoom(command.start, command.end);
+        var room = getAnyAvailableRoom(command.start, command.end);
         publisher.publish(new OccupyRoom(room.roomId, command.start, command.end, command.occupant));
         return null;
     }

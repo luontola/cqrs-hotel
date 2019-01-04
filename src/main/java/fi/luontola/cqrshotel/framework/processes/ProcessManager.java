@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -31,15 +31,15 @@ public class ProcessManager {
     private final Projection projection;
 
     public static ProcessManager start(UUID processId, Class<?> processType) {
-        ProcessManager process = new ProcessManager(processId, processType, Collections.emptyList());
+        var process = new ProcessManager(processId, processType, Collections.emptyList());
         // TODO: add Envelope.setContext() calls for causation ID, probably in ProcessManagers.handle()
         process.changes.add(Envelope.newMessage(new ProcessStarted(processId, processType)));
         return process;
     }
 
     public static ProcessManager load(List<Envelope<Event>> history) {
-        ProcessStarted init = (ProcessStarted) history.get(0).payload;
-        ProcessManager process = new ProcessManager(init.processId, init.processType, history);
+        var init = (ProcessStarted) history.get(0).payload;
+        var process = new ProcessManager(init.processId, init.processType, history);
         process.history.forEach(process.projection::apply);
         return process;
     }

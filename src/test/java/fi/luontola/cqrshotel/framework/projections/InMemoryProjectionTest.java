@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -81,7 +81,7 @@ public class InMemoryProjectionTest {
             sleep(5);
             updater.update();
         }).start();
-        boolean result = updater.awaitPosition(1, Duration.ofSeconds(1));
+        var result = updater.awaitPosition(1, Duration.ofSeconds(1));
 
         List<Event> events = new ArrayList<>(projection.receivedEvents); // safe copy to avoid assertion message showing a later value
         assertThat("events", events, is(singletonList(one.payload)));
@@ -90,7 +90,7 @@ public class InMemoryProjectionTest {
 
     @Test
     public void awaiting_position_returns_false_if_timeout_is_reached() throws InterruptedException {
-        boolean result = updater.awaitPosition(1, Duration.ofSeconds(0));
+        var result = updater.awaitPosition(1, Duration.ofSeconds(0));
 
         assertThat("return value", result, is(false));
     }
@@ -108,18 +108,16 @@ public class InMemoryProjectionTest {
     @Test
     public void awaiting_position_is_not_blocked_by_a_concurrently_running_update() throws InterruptedException {
         eventStore.saveEvents(UUID.randomUUID(), singletonList(one), EventStore.BEGINNING);
-        CountDownLatch updateStarted = new CountDownLatch(1);
-        InMemoryProjection projection = new InMemoryProjection(new Projection() {
-            public void apply(Envelope<Event> event) {
-                updateStarted.countDown();
-                sleep(500);
-            }
+        var updateStarted = new CountDownLatch(1);
+        var projection = new InMemoryProjection(event -> {
+            updateStarted.countDown();
+            sleep(500);
         }, eventStore);
         new Thread(projection::update).start();
         updateStarted.await();
 
-        Stopwatch stopwatch = Stopwatch.createStarted();
-        boolean result = projection.awaitPosition(1, Duration.ofMillis(0));
+        var stopwatch = Stopwatch.createStarted();
+        var result = projection.awaitPosition(1, Duration.ofMillis(0));
 
         assertThat("elapsed time", stopwatch.elapsed(TimeUnit.MILLISECONDS), is(lessThan(100L)));
         assertThat("return value", result, is(false));

@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fi.luontola.cqrshotel.framework.Envelope;
 import fi.luontola.cqrshotel.framework.Event;
 import org.postgresql.util.PSQLException;
-import org.postgresql.util.ServerErrorMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.UncategorizedSQLException;
@@ -20,12 +19,10 @@ import org.springframework.jdbc.datasource.DataSourceUtils;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.sql.Array;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class PsqlEventStore implements EventStore {
@@ -50,7 +47,7 @@ public class PsqlEventStore implements EventStore {
         try {
             Array data;
             Array metadata;
-            try (Connection connection = DataSourceUtils.getConnection(dataSource)) {
+            try (var connection = DataSourceUtils.getConnection(dataSource)) {
                 // The connection must be closed before using JdbcTemplate, because otherwise
                 // the JdbcTemplate tries to get another connection and the pool may run out
                 // of available connections.
@@ -58,7 +55,7 @@ public class PsqlEventStore implements EventStore {
                 metadata = connection.createArrayOf("jsonb", serializeMetadata(newEvents));
             }
 
-            long endPosition = jdbcTemplate.queryForObject(
+            var endPosition = jdbcTemplate.queryForObject(
                     "SELECT save_events(:stream_id, :expected_version, :data, :metadata)",
                     new MapSqlParameterSource()
                             .addValue("stream_id", streamId)
@@ -68,9 +65,9 @@ public class PsqlEventStore implements EventStore {
                     Long.class);
 
             if (log.isTraceEnabled()) {
-                for (int i = 0; i < newEvents.size(); i++) {
-                    int newVersion = expectedVersion + 1 + i;
-                    Envelope<Event> newEvent = newEvents.get(i);
+                for (var i = 0; i < newEvents.size(); i++) {
+                    var newVersion = expectedVersion + 1 + i;
+                    var newEvent = newEvents.get(i);
                     log.trace("Saved stream {} version {}: {}", streamId, newVersion, newEvent);
                 }
             }
@@ -78,10 +75,10 @@ public class PsqlEventStore implements EventStore {
 
         } catch (UncategorizedSQLException e) {
             if (e.getCause() instanceof PSQLException) {
-                ServerErrorMessage serverError = ((PSQLException) e.getCause()).getServerErrorMessage();
-                Matcher m = OPTIMISTIC_LOCKING_FAILURE_MESSAGE.matcher(serverError.getMessage());
+                var serverError = ((PSQLException) e.getCause()).getServerErrorMessage();
+                var m = OPTIMISTIC_LOCKING_FAILURE_MESSAGE.matcher(serverError.getMessage());
                 if (m.matches()) {
-                    String currentVersion = m.group(1);
+                    var currentVersion = m.group(1);
                     throw new OptimisticLockingException("expected version " + expectedVersion +
                             " but was " + currentVersion + " for stream " + streamId, e);
                 }
@@ -119,7 +116,7 @@ public class PsqlEventStore implements EventStore {
 
     @Override
     public int getCurrentVersion(UUID streamId) {
-        List<Integer> version = jdbcTemplate.queryForList(
+        var version = jdbcTemplate.queryForList(
                 "SELECT version FROM stream WHERE stream_id = :stream_id",
                 new MapSqlParameterSource("stream_id", streamId),
                 Integer.class);
@@ -128,7 +125,7 @@ public class PsqlEventStore implements EventStore {
 
     @Override
     public long getCurrentPosition() {
-        List<Long> position = jdbcTemplate.queryForList(
+        var position = jdbcTemplate.queryForList(
                 "SELECT position FROM event_sequence ORDER BY position DESC  LIMIT 1",
                 new MapSqlParameterSource(),
                 Long.class);
@@ -136,12 +133,12 @@ public class PsqlEventStore implements EventStore {
     }
 
     private PersistedEvent eventMapping(ResultSet rs, int rowNum) throws SQLException {
-        String data = rs.getString("data");
-        String metadata = rs.getString("metadata");
-        Envelope<Event> event = deserialize(data, metadata);
-        UUID streamId = UUID.fromString(rs.getString("stream_id"));
-        int version = rs.getInt("version");
-        long position = rs.getLong("position");
+        var data = rs.getString("data");
+        var metadata = rs.getString("metadata");
+        var event = deserialize(data, metadata);
+        var streamId = UUID.fromString(rs.getString("stream_id"));
+        var version = rs.getInt("version");
+        var position = rs.getLong("position");
         return new PersistedEvent(event, streamId, version, position);
     }
 
@@ -160,7 +157,7 @@ public class PsqlEventStore implements EventStore {
     }
 
     private static EventMetadata getMetadata(Envelope<Event> event) {
-        EventMetadata meta = new EventMetadata();
+        var meta = new EventMetadata();
         meta.messageId = event.messageId;
         meta.correlationId = event.correlationId;
         meta.causationId = event.causationId;
@@ -179,8 +176,8 @@ public class PsqlEventStore implements EventStore {
 
     private Envelope<Event> deserialize(String dataJson, String metadataJson) {
         try {
-            EventMetadata meta = objectMapper.readValue(metadataJson, EventMetadata.class);
-            Event data = (Event) objectMapper.readValue(dataJson, Class.forName(meta.type));
+            var meta = objectMapper.readValue(metadataJson, EventMetadata.class);
+            var data = (Event) objectMapper.readValue(dataJson, Class.forName(meta.type));
             return new Envelope<>(data, meta.messageId, meta.correlationId, meta.causationId);
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);

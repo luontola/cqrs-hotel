@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -37,13 +37,13 @@ public class ProcessManagers {
 
     public void handle(Envelope<Event> event) {
         startNewProcesses(event);
-        for (UUID processId : findSubscribedProcesses(event)) {
+        for (var processId : findSubscribedProcesses(event)) {
             delegateToProcess(processId, event);
         }
     }
 
     private void delegateToProcess(UUID processId, Envelope<Event> event) {
-        ProcessManager process = repo.getById(processId);
+        var process = repo.getById(processId);
         process.handle(event);
         repo.save(process);
         process.publishNewMessagesTo(gateway);
@@ -52,7 +52,7 @@ public class ProcessManagers {
     // startup
 
     private void startNewProcesses(Envelope<Event> event) {
-        for (EntryPoint entryPoint : entryPoints) {
+        for (var entryPoint : entryPoints) {
             if (entryPoint.matches(event)) {
                 startNewProcess(entryPoint.processType, event);
             }
@@ -64,8 +64,8 @@ public class ProcessManagers {
         // Possible solutions:
         // - do not save the process yet here, but only after handing the initial event (would avoid subscription to the first message's ID)
         // - use the initial event's message ID (or a deterministically derived ID) as the process ID
-        UUID processId = UUIDs.newUUID();
-        ProcessManager process = repo.create(processId, processType);
+        var processId = UUIDs.newUUID();
+        var process = repo.create(processId, processType);
         process.subscribe(processId); // subscribe to itself as correlationId to receive responses to own commands
         process.subscribe(initialEvent.messageId); // always handle the first message (it won't have processId as correlationId)
         repo.save(process);
@@ -74,12 +74,12 @@ public class ProcessManagers {
     // lookup
 
     private Set<UUID> findSubscribedProcesses(Envelope<Event> event) {
-        List<UUID> topics = getTopics(event);
+        var topics = getTopics(event);
         return repo.findSubscribersToAnyOf(topics);
     }
 
     private static List<UUID> getTopics(Envelope<Event> event) {
-        List<UUID> topics = UUIDs.extractUUIDs(event.payload);
+        var topics = UUIDs.extractUUIDs(event.payload);
         topics.add(event.correlationId);
         topics.add(event.messageId);
         return topics;

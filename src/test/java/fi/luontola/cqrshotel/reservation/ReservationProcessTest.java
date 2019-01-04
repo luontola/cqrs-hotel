@@ -63,7 +63,7 @@ public class ReservationProcessTest {
     // helpers
 
     private void given(Event... events) {
-        for (Event event : events) {
+        for (var event : events) {
             process.apply(Envelope.newMessage(event));
         }
     }

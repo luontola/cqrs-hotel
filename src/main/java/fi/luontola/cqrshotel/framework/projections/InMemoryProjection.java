@@ -1,16 +1,14 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
 package fi.luontola.cqrshotel.framework.projections;
 
 import fi.luontola.cqrshotel.framework.eventstore.EventStore;
-import fi.luontola.cqrshotel.framework.eventstore.PersistedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -37,12 +35,12 @@ public class InMemoryProjection implements UpdatableProjection {
 
     @Override
     public synchronized final void update() {
-        List<PersistedEvent> events = eventStore.getAllEvents(position);
+        var events = eventStore.getAllEvents(position);
         if (!events.isEmpty()) {
-            PersistedEvent last = events.get(events.size() - 1);
+            var last = events.get(events.size() - 1);
             log.debug("Updating projection with {} events from position {} to {}", events.size(), position, last.position);
         }
-        for (PersistedEvent event : events) {
+        for (var event : events) {
             projection.apply(event.event);
             position = event.position;
             notifyWaiters();
@@ -51,7 +49,7 @@ public class InMemoryProjection implements UpdatableProjection {
 
     private void notifyWaiters() {
         while (true) {
-            Waiter head = waiters.peek();
+            var head = waiters.peek();
             if (head == null || head.expectedPosition > position) {
                 return; // no expired waiters
             }
@@ -76,7 +74,7 @@ public class InMemoryProjection implements UpdatableProjection {
         }
 
         // slow path, waiting probably needed
-        Waiter waiter = new Waiter(expectedPosition);
+        var waiter = new Waiter(expectedPosition);
         waiters.put(waiter);
 
         // double check after registering our waiter, in case the position was updated concurrently
@@ -86,7 +84,7 @@ public class InMemoryProjection implements UpdatableProjection {
             return true;
         }
 
-        boolean positionReached = waiter.positionReached.await(timeout.toNanos(), TimeUnit.NANOSECONDS);
+        var positionReached = waiter.positionReached.await(timeout.toNanos(), TimeUnit.NANOSECONDS);
         if (!positionReached) {
             waiters.remove(waiter); // we timed out; let the waiter object be garbage collected
         }

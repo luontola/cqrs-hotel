@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -27,7 +27,7 @@ public class UUIDs {
     }
 
     public static List<UUID> extractUUIDs(Object object) {
-        Field[] fields = getUuidFields(object.getClass());
+        var fields = getUuidFields(object.getClass());
         return getUuidFieldValues(fields, object);
     }
 
@@ -41,9 +41,9 @@ public class UUIDs {
 
     private static List<UUID> getUuidFieldValues(Field[] fields, Object object) {
         try {
-            List<UUID> values = new ArrayList<>(fields.length);
-            for (Field field : fields) {
-                UUID value = (UUID) field.get(object);
+            var values = new ArrayList<UUID>(fields.length);
+            for (var field : fields) {
+                var value = (UUID) field.get(object);
                 if (value != null) {
                     values.add(value);
                 }

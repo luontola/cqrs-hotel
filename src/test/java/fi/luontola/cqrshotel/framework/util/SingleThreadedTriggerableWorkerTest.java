@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -44,7 +44,7 @@ public class SingleThreadedTriggerableWorkerTest {
 
     @Test
     public void runs_the_task_when_triggered() throws InterruptedException {
-        CountDownLatch taskFinished = new CountDownLatch(1);
+        var taskFinished = new CountDownLatch(1);
         Runnable task = () -> {
             taskCount.incrementAndGet();
             taskFinished.countDown();
@@ -59,8 +59,8 @@ public class SingleThreadedTriggerableWorkerTest {
 
     @Test
     public void runs_the_task_in_a_background_thread() throws InterruptedException {
-        Thread[] taskThread = new Thread[1];
-        CountDownLatch taskFinished = new CountDownLatch(1);
+        var taskThread = new Thread[1];
+        var taskFinished = new CountDownLatch(1);
         Runnable task = () -> {
             taskThread[0] = Thread.currentThread();
             taskFinished.countDown();
@@ -76,8 +76,8 @@ public class SingleThreadedTriggerableWorkerTest {
 
     @Test
     public void reruns_when_triggered_after_task_started() throws InterruptedException {
-        CountDownLatch oneTaskStarted = new CountDownLatch(1);
-        CountDownLatch twoTasksFinished = new CountDownLatch(2);
+        var oneTaskStarted = new CountDownLatch(1);
+        var twoTasksFinished = new CountDownLatch(2);
         Runnable task = () -> {
             taskCount.incrementAndGet();
             oneTaskStarted.countDown();
@@ -95,9 +95,9 @@ public class SingleThreadedTriggerableWorkerTest {
 
     @Test
     public void reruns_only_once_when_triggered_many_times_after_task_started() throws InterruptedException {
-        CountDownLatch firstTaskStarted = new CountDownLatch(1);
-        CountDownLatch manyTasksTriggered = new CountDownLatch(1);
-        CountDownLatch twoTasksFinished = new CountDownLatch(2);
+        var firstTaskStarted = new CountDownLatch(1);
+        var manyTasksTriggered = new CountDownLatch(1);
+        var twoTasksFinished = new CountDownLatch(2);
         Runnable task = () -> {
             taskCount.incrementAndGet();
             firstTaskStarted.countDown();
@@ -125,7 +125,7 @@ public class SingleThreadedTriggerableWorkerTest {
 
     @Test
     public void reruns_many_times_when_triggered_after_task_finished() throws BrokenBarrierException, InterruptedException {
-        CyclicBarrier taskFinished = new CyclicBarrier(2);
+        var taskFinished = new CyclicBarrier(2);
         Runnable task = () -> {
             taskCount.incrementAndGet();
             try {
@@ -148,8 +148,8 @@ public class SingleThreadedTriggerableWorkerTest {
 
     @Test
     public void runs_only_a_single_task_at_a_time() throws InterruptedException {
-        AtomicInteger concurrentTasks = new AtomicInteger(0);
-        AtomicInteger maxConcurrentTasks = new AtomicInteger(0);
+        var concurrentTasks = new AtomicInteger(0);
+        var maxConcurrentTasks = new AtomicInteger(0);
         Runnable task = () -> {
             concurrentTasks.incrementAndGet();
             maxConcurrentTasks.updateAndGet(value -> Math.max(value, concurrentTasks.get()));
@@ -168,13 +168,13 @@ public class SingleThreadedTriggerableWorkerTest {
 
     @Test
     public void logs_uncaught_exceptions() throws InterruptedException {
-        CountDownLatch handlerCalled = new CountDownLatch(1);
-        Throwable[] actualException = new Throwable[1];
+        var handlerCalled = new CountDownLatch(1);
+        var actualException = new Throwable[1];
         UncaughtExceptionHandler exceptionHandler = (e) -> {
             actualException[0] = e;
             handlerCalled.countDown();
         };
-        RuntimeException expectedException = new RuntimeException("dummy");
+        var expectedException = new RuntimeException("dummy");
         Runnable task = () -> {
             throw expectedException;
         };

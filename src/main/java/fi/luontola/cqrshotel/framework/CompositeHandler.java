@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -20,8 +20,8 @@ public class CompositeHandler<M extends Message, R> implements Handler<M, R> {
 
     @Override
     public R handle(M message) {
-        Class<?> type = message.getClass();
-        Handler<M, R> handler = handlers.get(type);
+        var type = message.getClass();
+        var handler = handlers.get(type);
         if (handler == null) {
             throw new IllegalArgumentException("no handler for " + type);
         }

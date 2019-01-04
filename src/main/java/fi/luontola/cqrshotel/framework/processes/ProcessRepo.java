@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -33,25 +33,25 @@ public class ProcessRepo {
     }
 
     public void save(ProcessManager process) {
-        UUID processId = process.processId;
-        List<Envelope<Event>> savedEvents = processesById.computeIfAbsent(processId, key -> new ArrayList<>());
+        var processId = process.processId;
+        var savedEvents = processesById.computeIfAbsent(processId, key -> new ArrayList<>());
 
-        int expectedVersion = process.getOriginalVersion();
-        int actualVersion = savedEvents.size();
+        var expectedVersion = process.getOriginalVersion();
+        var actualVersion = savedEvents.size();
         if (expectedVersion != actualVersion) {
             throw new OptimisticLockingException("expected version " + expectedVersion + " but was " + actualVersion + " for process " + processId);
         }
 
-        List<Envelope<Event>> changes = process.getUncommittedChanges();
-        for (Envelope<Event> change : changes) {
+        var changes = process.getUncommittedChanges();
+        for (var change : changes) {
             // TODO: use EventListeners?
 
             if (change.payload instanceof ProcessSubscribedToTopic) {
-                ProcessSubscribedToTopic event = (ProcessSubscribedToTopic) change.payload;
+                var event = (ProcessSubscribedToTopic) change.payload;
                 subscribe(event.processId, event.topic);
 
             } else if (change.payload instanceof ProcessUnsubscribedFromTopic) {
-                ProcessUnsubscribedFromTopic event = (ProcessUnsubscribedFromTopic) change.payload;
+                var event = (ProcessUnsubscribedFromTopic) change.payload;
                 unsubscribe(event.processId, event.topic);
             }
         }
@@ -61,7 +61,7 @@ public class ProcessRepo {
     }
 
     public ProcessManager getById(UUID processId) {
-        List<Envelope<Event>> events = processesById.computeIfAbsent(processId, key -> {
+        var events = processesById.computeIfAbsent(processId, key -> {
             throw new IllegalArgumentException("Process not found: " + key);
         });
         return ProcessManager.load(events);
@@ -81,7 +81,7 @@ public class ProcessRepo {
 
     public Set<UUID> findSubscribersToAnyOf(List<UUID> topics) {
         Set<UUID> processIds = new HashSet<>();
-        for (UUID topic : topics) {
+        for (var topic : topics) {
             processIds.addAll(subscribedProcessesByTopic.get(topic));
         }
         return processIds;

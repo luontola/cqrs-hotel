@@ -16,7 +16,6 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -42,7 +41,7 @@ public class ReservationsViewTest {
         view.apply(new ContactInformationUpdated(reservationId, "name", "email"));
         view.apply(new RoomAssigned(reservationId, roomId, "123"));
 
-        ReservationDto expected = new ReservationDto();
+        var expected = new ReservationDto();
         expected.reservationId = reservationId;
         expected.arrival = arrival;
         expected.departure = departure;
@@ -62,7 +61,7 @@ public class ReservationsViewTest {
         view.apply(new ReservationCreated(reservationId, arrival, departure, checkInTime, checkOutTime));
         view.apply(new ReservationCreated(reservationId2, arrival, departure, checkInTime, checkOutTime));
 
-        List<ReservationDto> results = view.findAll();
+        var results = view.findAll();
         assertThat(results, hasSize(2));
     }
 
@@ -71,7 +70,7 @@ public class ReservationsViewTest {
         view.apply(new ReservationCreated(reservationId, arrival, departure, checkInTime, checkOutTime));
         view.apply(new ReservationCreated(reservationId2, arrival, departure, checkInTime, checkOutTime));
 
-        ReservationDto result = view.findById(reservationId);
+        var result = view.findById(reservationId);
         assertThat(result.reservationId, is(reservationId));
     }
 }

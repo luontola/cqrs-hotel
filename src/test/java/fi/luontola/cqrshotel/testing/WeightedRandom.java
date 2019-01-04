@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -25,8 +25,8 @@ public class WeightedRandom<T> {
         if (random < 0 || random > 1) {
             throw new IllegalArgumentException("expected random number between 0 and 1, but was " + random);
         }
-        double cursor = random * sumOfWeights();
-        for (WeightedItem<T> item : items) { // we assume a low number of items, so use linear instead of binary search
+        var cursor = random * sumOfWeights();
+        for (var item : items) { // we assume a low number of items, so use linear instead of binary search
             if (cursor <= item.cumulativeWeight) {
                 return item.value;
             }
@@ -39,7 +39,7 @@ public class WeightedRandom<T> {
     }
 
     private WeightedItem<T> lastItem() {
-        int size = items.size();
+        var size = items.size();
         if (size == 0) {
             return new WeightedItem<>(0, 0, null);
         } else {
@@ -49,8 +49,8 @@ public class WeightedRandom<T> {
 
     @Override
     public String toString() {
-        StringJoiner sj = new StringJoiner(", ", "{", "}");
-        for (WeightedItem<T> item : items) {
+        var sj = new StringJoiner(", ", "{", "}");
+        for (var item : items) {
             sj.add(item.weight + "=" + item.value);
         }
         return sj.toString();

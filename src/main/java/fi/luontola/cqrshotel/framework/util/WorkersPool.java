@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -13,22 +13,22 @@ public class WorkersPool {
     private final List<SingleThreadedTriggerableWorker> workers = new ArrayList<>();
 
     public WorkersPool(List<Runnable> updaters) {
-        for (Runnable updater : updaters) {
+        for (var updater : updaters) {
             workers.add(new SingleThreadedTriggerableWorker(updater));
         }
     }
 
     public void updateAll() {
-        for (SingleThreadedTriggerableWorker worker : workers) {
+        for (var worker : workers) {
             worker.trigger();
         }
     }
 
     public void shutdown(Duration timeout) throws InterruptedException {
-        for (SingleThreadedTriggerableWorker worker : workers) {
+        for (var worker : workers) {
             worker.shutdown();
         }
-        for (SingleThreadedTriggerableWorker worker : workers) {
+        for (var worker : workers) {
             worker.awaitTermination(timeout);
         }
     }

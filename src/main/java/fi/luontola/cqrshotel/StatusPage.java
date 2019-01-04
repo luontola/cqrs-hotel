@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -17,7 +17,7 @@ public class StatusPage {
     public Map<String, ProjectionStatus> projections;
 
     public static StatusPage build(EventStore eventStore, List<Core.ProjectionConfig<?>> projections) {
-        StatusPage status = new StatusPage();
+        var status = new StatusPage();
         status.projections = projections.stream()
                 .collect(Collectors.toMap(
                         p -> p.projection.getProjectionName(),
@@ -34,7 +34,7 @@ public class StatusPage {
         public Long position;
 
         public static EventStoreStatus build(EventStore eventStore) {
-            EventStoreStatus status = new EventStoreStatus();
+            var status = new EventStoreStatus();
             status.position = eventStore.getCurrentPosition();
             return status;
         }
@@ -44,7 +44,7 @@ public class StatusPage {
         public Long position;
 
         private static ProjectionStatus build(Core.ProjectionConfig<?> projection) {
-            ProjectionStatus status = new ProjectionStatus();
+            var status = new ProjectionStatus();
             status.position = projection.updater.getPosition();
             return status;
         }

@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -13,7 +13,6 @@ import fi.luontola.cqrshotel.reservation.queries.ReservationDto;
 import fi.luontola.cqrshotel.reservation.queries.ReservationOffer;
 import fi.luontola.cqrshotel.room.commands.CreateRoom;
 import fi.luontola.cqrshotel.room.queries.RoomAvailabilityDto;
-import fi.luontola.cqrshotel.room.queries.RoomAvailabilityIntervalDto;
 import fi.luontola.cqrshotel.room.queries.RoomDto;
 import org.javamoney.moneta.Money;
 import org.junit.Before;
@@ -26,13 +25,11 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -81,18 +78,18 @@ public class ApiControllerTest {
 
     @Test
     public void home() {
-        String response = getForObject("/api", String.class);
+        var response = getForObject("/api", String.class);
 
         assertThat(response, containsString("CQRS Hotel"));
     }
 
     @Test
     public void search_for_accommodation() {
-        ReservationOffer offer = postForObject("/api/search-for-accommodation",
+        var offer = postForObject("/api/search-for-accommodation",
                 new SearchForAccommodation(reservationId, arrival, departure),
                 ReservationOffer.class);
 
-        ReservationOffer expected = new ReservationOffer();
+        var expected = new ReservationOffer();
         expected.reservationId = reservationId;
         expected.arrival = arrival;
         expected.departure = departure;
@@ -102,7 +99,7 @@ public class ApiControllerTest {
 
     @Test
     public void make_reservation() {
-        ReservationOffer offer = postForObject("/api/search-for-accommodation",
+        var offer = postForObject("/api/search-for-accommodation",
                 new SearchForAccommodation(reservationId, arrival, departure),
                 ReservationOffer.class);
 
@@ -119,7 +116,7 @@ public class ApiControllerTest {
     // XXX: implement the following as dependent tests
 
     public void test_reservations() {
-        ReservationDto[] reservations = getForObject("/api/reservations", ReservationDto[].class);
+        var reservations = getForObject("/api/reservations", ReservationDto[].class);
 
         assertThat("reservations", reservations, is(not(emptyArray())));
         assertThat("reservation " + reservationId, Stream.of(reservations)
@@ -128,7 +125,7 @@ public class ApiControllerTest {
     }
 
     public void test_reservationById() {
-        ReservationDto reservation = getForObject("/api/reservations/{id}", ReservationDto.class, reservationId);
+        var reservation = getForObject("/api/reservations/{id}", ReservationDto.class, reservationId);
 
         assertThat("reservation", reservation, is(notNullValue()));
         assertThat("reservationId", reservation.reservationId, is(reservationId));
@@ -145,7 +142,7 @@ public class ApiControllerTest {
     }
 
     public void test_rooms() {
-        RoomDto[] rooms = getForObject("/api/rooms", RoomDto[].class);
+        var rooms = getForObject("/api/rooms", RoomDto[].class);
 
         assertThat("rooms", rooms, is(not(emptyArray())));
         assertThat("room " + roomId, Stream.of(rooms)
@@ -154,9 +151,9 @@ public class ApiControllerTest {
     }
 
     public void test_capacityByDate() {
-        LocalDate date = LocalDate.now();
+        var date = LocalDate.now();
 
-        CapacityDto capacity = getForObject("/api/capacity/{date}", CapacityDto.class, date);
+        var capacity = getForObject("/api/capacity/{date}", CapacityDto.class, date);
 
         assertThat("date", capacity.date, is(date));
         assertThat("capacity", capacity.capacity, is(greaterThan(0)));
@@ -165,33 +162,33 @@ public class ApiControllerTest {
 
     @Test
     public void test_capacityByDateRange() {
-        LocalDate start = LocalDate.now();
-        LocalDate end = start.plusDays(2); // 3 days inclusive
+        var start = LocalDate.now();
+        var end = start.plusDays(2); // 3 days inclusive
 
-        CapacityDto[] capacities = getForObject("/api/capacity/{start}/{end}", CapacityDto[].class, start, end);
+        var capacities = getForObject("/api/capacity/{start}/{end}", CapacityDto[].class, start, end);
 
         assertThat("capacities", capacities, arrayWithSize(3));
     }
 
     @Test
     public void test_availabilityByDateRange() {
-        LocalDate start = LocalDate.now();
-        LocalDate end = start.plusDays(2); // 3 days inclusive
+        var start = LocalDate.now();
+        var end = start.plusDays(2); // 3 days inclusive
 
-        RoomAvailabilityDto[] rooms = getForObject("/api/availability/{start}/{end}", RoomAvailabilityDto[].class, start, end);
+        var rooms = getForObject("/api/availability/{start}/{end}", RoomAvailabilityDto[].class, start, end);
 
         assertThat("rooms", rooms, is(not(emptyArray())));
-        List<RoomAvailabilityIntervalDto> intervals = rooms[0].details;
+        var intervals = rooms[0].details;
         assertThat("availability intervals", intervals, is(not(empty())));
-        RoomAvailabilityIntervalDto first = intervals.get(0);
-        RoomAvailabilityIntervalDto last = intervals.get(intervals.size() - 1);
-        long days = first.start.until(last.end, DAYS); // may be longer than 3 days when the first or last interval is occupied
+        var first = intervals.get(0);
+        var last = intervals.get(intervals.size() - 1);
+        var days = first.start.until(last.end, DAYS); // may be longer than 3 days when the first or last interval is occupied
         assertThat("availability interval in days", days, is(greaterThanOrEqualTo(3L)));
     }
 
     @Test
     public void status_page() {
-        StatusPage status = restTemplate.getForObject("/api/status", StatusPage.class);
+        var status = restTemplate.getForObject("/api/status", StatusPage.class);
         assertThat(status.eventStore.position, is(notNullValue()));
     }
 
@@ -199,27 +196,27 @@ public class ApiControllerTest {
     // helpers
 
     private <T> T postForObject(String url, Object request, Class<T> responseType, Object... urlVariables) {
-        ResponseEntity<T> response = restTemplate.exchange(url, POST, new HttpEntity<>(request, headers()), responseType, urlVariables);
+        var response = restTemplate.exchange(url, POST, new HttpEntity<>(request, headers()), responseType, urlVariables);
         assert2xxSuccessful(response);
         rememberObservedPosition(response);
         return response.getBody();
     }
 
     private <T> T getForObject(String url, Class<T> responseType, Object... urlVariables) {
-        ResponseEntity<T> response = restTemplate.exchange(url, GET, new HttpEntity<>(headers()), responseType, urlVariables);
+        var response = restTemplate.exchange(url, GET, new HttpEntity<>(headers()), responseType, urlVariables);
         assert2xxSuccessful(response);
         return response.getBody();
     }
 
     private void rememberObservedPosition(ResponseEntity<?> response) {
-        String observedPosition = response.getHeaders().getFirst(ObservedPosition.HTTP_HEADER);
+        var observedPosition = response.getHeaders().getFirst(ObservedPosition.HTTP_HEADER);
         if (observedPosition != null) {
             this.observedPosition = observedPosition;
         }
     }
 
     private HttpHeaders headers() {
-        HttpHeaders headers = new HttpHeaders();
+        var headers = new HttpHeaders();
         if (observedPosition != null) {
             headers.set(ObservedPosition.HTTP_HEADER, observedPosition);
         }
@@ -227,7 +224,7 @@ public class ApiControllerTest {
     }
 
     private static void assert2xxSuccessful(ResponseEntity<?> response) {
-        HttpStatus statusCode = response.getStatusCode();
+        var statusCode = response.getStatusCode();
         if (!statusCode.is2xxSuccessful()) {
             throw new AssertionError("HTTP " + statusCode + " " + statusCode.getReasonPhrase());
         }

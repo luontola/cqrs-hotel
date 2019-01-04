@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -31,16 +31,16 @@ public class EventListeners {
 
     private static Map<Class<?>, Method> findEventListeners(Class<?> targetType, Requirements[] requirements) {
         Map<Class<?>, Method> eventListeners = new HashMap<>();
-        for (Method method : targetType.getDeclaredMethods()) {
+        for (var method : targetType.getDeclaredMethods()) {
             if (method.isAnnotationPresent(EventListener.class)) {
                 if (method.getParameterCount() != 1) {
                     throw new IllegalArgumentException("expected method to take exactly one parameter: " + method);
                 }
-                Class<?> eventType = method.getParameterTypes()[0];
+                var eventType = method.getParameterTypes()[0];
                 if (!Event.class.isAssignableFrom(eventType)) {
                     throw new IllegalArgumentException("expected method to take an event parameter: " + method);
                 }
-                for (Requirements requirement : requirements) {
+                for (var requirement : requirements) {
                     requirement.check(method);
                 }
                 method.setAccessible(true);
@@ -51,7 +51,7 @@ public class EventListeners {
     }
 
     public void send(Event event) {
-        Method method = eventListeners.get(event.getClass());
+        var method = eventListeners.get(event.getClass());
         if (method != null) {
             try {
                 method.invoke(target, event);
