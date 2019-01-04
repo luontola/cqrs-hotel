@@ -165,6 +165,7 @@
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                    <argLine>--illegal-access=deny</argLine>
                     <includes>
                         <include>**/*Test.java</include>
                     </includes>
@@ -175,6 +176,7 @@
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
+                    <argLine>--illegal-access=deny</argLine>
                     <includes>
                         <include>**/*Test.java</include>
                     </includes>

@@ -31,6 +31,6 @@ WORKDIR /app
 USER app
 
 EXPOSE 8080
-CMD ["java", "-Xmx200m", "-XX:MaxMetaspaceSize=64m", "-jar", "cqrs-hotel.jar", "--spring.profiles.active=docker"]
+CMD ["java", "-Xmx200m", "-XX:MaxMetaspaceSize=64m", "--illegal-access=deny", "-jar", "cqrs-hotel.jar", "--spring.profiles.active=docker"]
 
 COPY --from=builder /project/target/cqrs-hotel.jar /app/cqrs-hotel.jar
