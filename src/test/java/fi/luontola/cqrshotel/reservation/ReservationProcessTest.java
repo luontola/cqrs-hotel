@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -10,7 +10,7 @@ import fi.luontola.cqrshotel.framework.Envelope;
 import fi.luontola.cqrshotel.framework.Event;
 import fi.luontola.cqrshotel.framework.Message;
 import fi.luontola.cqrshotel.reservation.commands.AssignRoom;
-import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
+import fi.luontola.cqrshotel.reservation.events.ReservationCreated;
 import fi.luontola.cqrshotel.room.commands.OccupyAnyAvailableRoom;
 import fi.luontola.cqrshotel.room.events.RoomOccupied;
 import org.junit.Test;
@@ -41,7 +41,7 @@ public class ReservationProcessTest {
 
     @Test
     public void when_reservation_is_initialized_then_an_available_room_is_allocated_for_it() {  // TODO: should be "when confirmed"
-        when(new ReservationInitiated(reservationId, arrival, departure, checkInTime, checkOutTime));
+        when(new ReservationCreated(reservationId, arrival, departure, checkInTime, checkOutTime));
 
         then(new OccupyAnyAvailableRoom(checkInTime.toInstant(), checkOutTime.toInstant(), reservationId));
     }
@@ -50,7 +50,7 @@ public class ReservationProcessTest {
 
     @Test
     public void when_an_available_room_is_found_then_that_is_assigned_to_the_reservation() {
-        given(new ReservationInitiated(reservationId, arrival, departure, checkInTime, checkOutTime));
+        given(new ReservationCreated(reservationId, arrival, departure, checkInTime, checkOutTime));
 
         when(new RoomOccupied(roomId, checkInTime.toInstant(), checkOutTime.toInstant(), reservationId));
 

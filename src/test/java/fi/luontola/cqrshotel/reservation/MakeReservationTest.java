@@ -12,7 +12,7 @@ import fi.luontola.cqrshotel.reservation.commands.MakeReservationHandler;
 import fi.luontola.cqrshotel.reservation.events.ContactInformationUpdated;
 import fi.luontola.cqrshotel.reservation.events.LineItemCreated;
 import fi.luontola.cqrshotel.reservation.events.PriceOffered;
-import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
+import fi.luontola.cqrshotel.reservation.events.ReservationCreated;
 import org.javamoney.moneta.Money;
 import org.junit.Rule;
 import org.junit.Test;
@@ -52,13 +52,13 @@ public class MakeReservationTest extends AggregateRootTester {
         when(new MakeReservation(id, date1, date2, "John Doe", "john@example.com"));
 
         then(new ContactInformationUpdated(id, "John Doe", "john@example.com"),
-                new ReservationInitiated(id, date1, date2, Hotel.checkInTime(date1), Hotel.checkOutTime(date2)),
+                new ReservationCreated(id, date1, date2, Hotel.checkInTime(date1), Hotel.checkOutTime(date2)),
                 new LineItemCreated(id, 1, date1, price1));
     }
 
     @Test
     public void cannot_make_reservation_twice() {
-        given(new ReservationInitiated(id, date1, date2, Hotel.checkInTime(date1), Hotel.checkOutTime(date2)));
+        given(new ReservationCreated(id, date1, date2, Hotel.checkInTime(date1), Hotel.checkOutTime(date2)));
 
         thrown.expect(IllegalStateException.class);
         thrown.expectMessage("unexpected state: RESERVED");

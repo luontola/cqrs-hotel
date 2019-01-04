@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -7,7 +7,7 @@ package fi.luontola.cqrshotel.reservation.queries;
 import fi.luontola.cqrshotel.framework.projections.AnnotatedProjection;
 import fi.luontola.cqrshotel.framework.util.EventListener;
 import fi.luontola.cqrshotel.reservation.events.ContactInformationUpdated;
-import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
+import fi.luontola.cqrshotel.reservation.events.ReservationCreated;
 import fi.luontola.cqrshotel.reservation.events.RoomAssigned;
 
 import java.time.format.DateTimeFormatter;
@@ -24,7 +24,7 @@ public class ReservationsView extends AnnotatedProjection {
     private final ConcurrentMap<UUID, ReservationDto> reservationsById = new ConcurrentHashMap<>();
 
     @EventListener
-    public void apply(ReservationInitiated event) {
+    public void apply(ReservationCreated event) {
         ReservationDto reservation = getReservation(event.reservationId);
         reservation.arrival = event.arrival;
         reservation.departure = event.departure;

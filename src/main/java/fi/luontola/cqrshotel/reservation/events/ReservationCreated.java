@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -13,7 +13,7 @@ import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
-public class ReservationInitiated extends Struct implements Event {
+public class ReservationCreated extends Struct implements Event {
 
     public final UUID reservationId;
     public final LocalDate arrival;
@@ -22,11 +22,11 @@ public class ReservationInitiated extends Struct implements Event {
     public final ZonedDateTime checkOutTime;
 
     @JsonCreator
-    public ReservationInitiated(@JsonProperty("reservationId") UUID reservationId,
-                                @JsonProperty("arrival") LocalDate arrival,
-                                @JsonProperty("departure") LocalDate departure,
-                                @JsonProperty("checkInTime") ZonedDateTime checkInTime,
-                                @JsonProperty("checkOutTime") ZonedDateTime checkOutTime) {
+    public ReservationCreated(@JsonProperty("reservationId") UUID reservationId,
+                              @JsonProperty("arrival") LocalDate arrival,
+                              @JsonProperty("departure") LocalDate departure,
+                              @JsonProperty("checkInTime") ZonedDateTime checkInTime,
+                              @JsonProperty("checkOutTime") ZonedDateTime checkOutTime) {
         this.reservationId = reservationId;
         this.arrival = arrival;
         this.departure = departure;

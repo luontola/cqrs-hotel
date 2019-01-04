@@ -11,7 +11,7 @@ import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.reservation.events.ContactInformationUpdated;
 import fi.luontola.cqrshotel.reservation.events.LineItemCreated;
 import fi.luontola.cqrshotel.reservation.events.PriceOffered;
-import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
+import fi.luontola.cqrshotel.reservation.events.ReservationCreated;
 import fi.luontola.cqrshotel.reservation.events.RoomAssigned;
 import fi.luontola.cqrshotel.reservation.events.SearchedForAccommodation;
 
@@ -42,7 +42,7 @@ public class Reservation extends AggregateRoot {
     }
 
     @EventListener
-    private void apply(ReservationInitiated event) {
+    private void apply(ReservationCreated event) {
         state = RESERVED;
     }
 
@@ -79,7 +79,7 @@ public class Reservation extends AggregateRoot {
 
     public void makeReservation(LocalDate arrival, LocalDate departure, Clock clock) {
         checkStateIs(PROSPECTIVE);
-        publish(new ReservationInitiated(getId(), arrival, departure, Hotel.checkInTime(arrival), Hotel.checkOutTime(departure)));
+        publish(new ReservationCreated(getId(), arrival, departure, Hotel.checkInTime(arrival), Hotel.checkOutTime(departure)));
 
         for (LocalDate date = arrival; date.isBefore(departure); date = date.plusDays(1)) {
             PriceOffered offer = getValidPriceOffer(date, clock);

@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -6,7 +6,7 @@ package fi.luontola.cqrshotel.capacity.queries;
 
 import fi.luontola.cqrshotel.framework.projections.AnnotatedProjection;
 import fi.luontola.cqrshotel.framework.util.EventListener;
-import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
+import fi.luontola.cqrshotel.reservation.events.ReservationCreated;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
 
 import java.time.LocalDate;
@@ -27,7 +27,7 @@ public class CapacityView extends AnnotatedProjection {
     }
 
     @EventListener
-    public void apply(ReservationInitiated event) {
+    public void apply(ReservationCreated event) {
         for (LocalDate date = event.arrival; date.isBefore(event.departure); date = date.plusDays(1)) {
             reservationsByDate.computeIfAbsent(date, _date -> new AtomicInteger(0))
                     .incrementAndGet();

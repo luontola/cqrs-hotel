@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -6,7 +6,7 @@ package fi.luontola.cqrshotel.reservation.queries;
 
 import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.reservation.events.ContactInformationUpdated;
-import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
+import fi.luontola.cqrshotel.reservation.events.ReservationCreated;
 import fi.luontola.cqrshotel.reservation.events.RoomAssigned;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -38,7 +38,7 @@ public class ReservationsViewTest {
 
     @Test
     public void fills_in_all_fields() {
-        view.apply(new ReservationInitiated(reservationId, arrival, departure, checkInTime, checkOutTime));
+        view.apply(new ReservationCreated(reservationId, arrival, departure, checkInTime, checkOutTime));
         view.apply(new ContactInformationUpdated(reservationId, "name", "email"));
         view.apply(new RoomAssigned(reservationId, roomId, "123"));
 
@@ -59,8 +59,8 @@ public class ReservationsViewTest {
 
     @Test
     public void lists_all_reservations() {
-        view.apply(new ReservationInitiated(reservationId, arrival, departure, checkInTime, checkOutTime));
-        view.apply(new ReservationInitiated(reservationId2, arrival, departure, checkInTime, checkOutTime));
+        view.apply(new ReservationCreated(reservationId, arrival, departure, checkInTime, checkOutTime));
+        view.apply(new ReservationCreated(reservationId2, arrival, departure, checkInTime, checkOutTime));
 
         List<ReservationDto> results = view.findAll();
         assertThat(results, hasSize(2));
@@ -68,8 +68,8 @@ public class ReservationsViewTest {
 
     @Test
     public void finds_reservations_by_id() {
-        view.apply(new ReservationInitiated(reservationId, arrival, departure, checkInTime, checkOutTime));
-        view.apply(new ReservationInitiated(reservationId2, arrival, departure, checkInTime, checkOutTime));
+        view.apply(new ReservationCreated(reservationId, arrival, departure, checkInTime, checkOutTime));
+        view.apply(new ReservationCreated(reservationId2, arrival, departure, checkInTime, checkOutTime));
 
         ReservationDto result = view.findById(reservationId);
         assertThat(result.reservationId, is(reservationId));

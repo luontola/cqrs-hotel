@@ -1,11 +1,11 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
 package fi.luontola.cqrshotel.capacity.queries;
 
 import fi.luontola.cqrshotel.FastTests;
-import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
+import fi.luontola.cqrshotel.reservation.events.ReservationCreated;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -52,8 +52,8 @@ public class CapacityViewTest {
 
     @Test
     public void reserved_equals_the_number_of_reservations() {
-        view.apply(new ReservationInitiated(UUID.randomUUID(), date1, date2, null, null));
-        view.apply(new ReservationInitiated(UUID.randomUUID(), date1, date2, null, null));
+        view.apply(new ReservationCreated(UUID.randomUUID(), date1, date2, null, null));
+        view.apply(new ReservationCreated(UUID.randomUUID(), date1, date2, null, null));
 
         CapacityDto capacity = view.getCapacityByDate(date1);
 
@@ -63,7 +63,7 @@ public class CapacityViewTest {
 
     @Test
     public void reservations_affect_only_the_range_from_arrival_inclusive_to_departure_exclusive() {
-        view.apply(new ReservationInitiated(UUID.randomUUID(), date2, date4, null, null));
+        view.apply(new ReservationCreated(UUID.randomUUID(), date2, date4, null, null));
 
         assertThat("date1 (before)",
                 view.getCapacityByDate(date1).reserved, is(0));

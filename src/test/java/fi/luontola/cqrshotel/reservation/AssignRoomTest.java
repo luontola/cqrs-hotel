@@ -9,7 +9,7 @@ import fi.luontola.cqrshotel.framework.AggregateRootTester;
 import fi.luontola.cqrshotel.hotel.Hotel;
 import fi.luontola.cqrshotel.reservation.commands.AssignRoom;
 import fi.luontola.cqrshotel.reservation.commands.AssignRoomHandler;
-import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
+import fi.luontola.cqrshotel.reservation.events.ReservationCreated;
 import fi.luontola.cqrshotel.reservation.events.RoomAssigned;
 import fi.luontola.cqrshotel.reservation.events.SearchedForAccommodation;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
@@ -46,7 +46,7 @@ public class AssignRoomTest extends AggregateRootTester {
 
     @Test
     public void assigns_the_room_to_the_reservation() {
-        given(new ReservationInitiated(id, arrival, departure, Hotel.checkInTime(arrival), Hotel.checkOutTime(departure)));
+        given(new ReservationCreated(id, arrival, departure, Hotel.checkInTime(arrival), Hotel.checkOutTime(departure)));
 
         when(new AssignRoom(id, roomId));
 
@@ -55,7 +55,7 @@ public class AssignRoomTest extends AggregateRootTester {
 
     @Test
     public void the_assigned_room_can_be_changed() {
-        given(new ReservationInitiated(id, arrival, departure, Hotel.checkInTime(arrival), Hotel.checkOutTime(departure)),
+        given(new ReservationCreated(id, arrival, departure, Hotel.checkInTime(arrival), Hotel.checkOutTime(departure)),
                 new RoomAssigned(id, roomId, roomNumber));
 
         when(new AssignRoom(id, roomId2));
