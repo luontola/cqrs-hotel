@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -10,7 +10,6 @@ import fi.luontola.cqrshotel.hotel.Hotel;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservationHandler;
 import fi.luontola.cqrshotel.reservation.events.ContactInformationUpdated;
-import fi.luontola.cqrshotel.reservation.events.CustomerDiscovered;
 import fi.luontola.cqrshotel.reservation.events.LineItemCreated;
 import fi.luontola.cqrshotel.reservation.events.PriceOffered;
 import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
@@ -48,8 +47,7 @@ public class MakeReservationTest extends AggregateRootTester {
 
     @Test
     public void make_reservation_for_one_night() {
-        given(new CustomerDiscovered(id),
-                new PriceOffered(id, date1, price1, expiresInFuture));
+        given(new PriceOffered(id, date1, price1, expiresInFuture));
 
         when(new MakeReservation(id, date1, date2, "John Doe", "john@example.com"));
 
@@ -60,18 +58,16 @@ public class MakeReservationTest extends AggregateRootTester {
 
     @Test
     public void cannot_make_reservation_twice() {
-        given(new CustomerDiscovered(id),
-                new ReservationInitiated(id, date1, date2, Hotel.checkInTime(date1), Hotel.checkOutTime(date2)));
+        given(new ReservationInitiated(id, date1, date2, Hotel.checkInTime(date1), Hotel.checkOutTime(date2)));
 
         thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("unexpected state: INITIATED");
+        thrown.expectMessage("unexpected state: RESERVED");
         when(new MakeReservation(id, date1, date2, "John Doe", "john@example.com"));
     }
 
     @Test
     public void produces_line_items_for_every_date_in_range() {
-        given(new CustomerDiscovered(id),
-                new PriceOffered(id, date1, price1, expiresInFuture),
+        given(new PriceOffered(id, date1, price1, expiresInFuture),
                 new PriceOffered(id, date2, price2, expiresInFuture),
                 new PriceOffered(id, date3, price3, expiresInFuture));
 
@@ -85,8 +81,7 @@ public class MakeReservationTest extends AggregateRootTester {
 
     @Test
     public void rejects_if_a_price_offer_is_missing() {
-        given(new CustomerDiscovered(id),
-                new PriceOffered(id, date1, price1, expiresInFuture),
+        given(new PriceOffered(id, date1, price1, expiresInFuture),
                 new PriceOffered(id, date2, price2, expiresInFuture));
 
         thrown.expect(IllegalStateException.class);
@@ -96,8 +91,7 @@ public class MakeReservationTest extends AggregateRootTester {
 
     @Test
     public void rejects_if_a_price_offer_has_expired() {
-        given(new CustomerDiscovered(id),
-                new PriceOffered(id, date1, price1, expiresInFuture),
+        given(new PriceOffered(id, date1, price1, expiresInFuture),
                 new PriceOffered(id, date2, price2, expiresInFuture),
                 new PriceOffered(id, date3, price3, now));
 
@@ -109,8 +103,7 @@ public class MakeReservationTest extends AggregateRootTester {
     @Test
     public void uses_the_new_price_if_an_expired_price_offer_has_been_replaced() {
         Money newPrice3 = price3.add(Money.of(10, "EUR"));
-        given(new CustomerDiscovered(id),
-                new PriceOffered(id, date1, price1, expiresInFuture),
+        given(new PriceOffered(id, date1, price1, expiresInFuture),
                 new PriceOffered(id, date2, price2, expiresInFuture),
                 new PriceOffered(id, date3, price3, now),
                 new PriceOffered(id, date3, newPrice3, expiresInFuture));

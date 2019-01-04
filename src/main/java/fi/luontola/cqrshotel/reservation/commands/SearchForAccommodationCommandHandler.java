@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -28,7 +28,6 @@ public class SearchForAccommodationCommandHandler implements Handler<SearchForAc
     public Commit handle(SearchForAccommodation command) {
         Reservation reservation = repo.createOrGet(command.reservationId);
         int originalVersion = reservation.getVersion();
-        reservation.discoverCustomer();
         reservation.searchForAccommodation(command.arrival, command.departure, pricing, clock);
         return repo.save(reservation, originalVersion);
     }

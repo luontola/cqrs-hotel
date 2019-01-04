@@ -1,16 +1,14 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
 package fi.luontola.cqrshotel.reservation;
 
 import fi.luontola.cqrshotel.framework.AggregateRoot;
-import fi.luontola.cqrshotel.framework.eventstore.EventStore;
 import fi.luontola.cqrshotel.framework.util.EventListener;
 import fi.luontola.cqrshotel.hotel.Hotel;
 import fi.luontola.cqrshotel.pricing.PricingEngine;
 import fi.luontola.cqrshotel.reservation.events.ContactInformationUpdated;
-import fi.luontola.cqrshotel.reservation.events.CustomerDiscovered;
 import fi.luontola.cqrshotel.reservation.events.LineItemCreated;
 import fi.luontola.cqrshotel.reservation.events.PriceOffered;
 import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
@@ -25,23 +23,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static fi.luontola.cqrshotel.reservation.Reservation.State.INITIATED;
-import static fi.luontola.cqrshotel.reservation.Reservation.State.PROSPECT;
+import static fi.luontola.cqrshotel.reservation.Reservation.State.PROSPECTIVE;
+import static fi.luontola.cqrshotel.reservation.Reservation.State.RESERVED;
 
 public class Reservation extends AggregateRoot {
 
     public static final Duration PRICE_VALIDITY_DURATION = Duration.ofMinutes(30);
 
-    enum State {PROSPECT, INITIATED}
+    enum State {PROSPECTIVE, RESERVED}
 
-    private State state;
+    private State state = PROSPECTIVE;
     private final Map<LocalDate, PriceOffered> priceOffersByDate = new HashMap<>();
     private int lineItems = 0;
-
-    @EventListener
-    private void apply(CustomerDiscovered event) {
-        state = PROSPECT;
-    }
 
     @EventListener
     private void apply(PriceOffered event) {
@@ -50,18 +43,12 @@ public class Reservation extends AggregateRoot {
 
     @EventListener
     private void apply(ReservationInitiated event) {
-        state = INITIATED;
+        state = RESERVED;
     }
 
     @EventListener
     private void apply(LineItemCreated event) {
         lineItems++;
-    }
-
-    public void discoverCustomer() {
-        if (getVersion() == EventStore.BEGINNING) {
-            publish(new CustomerDiscovered(getId()));
-        }
     }
 
     public void searchForAccommodation(LocalDate arrival, LocalDate departure, PricingEngine pricing, Clock clock) {
@@ -91,7 +78,7 @@ public class Reservation extends AggregateRoot {
     }
 
     public void makeReservation(LocalDate arrival, LocalDate departure, Clock clock) {
-        checkStateIs(PROSPECT);
+        checkStateIs(PROSPECTIVE);
         publish(new ReservationInitiated(getId(), arrival, departure, Hotel.checkInTime(arrival), Hotel.checkOutTime(departure)));
 
         for (LocalDate date = arrival; date.isBefore(departure); date = date.plusDays(1)) {
@@ -112,7 +99,7 @@ public class Reservation extends AggregateRoot {
     }
 
     public void assignRoom(UUID roomId, String roomNumber) {
-        checkStateIs(INITIATED);
+        checkStateIs(RESERVED);
         publish(new RoomAssigned(getId(), roomId, roomNumber));
     }
 

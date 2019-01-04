@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -9,9 +9,9 @@ import fi.luontola.cqrshotel.framework.AggregateRootTester;
 import fi.luontola.cqrshotel.hotel.Hotel;
 import fi.luontola.cqrshotel.reservation.commands.AssignRoom;
 import fi.luontola.cqrshotel.reservation.commands.AssignRoomHandler;
-import fi.luontola.cqrshotel.reservation.events.CustomerDiscovered;
 import fi.luontola.cqrshotel.reservation.events.ReservationInitiated;
 import fi.luontola.cqrshotel.reservation.events.RoomAssigned;
+import fi.luontola.cqrshotel.reservation.events.SearchedForAccommodation;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
 import fi.luontola.cqrshotel.room.queries.GetRoomByIdHandler;
 import fi.luontola.cqrshotel.room.queries.RoomsView;
@@ -46,8 +46,7 @@ public class AssignRoomTest extends AggregateRootTester {
 
     @Test
     public void assigns_the_room_to_the_reservation() {
-        given(new CustomerDiscovered(id),
-                new ReservationInitiated(id, arrival, departure, Hotel.checkInTime(arrival), Hotel.checkOutTime(departure)));
+        given(new ReservationInitiated(id, arrival, departure, Hotel.checkInTime(arrival), Hotel.checkOutTime(departure)));
 
         when(new AssignRoom(id, roomId));
 
@@ -56,8 +55,7 @@ public class AssignRoomTest extends AggregateRootTester {
 
     @Test
     public void the_assigned_room_can_be_changed() {
-        given(new CustomerDiscovered(id),
-                new ReservationInitiated(id, arrival, departure, Hotel.checkInTime(arrival), Hotel.checkOutTime(departure)),
+        given(new ReservationInitiated(id, arrival, departure, Hotel.checkInTime(arrival), Hotel.checkOutTime(departure)),
                 new RoomAssigned(id, roomId, roomNumber));
 
         when(new AssignRoom(id, roomId2));
@@ -67,16 +65,15 @@ public class AssignRoomTest extends AggregateRootTester {
 
     @Test
     public void cannot_assign_the_room_before_checkin_and_checkout_times_are_known() {
-        given(new CustomerDiscovered(id));
+        given(new SearchedForAccommodation(id, arrival, departure));
 
         thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("unexpected state: PROSPECT");
+        thrown.expectMessage("unexpected state: PROSPECTIVE");
         when(new AssignRoom(id, roomId2));
     }
 
     @Test
     public void validates_the_roomId() {
-        given(new CustomerDiscovered(id));
         UUID roomId3 = UUID.randomUUID();
 
         thrown.expect(IllegalArgumentException.class);
