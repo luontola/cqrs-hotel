@@ -4,16 +4,13 @@
 
 package fi.luontola.cqrshotel.framework.consistency;
 
-import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.framework.Envelope;
 import fi.luontola.cqrshotel.framework.Event;
 import fi.luontola.cqrshotel.framework.eventstore.InMemoryEventStore;
 import fi.luontola.cqrshotel.framework.projections.InMemoryProjection;
 import fi.luontola.cqrshotel.framework.projections.Projection;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -23,12 +20,10 @@ import java.util.concurrent.CyclicBarrier;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@Category(FastTests.class)
+@Tag("fast")
 public class ObservedPositionTest {
-
-    @Rule
-    public final ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void starts_with_zero() {
@@ -117,8 +112,9 @@ public class ObservedPositionTest {
         observedPosition.observe(1);
         assertThat(observedPosition.get(), is(greaterThan(projection.getPosition())));
 
-        thrown.expect(ReadModelNotUpToDateException.class);
-        observedPosition.waitForProjectionToUpdate(projection);
+        assertThrows(ReadModelNotUpToDateException.class, () -> {
+            observedPosition.waitForProjectionToUpdate(projection);
+        });
     }
 
 

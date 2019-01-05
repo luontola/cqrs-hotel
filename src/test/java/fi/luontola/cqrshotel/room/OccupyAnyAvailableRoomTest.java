@@ -4,7 +4,6 @@
 
 package fi.luontola.cqrshotel.room;
 
-import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.framework.BufferedPublisher;
 import fi.luontola.cqrshotel.framework.Command;
 import fi.luontola.cqrshotel.framework.Envelope;
@@ -18,10 +17,8 @@ import fi.luontola.cqrshotel.room.events.RoomOccupied;
 import fi.luontola.cqrshotel.room.queries.GetAvailabilityByTimeRangeHandler;
 import fi.luontola.cqrshotel.room.queries.RoomAvailabilityView;
 import org.hamcrest.Matcher;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -31,12 +28,10 @@ import java.util.UUID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@Category(FastTests.class)
+@Tag("fast")
 public class OccupyAnyAvailableRoomTest {
-
-    @Rule
-    public final ExpectedException thrown = ExpectedException.none();
 
     private static final UUID roomId = UUID.randomUUID();
     private static final UUID roomId2 = UUID.randomUUID();
@@ -76,8 +71,9 @@ public class OccupyAnyAvailableRoomTest {
         given(new RoomCreated(roomId, "101"),
                 new RoomOccupied(roomId, t1, t2, occupant));
 
-        thrown.expect(NoRoomsAvailableException.class);
-        when(new OccupyAnyAvailableRoom(t1, t2, occupant));
+        assertThrows(NoRoomsAvailableException.class, () -> {
+            when(new OccupyAnyAvailableRoom(t1, t2, occupant));
+        });
     }
 
     @Test
@@ -85,8 +81,9 @@ public class OccupyAnyAvailableRoomTest {
         given(new RoomCreated(roomId, "101"),
                 new RoomOccupied(roomId, t2, t3, occupant));
 
-        thrown.expect(NoRoomsAvailableException.class);
-        when(new OccupyAnyAvailableRoom(t1, t4, occupant));
+        assertThrows(NoRoomsAvailableException.class, () -> {
+            when(new OccupyAnyAvailableRoom(t1, t4, occupant));
+        });
     }
 
 

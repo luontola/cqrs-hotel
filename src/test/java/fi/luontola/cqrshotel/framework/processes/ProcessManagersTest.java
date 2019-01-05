@@ -4,7 +4,6 @@
 
 package fi.luontola.cqrshotel.framework.processes;
 
-import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.framework.Command;
 import fi.luontola.cqrshotel.framework.Envelope;
 import fi.luontola.cqrshotel.framework.Event;
@@ -13,10 +12,8 @@ import fi.luontola.cqrshotel.framework.SpyMessageGateway;
 import fi.luontola.cqrshotel.framework.projections.AnnotatedProjection;
 import fi.luontola.cqrshotel.framework.util.EventListener;
 import fi.luontola.cqrshotel.framework.util.Struct;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.UUID;
@@ -25,12 +22,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@Category(FastTests.class)
+@Tag("fast")
 public class ProcessManagersTest {
-
-    @Rule
-    public final ExpectedException thrown = ExpectedException.none();
 
     private static final UUID registerId = UUID.randomUUID();
     private static final UUID registerId2 = UUID.randomUUID();
@@ -117,9 +112,10 @@ public class ProcessManagersTest {
 
     @Test
     public void cannot_register_the_same_process_twice() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(is("Process already registered: class fi.luontola.cqrshotel.framework.processes.ProcessManagersTest$RegisterProcess"));
-        processManagers.register(RegisterProcess.class, RegisterProcess::entryPoint);
+        var e = assertThrows(IllegalArgumentException.class, () -> {
+            processManagers.register(RegisterProcess.class, RegisterProcess::entryPoint);
+        });
+        assertThat(e.getMessage(), is(is("Process already registered: class fi.luontola.cqrshotel.framework.processes.ProcessManagersTest$RegisterProcess")));
     }
 
 

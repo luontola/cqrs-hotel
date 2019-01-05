@@ -4,12 +4,9 @@
 
 package fi.luontola.cqrshotel.framework.util;
 
-import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.framework.Event;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -18,14 +15,13 @@ import java.util.List;
 import static fi.luontola.cqrshotel.framework.util.EventListeners.Requirements.MUST_BE_PRIVATE;
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@Category(FastTests.class)
+@Tag("fast")
 public class EventListenersTest {
-
-    @Rule
-    public final ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void sends_events_to_event_listeners() {
@@ -68,10 +64,11 @@ public class EventListenersTest {
         }
         var eventListeners = EventListeners.of(new Target());
 
-        thrown.expect(RuntimeException.class);
-        thrown.expectMessage("event listener failed for event: EventListenersTest.DummyEvent1[]");
-        thrown.expectCause(is(instanceOf(InvocationTargetException.class)));
-        eventListeners.send(new DummyEvent1());
+        var e = assertThrows(RuntimeException.class, () -> {
+            eventListeners.send(new DummyEvent1());
+        });
+        assertThat(e.getMessage(), is("event listener failed for event: EventListenersTest.DummyEvent1[]"));
+        assertThat(e.getCause(), is(instanceOf(InvocationTargetException.class)));
     }
 
 
@@ -83,10 +80,11 @@ public class EventListenersTest {
             }
         }
 
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("expected method to take exactly one parameter");
-        thrown.expectMessage("Target.apply()");
-        EventListeners.of(new Target());
+        var e = assertThrows(IllegalArgumentException.class, () -> {
+            EventListeners.of(new Target());
+        });
+        assertThat(e.getMessage(), containsString("expected method to take exactly one parameter"));
+        assertThat(e.getMessage(), containsString("Target.apply()"));
     }
 
     @Test
@@ -97,10 +95,11 @@ public class EventListenersTest {
             }
         }
 
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("expected method to take exactly one parameter");
-        thrown.expectMessage("Target.apply(");
-        EventListeners.of(new Target());
+        var e = assertThrows(IllegalArgumentException.class, () -> {
+            EventListeners.of(new Target());
+        });
+        assertThat(e.getMessage(), containsString("expected method to take exactly one parameter"));
+        assertThat(e.getMessage(), containsString("Target.apply("));
     }
 
     @Test
@@ -111,10 +110,11 @@ public class EventListenersTest {
             }
         }
 
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("expected method to take an event parameter");
-        thrown.expectMessage("Target.apply(");
-        EventListeners.of(new Target());
+        var e = assertThrows(IllegalArgumentException.class, () -> {
+            EventListeners.of(new Target());
+        });
+        assertThat(e.getMessage(), containsString("expected method to take an event parameter"));
+        assertThat(e.getMessage(), containsString("Target.apply("));
     }
 
     @Test
@@ -132,10 +132,11 @@ public class EventListenersTest {
 
         EventListeners.of(new TargetPrivate(), MUST_BE_PRIVATE);
 
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("expected method to be private");
-        thrown.expectMessage("TargetPublic.apply(");
-        EventListeners.of(new TargetPublic(), MUST_BE_PRIVATE);
+        var e = assertThrows(IllegalArgumentException.class, () -> {
+            EventListeners.of(new TargetPublic(), MUST_BE_PRIVATE);
+        });
+        assertThat(e.getMessage(), containsString("expected method to be private"));
+        assertThat(e.getMessage(), containsString("TargetPublic.apply("));
     }
 
 

@@ -4,11 +4,10 @@
 
 package fi.luontola.cqrshotel.framework;
 
-import fi.luontola.cqrshotel.FastTests;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
@@ -19,11 +18,11 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
-@Category(FastTests.class)
+@Tag("fast")
 public class EnvelopeTest {
 
-    @Before
-    @After
+    @BeforeEach
+    @AfterEach
     public void resetCause() {
         Envelope.resetContext();
     }

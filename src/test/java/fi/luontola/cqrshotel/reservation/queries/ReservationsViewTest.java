@@ -4,12 +4,11 @@
 
 package fi.luontola.cqrshotel.reservation.queries;
 
-import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.reservation.events.ContactInformationUpdated;
 import fi.luontola.cqrshotel.reservation.events.ReservationCreated;
 import fi.luontola.cqrshotel.reservation.events.RoomAssigned;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -22,7 +21,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
-@Category(FastTests.class)
+@Tag("fast")
 public class ReservationsViewTest {
 
     private static final UUID reservationId = UUID.randomUUID();

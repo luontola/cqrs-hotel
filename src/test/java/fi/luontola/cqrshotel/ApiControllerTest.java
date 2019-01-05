@@ -15,10 +15,10 @@ import fi.luontola.cqrshotel.room.commands.CreateRoom;
 import fi.luontola.cqrshotel.room.queries.RoomAvailabilityDto;
 import fi.luontola.cqrshotel.room.queries.RoomDto;
 import org.javamoney.moneta.Money;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -27,7 +27,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -51,10 +51,10 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.POST;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
-@Category(SlowTests.class)
+@Tag("slow")
 public class ApiControllerTest {
 
     @Autowired
@@ -70,7 +70,7 @@ public class ApiControllerTest {
     private final LocalDate departure = arrival.plusDays(2);
     private String observedPosition = null;
 
-    @Before
+    @BeforeEach
     public void initMocks() {
         when(pricingEngine.getAccommodationPrice(any(LocalDate.class)))
                 .thenReturn(Optional.of(pricePerDay));

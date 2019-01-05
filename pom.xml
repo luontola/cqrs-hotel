@@ -109,8 +109,18 @@
         <!-- Testing -->
 
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -169,7 +179,7 @@
                     <includes>
                         <include>**/*Test.java</include>
                     </includes>
-                    <groups>fi.luontola.cqrshotel.FastTests</groups>
+                    <groups>fast</groups>
                 </configuration>
             </plugin>
 
@@ -180,7 +190,7 @@
                     <includes>
                         <include>**/*Test.java</include>
                     </includes>
-                    <groups>fi.luontola.cqrshotel.SlowTests</groups>
+                    <excludedGroups>fast</excludedGroups>
                 </configuration>
             </plugin>
 
@@ -188,7 +198,7 @@
 
             <plugin>
                 <groupId>org.apache.maven.surefire</groupId>
-                <artifactId>surefire-junit47</artifactId>
+                <artifactId>surefire-junit-platform</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
             </plugin>
 

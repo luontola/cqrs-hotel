@@ -19,11 +19,8 @@ import fi.luontola.cqrshotel.room.commands.CreateRoom;
 import fi.luontola.cqrshotel.room.queries.GetAvailabilityByDateRange;
 import fi.luontola.cqrshotel.room.queries.RoomAvailabilityDto;
 import org.hamcrest.Matcher;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
-import org.junit.rules.Timeout;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -35,15 +32,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.arrayWithSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
-@Category(FastTests.class)
+@Tag("fast")
 public class AcceptanceTest {
 
-    @Rule
-    public final Timeout timeout = Timeout.seconds(2);
-    public static final Duration assertionTimeout = Duration.ofSeconds(1);
-    @Rule
-    public final ExpectedException thrown = ExpectedException.none();
+    private static final Duration testTimeout = Duration.ofSeconds(2);
+    private static final Duration assertionTimeout = Duration.ofSeconds(1);
 
     private static final UUID reservationId = UUID.randomUUID();
     private static final LocalDate arrival = LocalDate.now();
@@ -57,15 +52,17 @@ public class AcceptanceTest {
 
     @Test
     public void making_a_reservation() {
-        core.handle(new CreateRoom(UUID.randomUUID(), "101"));
-        assertRoomAvailable("before reservation", is(true));
+        assertTimeoutPreemptively(testTimeout, () -> {
+            core.handle(new CreateRoom(UUID.randomUUID(), "101"));
+            assertRoomAvailable("before reservation", is(true));
 
-        var offer = (ReservationOffer) core.handle(new SearchForAccommodation(reservationId, arrival, departure));
-        assertThat("total price", offer.totalPrice, is(notNullValue()));
+            var offer = (ReservationOffer) core.handle(new SearchForAccommodation(reservationId, arrival, departure));
+            assertThat("total price", offer.totalPrice, is(notNullValue()));
 
-        core.handle(new MakeReservation(reservationId, arrival, departure, "John Doe", "john@example.com"));
-        eventually(() -> assertRoomAvailable("after reservation", is(false)));
-        eventually(() -> assertThat("room is assigned to reservation", reservation().roomNumber, is("101")));
+            core.handle(new MakeReservation(reservationId, arrival, departure, "John Doe", "john@example.com"));
+            eventually(() -> assertRoomAvailable("after reservation", is(false)));
+            eventually(() -> assertThat("room is assigned to reservation", reservation().roomNumber, is("101")));
+        });
     }
 
     private ReservationDto reservation() {

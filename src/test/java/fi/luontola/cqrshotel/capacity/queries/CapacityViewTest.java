@@ -4,11 +4,10 @@
 
 package fi.luontola.cqrshotel.capacity.queries;
 
-import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.reservation.events.ReservationCreated;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -18,7 +17,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
-@Category(FastTests.class)
+@Tag("fast")
 public class CapacityViewTest {
 
     private static final LocalDate date1 = LocalDate.of(2000, 1, 1);

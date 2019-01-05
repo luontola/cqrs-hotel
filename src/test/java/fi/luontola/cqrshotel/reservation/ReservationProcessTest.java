@@ -4,7 +4,6 @@
 
 package fi.luontola.cqrshotel.reservation;
 
-import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.framework.BufferedPublisher;
 import fi.luontola.cqrshotel.framework.Envelope;
 import fi.luontola.cqrshotel.framework.Event;
@@ -13,8 +12,8 @@ import fi.luontola.cqrshotel.reservation.commands.AssignRoom;
 import fi.luontola.cqrshotel.reservation.events.ReservationCreated;
 import fi.luontola.cqrshotel.room.commands.OccupyAnyAvailableRoom;
 import fi.luontola.cqrshotel.room.events.RoomOccupied;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
@@ -24,7 +23,7 @@ import java.util.UUID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-@Category(FastTests.class)
+@Tag("fast")
 public class ReservationProcessTest {
 
     private static final UUID reservationId = UUID.randomUUID();

@@ -4,19 +4,15 @@
 
 package fi.luontola.cqrshotel.framework.util;
 
-import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.framework.util.SingleThreadedTriggerableWorker.UncaughtExceptionHandler;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.Timeout;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -24,17 +20,17 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.sameInstance;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
-@Category(FastTests.class)
+@Tag("fast")
 public class SingleThreadedTriggerableWorkerTest {
 
-    @Rule
-    public final Timeout timeout = new Timeout(1, TimeUnit.SECONDS);
+    private static final Duration testTimeout = Duration.ofSeconds(1);
 
     private final AtomicInteger taskCount = new AtomicInteger(0);
     private SingleThreadedTriggerableWorker worker;
 
-    @After
+    @AfterEach
     public void tearDown() throws InterruptedException {
         if (worker != null) {
             worker.shutdown();
@@ -43,146 +39,160 @@ public class SingleThreadedTriggerableWorkerTest {
     }
 
     @Test
-    public void runs_the_task_when_triggered() throws InterruptedException {
-        var taskFinished = new CountDownLatch(1);
-        Runnable task = () -> {
-            taskCount.incrementAndGet();
-            taskFinished.countDown();
-        };
-        worker = new SingleThreadedTriggerableWorker(task);
+    public void runs_the_task_when_triggered() {
+        assertTimeoutPreemptively(testTimeout, () -> {
+            var taskFinished = new CountDownLatch(1);
+            Runnable task = () -> {
+                taskCount.incrementAndGet();
+                taskFinished.countDown();
+            };
+            worker = new SingleThreadedTriggerableWorker(task);
 
-        worker.trigger();
-        taskFinished.await();
-
-        assertThat("task count", taskCount.get(), is(1));
-    }
-
-    @Test
-    public void runs_the_task_in_a_background_thread() throws InterruptedException {
-        var taskThread = new Thread[1];
-        var taskFinished = new CountDownLatch(1);
-        Runnable task = () -> {
-            taskThread[0] = Thread.currentThread();
-            taskFinished.countDown();
-        };
-        worker = new SingleThreadedTriggerableWorker(task);
-
-        worker.trigger();
-        taskFinished.await();
-
-        assertThat("task thread", taskThread[0], is(notNullValue()));
-        assertThat("task thread", taskThread[0], is(not(Thread.currentThread())));
-    }
-
-    @Test
-    public void reruns_when_triggered_after_task_started() throws InterruptedException {
-        var oneTaskStarted = new CountDownLatch(1);
-        var twoTasksFinished = new CountDownLatch(2);
-        Runnable task = () -> {
-            taskCount.incrementAndGet();
-            oneTaskStarted.countDown();
-            twoTasksFinished.countDown();
-        };
-        worker = new SingleThreadedTriggerableWorker(task);
-
-        worker.trigger();
-        oneTaskStarted.await();
-        worker.trigger();
-        twoTasksFinished.await();
-
-        assertThat("task count", taskCount.get(), is(2));
-    }
-
-    @Test
-    public void reruns_only_once_when_triggered_many_times_after_task_started() throws InterruptedException {
-        var firstTaskStarted = new CountDownLatch(1);
-        var manyTasksTriggered = new CountDownLatch(1);
-        var twoTasksFinished = new CountDownLatch(2);
-        Runnable task = () -> {
-            taskCount.incrementAndGet();
-            firstTaskStarted.countDown();
-            try {
-                manyTasksTriggered.await();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            twoTasksFinished.countDown();
-        };
-        worker = new SingleThreadedTriggerableWorker(task);
-
-        worker.trigger();
-        firstTaskStarted.await();
-        worker.trigger();
-        worker.trigger();
-        worker.trigger();
-        worker.trigger();
-        manyTasksTriggered.countDown();
-        twoTasksFinished.await();
-        Thread.yield(); // wait a moment in case more tasks are run
-
-        assertThat("task count", taskCount.get(), is(2));
-    }
-
-    @Test
-    public void reruns_many_times_when_triggered_after_task_finished() throws BrokenBarrierException, InterruptedException {
-        var taskFinished = new CyclicBarrier(2);
-        Runnable task = () -> {
-            taskCount.incrementAndGet();
-            try {
-                taskFinished.await();
-            } catch (InterruptedException | BrokenBarrierException e) {
-                throw new RuntimeException(e);
-            }
-        };
-        worker = new SingleThreadedTriggerableWorker(task);
-
-        worker.trigger();
-        taskFinished.await();
-        worker.trigger();
-        taskFinished.await();
-        worker.trigger();
-        taskFinished.await();
-
-        assertThat("task count", taskCount.get(), is(3));
-    }
-
-    @Test
-    public void runs_only_a_single_task_at_a_time() throws InterruptedException {
-        var concurrentTasks = new AtomicInteger(0);
-        var maxConcurrentTasks = new AtomicInteger(0);
-        Runnable task = () -> {
-            concurrentTasks.incrementAndGet();
-            maxConcurrentTasks.updateAndGet(value -> Math.max(value, concurrentTasks.get()));
-            taskCount.incrementAndGet();
-            Thread.yield();
-            concurrentTasks.decrementAndGet();
-        };
-        worker = new SingleThreadedTriggerableWorker(task);
-
-        while (taskCount.get() < 10 && !Thread.currentThread().isInterrupted()) {
             worker.trigger();
-        }
+            taskFinished.await();
 
-        assertThat("max concurrent tasks", maxConcurrentTasks.get(), is(1));
+            assertThat("task count", taskCount.get(), is(1));
+        });
     }
 
     @Test
-    public void logs_uncaught_exceptions() throws InterruptedException {
-        var handlerCalled = new CountDownLatch(1);
-        var actualException = new Throwable[1];
-        UncaughtExceptionHandler exceptionHandler = (e) -> {
-            actualException[0] = e;
-            handlerCalled.countDown();
-        };
-        var expectedException = new RuntimeException("dummy");
-        Runnable task = () -> {
-            throw expectedException;
-        };
-        worker = new SingleThreadedTriggerableWorker(task, exceptionHandler);
+    public void runs_the_task_in_a_background_thread() {
+        assertTimeoutPreemptively(testTimeout, () -> {
+            var taskThread = new Thread[1];
+            var taskFinished = new CountDownLatch(1);
+            Runnable task = () -> {
+                taskThread[0] = Thread.currentThread();
+                taskFinished.countDown();
+            };
+            worker = new SingleThreadedTriggerableWorker(task);
 
-        worker.trigger();
-        handlerCalled.await();
+            worker.trigger();
+            taskFinished.await();
 
-        assertThat(actualException[0], is(sameInstance(expectedException)));
+            assertThat("task thread", taskThread[0], is(notNullValue()));
+            assertThat("task thread", taskThread[0], is(not(Thread.currentThread())));
+        });
+    }
+
+    @Test
+    public void reruns_when_triggered_after_task_started() {
+        assertTimeoutPreemptively(testTimeout, () -> {
+            var oneTaskStarted = new CountDownLatch(1);
+            var twoTasksFinished = new CountDownLatch(2);
+            Runnable task = () -> {
+                taskCount.incrementAndGet();
+                oneTaskStarted.countDown();
+                twoTasksFinished.countDown();
+            };
+            worker = new SingleThreadedTriggerableWorker(task);
+
+            worker.trigger();
+            oneTaskStarted.await();
+            worker.trigger();
+            twoTasksFinished.await();
+
+            assertThat("task count", taskCount.get(), is(2));
+        });
+    }
+
+    @Test
+    public void reruns_only_once_when_triggered_many_times_after_task_started() {
+        assertTimeoutPreemptively(testTimeout, () -> {
+            var firstTaskStarted = new CountDownLatch(1);
+            var manyTasksTriggered = new CountDownLatch(1);
+            var twoTasksFinished = new CountDownLatch(2);
+            Runnable task = () -> {
+                taskCount.incrementAndGet();
+                firstTaskStarted.countDown();
+                try {
+                    manyTasksTriggered.await();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                twoTasksFinished.countDown();
+            };
+            worker = new SingleThreadedTriggerableWorker(task);
+
+            worker.trigger();
+            firstTaskStarted.await();
+            worker.trigger();
+            worker.trigger();
+            worker.trigger();
+            worker.trigger();
+            manyTasksTriggered.countDown();
+            twoTasksFinished.await();
+            Thread.yield(); // wait a moment in case more tasks are run
+
+            assertThat("task count", taskCount.get(), is(2));
+        });
+    }
+
+    @Test
+    public void reruns_many_times_when_triggered_after_task_finished() {
+        assertTimeoutPreemptively(testTimeout, () -> {
+            var taskFinished = new CyclicBarrier(2);
+            Runnable task = () -> {
+                taskCount.incrementAndGet();
+                try {
+                    taskFinished.await();
+                } catch (InterruptedException | BrokenBarrierException e) {
+                    throw new RuntimeException(e);
+                }
+            };
+            worker = new SingleThreadedTriggerableWorker(task);
+
+            worker.trigger();
+            taskFinished.await();
+            worker.trigger();
+            taskFinished.await();
+            worker.trigger();
+            taskFinished.await();
+
+            assertThat("task count", taskCount.get(), is(3));
+        });
+    }
+
+    @Test
+    public void runs_only_a_single_task_at_a_time() {
+        assertTimeoutPreemptively(testTimeout, () -> {
+            var concurrentTasks = new AtomicInteger(0);
+            var maxConcurrentTasks = new AtomicInteger(0);
+            Runnable task = () -> {
+                concurrentTasks.incrementAndGet();
+                maxConcurrentTasks.updateAndGet(value -> Math.max(value, concurrentTasks.get()));
+                taskCount.incrementAndGet();
+                Thread.yield();
+                concurrentTasks.decrementAndGet();
+            };
+            worker = new SingleThreadedTriggerableWorker(task);
+
+            while (taskCount.get() < 10 && !Thread.currentThread().isInterrupted()) {
+                worker.trigger();
+            }
+
+            assertThat("max concurrent tasks", maxConcurrentTasks.get(), is(1));
+        });
+    }
+
+    @Test
+    public void logs_uncaught_exceptions() {
+        assertTimeoutPreemptively(testTimeout, () -> {
+            var handlerCalled = new CountDownLatch(1);
+            var actualException = new Throwable[1];
+            UncaughtExceptionHandler exceptionHandler = (e) -> {
+                actualException[0] = e;
+                handlerCalled.countDown();
+            };
+            var expectedException = new RuntimeException("dummy");
+            Runnable task = () -> {
+                throw expectedException;
+            };
+            worker = new SingleThreadedTriggerableWorker(task, exceptionHandler);
+
+            worker.trigger();
+            handlerCalled.await();
+
+            assertThat(actualException[0], is(sameInstance(expectedException)));
+        });
     }
 }

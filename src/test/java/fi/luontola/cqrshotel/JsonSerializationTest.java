@@ -9,8 +9,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fi.luontola.cqrshotel.framework.Message;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.javamoney.moneta.Money;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.reflections.Reflections;
 
 import javax.money.Monetary;
@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-@Category(SlowTests.class)
+@Tag("slow")
 public class JsonSerializationTest {
 
     private final ObjectMapper objectMapper = new Application().jacksonObjectMapper();

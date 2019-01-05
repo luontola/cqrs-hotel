@@ -4,14 +4,11 @@
 
 package fi.luontola.cqrshotel.framework.processes;
 
-import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.framework.Publisher;
 import fi.luontola.cqrshotel.framework.eventstore.OptimisticLockingException;
 import fi.luontola.cqrshotel.framework.projections.AnnotatedProjection;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -21,12 +18,10 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@Category(FastTests.class)
+@Tag("fast")
 public class ProcessRepoTest {
-
-    @Rule
-    public final ExpectedException thrown = ExpectedException.none();
 
     private static final UUID processId = UUID.randomUUID();
     private static final UUID topic = UUID.randomUUID();
@@ -49,9 +44,10 @@ public class ProcessRepoTest {
         var p2 = repo.create(processId, DummyProcess.class);
         repo.save(p1);
 
-        thrown.expect(OptimisticLockingException.class);
-        thrown.expectMessage(is("expected version 0 but was 1 for process " + processId));
-        repo.save(p2);
+        var e = assertThrows(OptimisticLockingException.class, () -> {
+            repo.save(p2);
+        });
+        assertThat(e.getMessage(), is(is("expected version 0 but was 1 for process " + processId)));
     }
 
     @Test
@@ -64,9 +60,10 @@ public class ProcessRepoTest {
         p2.subscribe(topic);
         repo.save(p1);
 
-        thrown.expect(OptimisticLockingException.class);
-        thrown.expectMessage("expected version 1 but was 2 for process " + processId);
-        repo.save(p2);
+        var e = assertThrows(OptimisticLockingException.class, () -> {
+            repo.save(p2);
+        });
+        assertThat(e.getMessage(), is("expected version 1 but was 2 for process " + processId));
     }
 
     @Test

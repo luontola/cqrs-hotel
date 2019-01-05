@@ -11,10 +11,8 @@ import fi.luontola.cqrshotel.pricing.InMemoryPricingEngine;
 import fi.luontola.cqrshotel.room.commands.CreateRoom;
 import fi.luontola.cqrshotel.room.queries.FindAllRooms;
 import fi.luontola.cqrshotel.room.queries.RoomDto;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -24,8 +22,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.arrayWithSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@Category(FastTests.class)
+@Tag("fast")
 public class CoreTest {
 
     private final InMemoryEventStore eventStore = new InMemoryEventStore();
@@ -33,9 +32,6 @@ public class CoreTest {
     private final Clock clock = Clock.systemDefaultZone();
     private final ObservedPosition observedPosition = new ObservedPosition(Duration.ofSeconds(5));
     private final Core core = new Core(eventStore, pricing, clock, observedPosition);
-
-    @Rule
-    public final ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void updates_observed_position_after_command() {
@@ -77,8 +73,9 @@ public class CoreTest {
 
         observedPosition.observe(observedPosition.get() + 1); // wait for a future that will never arrive
 
-        thrown.expect(ReadModelNotUpToDateException.class);
-        core.handle(new FindAllRooms());
+        assertThrows(ReadModelNotUpToDateException.class, () -> {
+            core.handle(new FindAllRooms());
+        });
     }
 
     @Test

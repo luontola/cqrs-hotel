@@ -10,10 +10,8 @@ import fi.luontola.cqrshotel.framework.Envelope;
 import fi.luontola.cqrshotel.framework.Event;
 import fi.luontola.cqrshotel.framework.util.Struct;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,17 +27,15 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public abstract class EventStoreContract {
 
     // TODO: use a cursor to search results
 
-    @Rule
-    public final ExpectedException thrown = ExpectedException.none();
-
     protected EventStore eventStore;
 
-    @Before
+    @BeforeEach
     public final void parentInit() {
         init();
         Assert.assertNotNull("eventStore was not set", eventStore);
@@ -91,9 +87,10 @@ public abstract class EventStoreContract {
         var streamId = UUID.randomUUID();
         eventStore.saveEvents(streamId, Arrays.asList(one, two), EventStore.BEGINNING);
 
-        thrown.expect(OptimisticLockingException.class);
-        thrown.expectMessage("expected version 1 but was 2 for stream " + streamId);
-        eventStore.saveEvents(streamId, Arrays.asList(three, four), 1);
+        var e = assertThrows(OptimisticLockingException.class, () -> {
+            eventStore.saveEvents(streamId, Arrays.asList(three, four), 1);
+        });
+        assertThat(e.getMessage(), is("expected version 1 but was 2 for stream " + streamId));
     }
 
     @Test

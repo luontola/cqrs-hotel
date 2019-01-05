@@ -4,7 +4,6 @@
 
 package fi.luontola.cqrshotel.reservation;
 
-import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.framework.AggregateRootTester;
 import fi.luontola.cqrshotel.hotel.Hotel;
 import fi.luontola.cqrshotel.reservation.commands.AssignRoom;
@@ -15,19 +14,18 @@ import fi.luontola.cqrshotel.reservation.events.SearchedForAccommodation;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
 import fi.luontola.cqrshotel.room.queries.GetRoomByIdHandler;
 import fi.luontola.cqrshotel.room.queries.RoomsView;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
-@Category(FastTests.class)
-public class AssignRoomTest extends AggregateRootTester {
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-    @Rule
-    public final ExpectedException thrown = ExpectedException.none();
+@Tag("fast")
+public class AssignRoomTest extends AggregateRootTester {
 
     private static final LocalDate arrival = LocalDate.of(2000, 1, 1);
     private static final LocalDate departure = LocalDate.of(2000, 1, 5);
@@ -67,17 +65,19 @@ public class AssignRoomTest extends AggregateRootTester {
     public void cannot_assign_the_room_before_checkin_and_checkout_times_are_known() {
         given(new SearchedForAccommodation(id, arrival, departure));
 
-        thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("unexpected state: PROSPECTIVE");
-        when(new AssignRoom(id, roomId2));
+        var e = assertThrows(IllegalStateException.class, () -> {
+            when(new AssignRoom(id, roomId2));
+        });
+        assertThat(e.getMessage(), is("unexpected state: PROSPECTIVE"));
     }
 
     @Test
     public void validates_the_roomId() {
         var roomId3 = UUID.randomUUID();
 
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("room not found: " + roomId3);
-        when(new AssignRoom(id, roomId3));
+        var e = assertThrows(IllegalArgumentException.class, () -> {
+            when(new AssignRoom(id, roomId3));
+        });
+        assertThat(e.getMessage(), is("room not found: " + roomId3));
     }
 }

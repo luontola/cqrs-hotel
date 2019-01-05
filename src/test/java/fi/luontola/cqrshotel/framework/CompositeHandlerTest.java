@@ -4,20 +4,16 @@
 
 package fi.luontola.cqrshotel.framework;
 
-import fi.luontola.cqrshotel.FastTests;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@Category(FastTests.class)
+@Tag("fast")
 public class CompositeHandlerTest {
-
-    @Rule
-    public final ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void delegates_messages_to_the_handlers_by_message_type() {
@@ -46,9 +42,10 @@ public class CompositeHandlerTest {
 
         composite.register(Message1.class, handler1);
 
-        thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("already registered");
-        composite.register(Message1.class, handler2);
+        var e = assertThrows(IllegalStateException.class, () -> {
+            composite.register(Message1.class, handler2);
+        });
+        assertThat(e.getMessage(), containsString("already registered"));
     }
 
     @Test
@@ -57,9 +54,10 @@ public class CompositeHandlerTest {
 
         var message = new Message1();
 
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("no handler");
-        composite.handle(message);
+        var e = assertThrows(IllegalArgumentException.class, () -> {
+            composite.handle(message);
+        });
+        assertThat(e.getMessage(), containsString("no handler"));
     }
 
     private static class Message1 implements Message {

@@ -4,7 +4,6 @@
 
 package fi.luontola.cqrshotel.reservation;
 
-import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.framework.AggregateRootTester;
 import fi.luontola.cqrshotel.hotel.Hotel;
 import fi.luontola.cqrshotel.reservation.commands.MakeReservation;
@@ -14,10 +13,8 @@ import fi.luontola.cqrshotel.reservation.events.LineItemCreated;
 import fi.luontola.cqrshotel.reservation.events.PriceOffered;
 import fi.luontola.cqrshotel.reservation.events.ReservationCreated;
 import org.javamoney.moneta.Money;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -25,7 +22,11 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 
-@Category(FastTests.class)
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+@Tag("fast")
 public class MakeReservationTest extends AggregateRootTester {
 
     private static final LocalDate date1 = LocalDate.of(2000, 1, 11);
@@ -42,9 +43,6 @@ public class MakeReservationTest extends AggregateRootTester {
         commandHandler = new MakeReservationHandler(new ReservationRepo(eventStore), Clock.fixed(now, ZoneId.systemDefault()));
     }
 
-    @Rule
-    public final ExpectedException thrown = ExpectedException.none();
-
     @Test
     public void make_reservation_for_one_night() {
         given(new PriceOffered(id, date1, price1, expiresInFuture));
@@ -60,9 +58,10 @@ public class MakeReservationTest extends AggregateRootTester {
     public void cannot_make_reservation_twice() {
         given(new ReservationCreated(id, date1, date2, Hotel.checkInTime(date1), Hotel.checkOutTime(date2)));
 
-        thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("unexpected state: RESERVED");
-        when(new MakeReservation(id, date1, date2, "John Doe", "john@example.com"));
+        var e = assertThrows(IllegalStateException.class, () -> {
+            when(new MakeReservation(id, date1, date2, "John Doe", "john@example.com"));
+        });
+        assertThat(e.getMessage(), is("unexpected state: RESERVED"));
     }
 
     @Test
@@ -84,9 +83,10 @@ public class MakeReservationTest extends AggregateRootTester {
         given(new PriceOffered(id, date1, price1, expiresInFuture),
                 new PriceOffered(id, date2, price2, expiresInFuture));
 
-        thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("no price offer for date 2000-01-13");
-        when(new MakeReservation(id, date1, date4, "John Doe", "john@example.com"));
+        var e = assertThrows(IllegalStateException.class, () -> {
+            when(new MakeReservation(id, date1, date4, "John Doe", "john@example.com"));
+        });
+        assertThat(e.getMessage(), is("no price offer for date 2000-01-13"));
     }
 
     @Test
@@ -95,9 +95,10 @@ public class MakeReservationTest extends AggregateRootTester {
                 new PriceOffered(id, date2, price2, expiresInFuture),
                 new PriceOffered(id, date3, price3, now));
 
-        thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("price offer for date 2000-01-13 has expired");
-        when(new MakeReservation(id, date1, date4, "John Doe", "john@example.com"));
+        var e = assertThrows(IllegalStateException.class, () -> {
+            when(new MakeReservation(id, date1, date4, "John Doe", "john@example.com"));
+        });
+        assertThat(e.getMessage(), is("price offer for date 2000-01-13 has expired"));
     }
 
     @Test

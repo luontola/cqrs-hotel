@@ -4,24 +4,19 @@
 
 package fi.luontola.cqrshotel.room.queries;
 
-import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.room.events.RoomCreated;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.arrayWithSize;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@Category(FastTests.class)
+@Tag("fast")
 public class RoomsViewTest {
-
-    @Rule
-    public final ExpectedException thrown = ExpectedException.none();
 
     private static final UUID roomId = UUID.randomUUID();
     private static final UUID roomId2 = UUID.randomUUID();
@@ -53,8 +48,9 @@ public class RoomsViewTest {
 
     @Test
     public void cannot_find_rooms_which_do_not_exist() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("room not found: " + roomId);
-        getRoomById.handle(new GetRoomById(roomId));
+        var e = assertThrows(IllegalArgumentException.class, () -> {
+            getRoomById.handle(new GetRoomById(roomId));
+        });
+        assertThat(e.getMessage(), is("room not found: " + roomId));
     }
 }

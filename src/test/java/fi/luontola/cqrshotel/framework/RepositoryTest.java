@@ -4,26 +4,22 @@
 
 package fi.luontola.cqrshotel.framework;
 
-import fi.luontola.cqrshotel.FastTests;
 import fi.luontola.cqrshotel.framework.eventstore.EventStore;
 import fi.luontola.cqrshotel.framework.eventstore.InMemoryEventStore;
 import fi.luontola.cqrshotel.framework.eventstore.OptimisticLockingException;
 import fi.luontola.cqrshotel.framework.util.EventListener;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@Category(FastTests.class)
+@Tag("fast")
 public class RepositoryTest {
-
-    @Rule
-    public final ExpectedException thrown = ExpectedException.none();
 
     private final GuineaPigRepository repo = new GuineaPigRepository(new InMemoryEventStore());
     private final UUID id = UUID.randomUUID();
@@ -39,10 +35,11 @@ public class RepositoryTest {
     public void cannot_overwrite_existing_entity() {
         saveEvents(id, "foo");
 
-        thrown.expect(OptimisticLockingException.class);
-        thrown.expectMessage("expected version 0 but was 1");
         var entity = repo.create(id);
-        repo.save(entity, entity.getVersion());
+        var e = assertThrows(OptimisticLockingException.class, () -> {
+            repo.save(entity, entity.getVersion());
+        });
+        assertThat(e.getMessage(), containsString("expected version 0 but was 1"));
     }
 
     @Test
@@ -57,9 +54,10 @@ public class RepositoryTest {
 
     @Test
     public void cannot_get_non_existing_entity_by_id() {
-        thrown.expect(EntityNotFoundException.class);
-        thrown.expectMessage(id.toString());
-        repo.getById(id);
+        var e = assertThrows(EntityNotFoundException.class, () -> {
+            repo.getById(id);
+        });
+        assertThat(e.getMessage(), is(id.toString()));
     }
 
     @Test

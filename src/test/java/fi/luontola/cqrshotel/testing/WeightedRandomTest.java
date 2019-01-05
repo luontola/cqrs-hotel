@@ -1,24 +1,19 @@
-// Copyright © 2016-2018 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
 package fi.luontola.cqrshotel.testing;
 
-import fi.luontola.cqrshotel.FastTests;
 import org.hamcrest.Matcher;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@Category(FastTests.class)
+@Tag("fast")
 public class WeightedRandomTest {
-
-    @Rule
-    public final ExpectedException thrown = ExpectedException.none();
 
     private final WeightedRandom<String> items = new WeightedRandom<>();
 
@@ -67,9 +62,10 @@ public class WeightedRandomTest {
 
     @Test
     public void cannot_be_empty() {
-        thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("no items");
-        items.next();
+        var e = assertThrows(IllegalStateException.class, () -> {
+            items.next();
+        });
+        assertThat(e.getMessage(), is("no items"));
     }
 
     @Test

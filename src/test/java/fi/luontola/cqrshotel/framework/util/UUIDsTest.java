@@ -4,9 +4,8 @@
 
 package fi.luontola.cqrshotel.framework.util;
 
-import fi.luontola.cqrshotel.FastTests;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
@@ -16,7 +15,7 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
-@Category(FastTests.class)
+@Tag("fast")
 public class UUIDsTest {
 
     private static final UUID id1 = UUID.randomUUID();
