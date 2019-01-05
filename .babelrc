@@ -1,23 +1,23 @@
 {
   "presets": [
     [
-      "env", {
+      "@babel/preset-env", {
       "targets": {"browsers": ["last 2 versions"]},
       "modules": false,
-      "useBuiltIns": true,
+      "useBuiltIns": "entry",
       "debug": false
     }
     ],
-    "react"
+    "@babel/react"
   ],
   "plugins": [
-    "transform-object-rest-spread"
+    "@babel/plugin-proposal-object-rest-spread"
   ],
   "env": {
     "test": {
       "presets": [
-        ["env", {"targets": {"node": "current"}}],
-        "react"
+        ["@babel/env", {"targets": {"node": "current"}}],
+        "@babel/react"
       ]
     }
   }

@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 Esko Luontola
+// Copyright © 2016-2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -9,7 +9,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import {Provider} from "react-redux";
 import {applyMiddleware, createStore} from "redux";
-import createLogger from "redux-logger";
+import {createLogger} from "redux-logger";
 import reducers from "./reducers";
 import history from "./history";
 import router from "./router";
